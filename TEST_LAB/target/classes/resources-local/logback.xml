@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- ============================================================= -->
+    <!-- appender setting -->
+    <!-- ============================================================= -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{HH:mm:ss.SSS}] %-5level %-32logger{32} : %msg %n</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE_SQL"
+        class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- <file>C:/develop/sllab_log/sllab_jdbc.log</file> -->
+        <file>C:/develop/sllab_log/system.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>C:/develop/sllab_log/sllab_jdbc.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 10 days' worth of history -->
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>[%d] [%thread] %-5level : %-4n%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE_EXCEPTION"
+        class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- <file>C:/develop/sllab_log/sllab_exception.log</file> -->
+        <file>C:/develop/sllab_log/system_exception.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <!-- <fileNamePattern>C:/develop/sllab_log/sllab_exception.%d{yyyy-MM-dd}.log</fileNamePattern> -->
+            <fileNamePattern>C:/develop/sllab_log/system.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 10 days' worth of history -->
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <!-- <pattern>[%d] [%thread] %-5level : %-4n%msg%n</pattern> -->
+            <Pattern>
+               %d{yyyy-MM-dd HH:mm:ss} %level [%logger:%L] - %msg%n
+         </Pattern>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================= -->
+    <!-- logger setting -->
+    <!-- ============================================================= -->
+    <logger name="org.apache" level="warn"  additivity="false"/>
+    <logger name="org.springframework" level="info" />
+
+    <logger name="log4jdbc.debug" level="warn"  additivity="false"/>
+    <logger name="jdbc" level="warn"  additivity="false"/>
+    <logger name="java.sql" level="debug"  additivity="false"/>
+
+    <logger name="org.springframework.beans.factory.support" level="info"  additivity="false"/>
+
+    <logger name="jdbc.sqltiming" additivity="false">
+        <level value="info" />
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE_SQL" />
+    </logger>
+	<!-- 
+	<logger name="jdbc.resultsettable" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="FILE_SQL" />
+	</logger>
+ 	-->
+    <logger name="kr.co.aspn" additivity="false">
+    	<level value="debug" />
+    	<appender-ref ref="FILE_EXCEPTION" />
+    </logger>
+
+    <root level="debug">
+        <appender-ref ref="CONSOLE" /> 
+    </root>
+</configuration>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="code">
+	<select id="groupList" parameterType="CodeGroupVO" resultType="CodeGroupVO">
+	/*code.groupList*/
+	SELECT groupCode
+		,groupName
+		,description
+		,isDelete
+		,regUserId
+		,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		,modUserId
+		,DATE_FORMAT(modDate,'%Y-%m-%d') as modDate 
+	FROM codeGroup
+	WHERE isDelete = 'N'
+    </select>
+    
+    <select id="groupCount" parameterType="CodeGroupVO" resultType="int">
+    /*code.groupCount*/
+	  	SELECT	COUNT(groupCode) CNT
+	  	FROM 	codeGroup
+	  	WHERE 	1=1
+	  	AND groupCode = #{groupCode}
+	</select>
+
+	<insert id="groupInsert" parameterType="CodeGroupVO">
+	/*code.groupInsert*/
+		INSERT
+			INTO codeGroup
+		(
+			groupCode
+			, groupName
+			, description
+			, isDelete
+			, regUserId
+			, regDate
+		) VALUES (
+			#{groupCode}
+			, #{groupName}
+			, #{description}
+			, 'N'
+			, ''
+			, sysdate()
+		)
+	</insert>
+	
+	<update id="groupUpdate" parameterType="CodeGroupVO">
+	/*code.groupUpdate*/
+		UPDATE codeGroup
+		SET
+			groupName = #{groupName}
+			,description = #{description}
+			,modUserId = ''
+			,modDate = sysdate()
+		WHERE groupCode = #{groupCode}
+	</update>
+	
+	<update id="groupDelete" parameterType="CodeGroupVO">
+	/*code.groupDelete*/
+		UPDATE codeGroup
+		SET
+			isDelete = 'Y'
+			,modUserId = ''
+			,modDate = sysdate()
+		WHERE groupCode = #{groupCode}
+	</update>
+	
+	<select id="groupItemCount" parameterType="CodeGroupVO" resultType="int">
+	/*code.groupItemCount*/
+	  	SELECT COUNT(groupCode) CNT
+	    FROM codeItem
+	    WHERE 	1=1
+	  	AND groupCode = #{groupCode}
+	  	AND isDelete = 'N'
+	</select>
+	
+	<select id="itemList" parameterType="CodeItemVO" resultType="CodeItemVO">
+	/*code.itemList*/
+	SELECT groupCode
+      	,itemCode
+      	,itemName
+      	,description
+      	,orderNo
+     	,isDelete
+      	,regUserId
+      	,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate 
+      	,modUserId
+      	,DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+	FROM codeItem
+	WHERE groupCode = #{groupCode}
+	AND isDelete = 'N'
+	ORDER BY orderNo ASC
+    </select>
+	
+	<select id="itemCount" parameterType="CodeItemVO" resultType="int">
+	/*code.itemCount*/
+	  	SELECT COUNT(itemCode) CNT
+	    FROM codeItem
+	    WHERE 	1=1
+	  	AND groupCode = #{groupCode}
+	  	AND itemCode = #{itemCode}
+	  	<!-- AND isDelete = 'N' -->
+	</select>
+	
+	<insert id="itemInsert" parameterType="CodeItemVO">
+	/*code.itemInsert*/
+		INSERT
+			INTO codeItem
+		(
+			groupCode
+			, itemCode
+			, itemName
+			, description
+			, orderNo
+			, isDelete
+			, regUserId
+			, regDate
+		) VALUES (
+			#{groupCode}
+			, #{itemCode}
+			, #{itemName}
+			, #{description}
+			, (SELECT ifnull(max(a.orderNo),0)+1 FROM codeItem a WHERE a.groupCode = #{groupCode})
+			, 'N'
+			, ''
+			, sysdate()
+		)
+	</insert>
+	
+	<update id="itemUpdate" parameterType="CodeItemVO">
+	/*code.itemUpdate*/
+		UPDATE codeItem
+		SET
+			itemName = #{itemName}
+			,description = #{description}
+			,modUserId = ''
+			,modDate = sysdate()
+		WHERE groupCode = #{groupCode}
+		AND itemCode = #{itemCode}
+	</update>
+	
+	<update id="itemOrderUpdate" parameterType="CodeItemVO">
+	/*code.itemOrderUpdate*/
+		UPDATE codeItem
+		SET
+			orderNo = (orderNo-1)
+		WHERE groupCode = #{groupCode}
+		AND orderNo > (SELECT tmp.orderNo FROM (SELECT a.orderNo as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode}) AS tmp )
+		AND isDelete = 'N'
+	</update>
+	
+	<update id="itemDelete" parameterType="CodeItemVO">
+	/*code.itemDelete*/
+		UPDATE codeItem
+		SET
+			isDelete = 'Y'
+			,modUserId = ''
+			,modDate = sysdate()
+		WHERE groupCode = #{groupCode}
+		AND itemCode = #{itemCode}
+	</update>
+	
+	<update id="itemOrderUpDown" parameterType="CodeItemVO">
+	/*code.itemOrderUpDown*/
+		UPDATE codeItem
+		SET
+		<choose>
+			<when test="mode.equals('UP')">
+			orderNo = (orderNo+1)
+			</when>
+      		<when test="mode.equals('DOWN')">
+      		orderNo = (orderNo-1)
+      		</when>	
+      	</choose>
+		WHERE groupCode = #{groupCode}
+		<choose>
+			<when test="mode.equals('UP')">
+			AND orderNo = (SELECT tmp.orderNo FROM (SELECT a.orderNo-1 as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode} AND a.isDelete = 'N') tmp)
+      		</when>
+      		<when test="mode.equals('DOWN')">
+      		AND orderNo = (SELECT tmp.orderNo FROM (SELECT a.orderNo+1 as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode} AND a.isDelete = 'N') tmp)
+      		</when>
+		</choose>
+		AND isDelete = 'N'
+	</update>
+	
+	<update id="itemOrderUpdateAjax" parameterType="CodeItemVO">
+	/*code.itemOrderUpdateAjax*/
+		UPDATE codeItem
+		SET
+		<choose>
+			<when test="mode.equals('UP')">
+			orderNo = (orderNo-1)
+			</when>
+      		<when test="mode.equals('DOWN')">
+      		orderNo = (orderNo+1)
+      		</when>	
+      	</choose>
+		WHERE groupCode = #{groupCode}
+		AND itemCode = #{itemCode}
+		AND isDelete = 'N'
+	</update>
+</mapper>

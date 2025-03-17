@@ -1,0 +1,225 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" trimDirectiveWhitespaces="true"%>
+<%@taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
+<%@ page session="false" %>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+<title>공지사항 등록 페이지</title>
+</head>
+<link href="css/common.css" rel="stylesheet" type="text/css" />
+<link href="css/board.css" rel="stylesheet" type="text/css" />
+<link href="css/layout.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src='<c:url value="/resources/js/jquery-3.3.1.js"/>'></script>
+<script type="text/javascript" src='<c:url value="/resources/js/jquery.form.js"/>'></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		var selectTarget = $('.selectbox select');
+
+		 selectTarget.on('blur', function(){
+		   $(this).parent().removeClass('focus');
+		 });
+
+		  selectTarget.change(function(){
+		    var select_name = $(this).children('option:selected').text();
+		  	$(this).siblings('label').text(select_name);
+		  });
+		  
+		  var topBar = $("#topBar").offset();
+
+		$(window).scroll(function(){
+			
+			var docScrollY = $(document).scrollTop()
+			var barThis = $("#topBar")
+			var fixNext = $("#fixNextTag")
+
+			if( docScrollY > topBar.top ) {
+				barThis.addClass("top_bar_fix");
+				fixNext.addClass("pd_top_80");
+			}else{
+				barThis.removeClass("top_bar_fix");
+				fixNext.removeClass("pd_top_80");
+			}
+		});
+	});
+	
+	function stepchage(id,step){document.getElementById("width_wrap").className = step;}
+	
+	function faqRegist() {
+		
+		if($('#title').val()==''){
+			alert('제목을 입력해 주세요.');
+			$('#title').focus();
+			return false;
+		}
+		if($('#contentTemp').val()==''){
+			alert('내용을 입력해 주세요.');
+			$('#contentTemp').focus();
+			return false;
+		}
+		
+// 		$('#noticeRegistForm').submit();
+		$('#faqRegistForm').ajaxForm({
+            beforeSubmit: function (data,form,option) {
+                //validation체크 
+                //막기위해서는 return false를 잡아주면됨
+                return true;
+            },
+            success: function(response,result){
+            	if(result == 'success'){
+                	//성공후 서버에서 받은 데이터 처리
+                	alert("작성되었습니다.");
+                	location.href = '/faqNotice/FaqnoticeList?pageNo='+'${paramVO.pageNo}'+"&keyword="+encodeURI(encodeURIComponent('${paramVO.keyword}'))+'&searchName='+encodeURI(encodeURIComponent('${paramVO.searchName}'));
+            	} else {
+            		alert('작성 실패하였습니다.');
+            	}
+            },
+            error: function(){
+                //에러발생을 위한 code페이지
+            	alert("오류가 발생하였습니다.");
+            }                               
+        }).submit();
+	}
+	
+	function goFaqList(){
+		location.href = '/faqNotice/FaqnoticeList?pageNo='+'${paramVO.pageNo}'+"&keyword="+encodeURI(encodeURIComponent('${paramVO.keyword}'))+'&searchName='+encodeURI(encodeURIComponent('${paramVO.searchName}'));
+	}
+	
+/* 	var tmpNo = 1;
+	
+	function addFile(fileIdx) {
+		var filePath = document.getElementById("file"+fileIdx).value;
+		var fileName = filePath.substring(filePath.lastIndexOf('\\') + 1,	filePath.length);
+		if (fileName.length == 0) {
+			alert("파일을 선택해 주십시요.");
+			return;
+		}
+		// 파일 추가
+		$("#fileSpan"+fileIdx).hide();
+		tmpNo = ++fileIdx;
+		var html = "";
+		html += "<span class=\"file_load\" id=\"fileSpan" + fileIdx + "\">";
+		html += "	<input type='file' name='files' id='file" + fileIdx + "' onChange=\"javaScript:addFile(tmpNo)\">";
+		html += "	<label class=\"btn-default\" for=\"file" + fileIdx + "\">파일첨부</label>";
+		html += "</span>"
+		$("#upFile").append(html);
+		html = "";
+		html += "<li style='width:100%;'>";
+		html += "	<span id='selfile" + fileIdx 	+ "'>";
+		html += "		<a href='#'>"+ fileName + "</a>";
+		html += "		<button class=\"btn_table_nomal\" type=\"button\" onClick='javascript:deleteFile(this)'>";
+		html += "			<img src=\"../resources/images/icon_del.png\">삭제";
+		html += "		</button>";
+		html += "	</span>";
+		html += "</li>"
+		$("#filelist").append(html);
+	}
+	
+	//추가 파일 삭제 함수
+	function deleteFile(e){
+		var fileSpanId = $(e).parent().attr("id");
+		var fileIndex = fileSpanId.slice(7);
+		var fileId = "file"+fileIndex;
+		var fileNo = fileIndex - 1;
+		$(e).parent().parent().remove();
+		$("#file"+ fileNo).remove();
+		return;
+	} */
+
+</script>
+	<form id="faqRegistForm" name="faqRegistForm" method="post" enctype="multipart/form-data" action="/faqNotice/FaqNoticeRegistAction">
+		<!-- <span class="path">
+		공지사항 작성&nbsp;&nbsp;<img src="../resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;
+		<a href="#">파리크라상 식품기술 연구개발시스템</a>
+		</span>
+		<section class="type01">
+			<h2 style="position:relative">
+			<span class="title_s">Notice</span>
+			<span class="title">공지사항 작성</span>
+			<div class="top_btn_box">
+				<ul>
+					<li>
+						<button type="button" onclick="goNoticeList(); return false;"  class="btn_circle_nomal">&nbsp;</button>
+					</li>
+				</ul>
+			</div>
+			</h2>
+			<div class="group01" >
+			<div class="title">span class="txt">연구개발시스템 공지사항</span</div>
+				<div class="list_detail">
+					<ul>
+						<li class="pt10">
+							<dt>제목</dt>
+							<dd class="pr20 pb10">
+								<input type="text"style="width:70%;" name="title" id="title" placeholder="제목을 입력해주세요."/>
+							</dd>
+						</li>
+						<li>
+							<dt>내용</dt>
+							<dd class="pr20 pb10">
+								<textarea style="width:100%; height:230px" name="content" id="content"></textarea>
+							</dd>
+						</li>
+						<li style="width:100%">
+							<dt>첨부파일</dt>
+							<dd class="pb20">
+								<div class="form-group form_file">
+									<input class="form-control form_point_color01" type="text" title="첨부된 파일명" readonly="readonly" style="width:200px">
+									<span class="file_load" id="fileSpan1">
+										<input type="file" name="files" id="file1" value="" onChange="javaScript:addFile(tmpNo)" /><label class="btn-default" for="file1">파일첨부</label>
+									</span>	
+									<span id="upFile"></span>
+									<ul class="view_list_file" style="background-color:#fafafa !important;" id="filelist">
+									</ul>
+								</div>
+							</dd>	 
+						</li>		
+					</ul>
+				</div>
+				<div class="btn_box_con" >
+					<input type="button" value="저장" class="btn_admin_red" onclick="noticeRegist(); return false;"> 
+					<input type="button" value="목록"  class="btn_admin_gray" onclick="goNoticeList(); return false;">
+				</div>
+			</div> -->
+		<div class="wrap_in" id="fixNextTag">
+			<span class="path">자주 하는 질문&nbsp;&nbsp;<img src="../resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;게시판&nbsp;&nbsp;<img src="../resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;<a href="#">${strUtil:getSystemName()}</a></span>
+			<section class="type01">
+			<h2 style="position:relative"><span class="title_s">FAQ</span>
+			<span class="title">자주 하는 질문 작성</span>
+			<div class="top_btn_box">
+				<ul>
+					<li><button class="btn_circle_nomal" onclick="goFaqList(); return false;">&nbsp;</button></li>
+				</ul>
+			</div>
+		</h2>
+			<div class="group01" >
+			<div class="title"><!--span class="txt">연구개발시스템 공지사항</span--></div>
+			<div class="list_detail">
+			<ul>
+				<li class="pt10">
+					<dt>제목</dt>
+						<dd class="pr20 pb10">
+						<input type="text" style="width:70%;" placeholder="제목을 입력해주세요." name="title" id="title"/>
+						</dd>
+				</li>			
+				<li>
+					<dt>내용</dt>
+						<dd class="pr20 pb10">
+						<textarea style="width:100%; height:300px" name="contentTemp" id="contentTemp"></textarea>
+						</dd>
+				</li>
+			</ul>
+			</div>
+				<div class="btn_box_con5">
+			</div>
+			<div class="btn_box_con4"> <button class="btn_admin_sky"onClick="faqRegist(); return false;">작성 완료</button></div>
+			 <hr class="con_mode"/><!-- 신규 추가 꼭 데려갈것 !-->
+			</div>
+				</section>
+		</div>
+		
+	
+	</form>
+</html>

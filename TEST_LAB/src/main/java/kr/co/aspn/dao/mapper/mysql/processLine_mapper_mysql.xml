@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="processLine">
+	<select id="list" parameterType="map" resultType="ProcessLineVO">
+	/** porcessLine.list */
+	SELECT		
+		ptNo
+		, plantName
+		, lineCode
+		, lineName
+		, count(*) over(partition by plantName) as plantCnt
+	FROM		
+		lineProcessTree 
+	WHERE 1 = 1
+	<if test='plantName != null and plantName != "" and plantName != "NULL"'>
+		AND plantName = #{plantName}
+	</if>
+	<if test='lineCode != null and lineCode != "" and lineCode != "NULL"'>
+		AND ptNo = #{lineCode}
+	</if>
+	ORDER BY orderSeq
+		
+	</select>
+	<select id="getLineCode" parameterType="String" resultType="map">
+	/** porcessLine.list */
+	SELECT 	
+		ptNo, 
+		lineCode
+	FROM
+		lineProcessTree
+	WHERE
+		plantName = #{plantName}
+	ORDER BY orderSeq
+	</select>
+</mapper>

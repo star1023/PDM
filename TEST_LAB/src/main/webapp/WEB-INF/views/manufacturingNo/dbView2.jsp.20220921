@@ -1,0 +1,1737 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" trimDirectiveWhitespaces="true"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
+<%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
+<%@ page session="false" %>
+<%@ page import="kr.co.spc.util.*" %> 
+<%
+	String userGrade = UserUtil.getUserGrade(request);
+	String userDept = UserUtil.getDeptCode(request);
+	String userTeam = UserUtil.getTeamCode(request);
+	String isAdmin = UserUtil.getIsAdmin(request);
+%>
+<script type="text/javascript">
+
+	$(document).ready(function(){
+		loadCodeList( "PRODCAT1", "productType1" );
+		loadCodeList( "STERILIZATION2", "sterilization" );
+		loadCodeList( "ETCDISPLAY", "etcDisplay" );
+		loadCodeList( "KEEPCONDITION2", "keepCondition" );
+		loadPackage("PACKAGE_UNIT");
+		
+		var companyCode 	= '${manufacturingNo.companyCode}';
+		var plant 			= '${manufacturingNo.plantCode}';
+		var licensingNo 	= '${manufacturingNo.licensingNo}';		
+		var productType1 	= '${manufacturingNo.productType1}';
+		var productType2 	= '${manufacturingNo.productType2}';
+		var productType3 	= '${manufacturingNo.productType3}';
+		
+		if(productType1.length > 0){ 
+			$('#productType1 option[value='+productType1+']').prop('selected', true);
+			$('#productType1').change();
+		}
+		if(productType2.length > 0){ 
+			$('#productType2 option[value='+productType2+']').prop('selected', true);
+			$('#productType2').change();
+		}
+		if(productType3.length > 0){
+			$("#dd_dd_productType_modify").append('<select id="productType3" name="productType3"></select>')
+			$('#productType3 option[value='+productType3+']').prop('selected', true);
+			$('#productType3').change();
+		}
+		
+		var sterilization = '${manufacturingNo.sterilization}';
+		if(sterilization.length > 0){
+			$('#sterilization option[value='+sterilization+']').prop('selected', true);
+			$('#sterilization').change();
+		}
+		
+		if(keepCondition.length > 0){
+			$('#keepCondition option[value='+'${manufacturingNo.keepCondition}'+']').prop('selected', true);
+			$('#keepCondition').change();
+		}
+		
+		var keepConditionText = '${manufacturingNo.keepConditionText}';
+		if(keepConditionText.length > 0){
+			$("#keepConditionText").val('${manufacturingNo.keepConditionText}');
+		}
+		
+		var sellDate1 = '${manufacturingNo.sellDate1}';
+		var sellDate3 = '${manufacturingNo.sellDate3}';
+		
+		$("#dd_sellDate_modify").append('<select id="sellDate1" name="sellDate1"  class="selectbox_popup" style="width: 160px;"></select>');
+		$('#sellDate1').append('<option value="">선택</option>');
+		$('#sellDate1').append('<option value="D">제조일로부터</option>');
+		$('#sellDate1').append('<option value="H">제조시간으로부터</option>');
+		$('#sellDate1').append('<option value="B">할란 후</option>');
+		
+		$("#dd_sellDate_modify").append('<input type="text" id="sellDate2" name="sellDate2" style="width: 50px;"/>');
+
+		$("#dd_sellDate_modify").append('<select id="sellDate3" name="sellDate3"  class="selectbox_popup" style="width: 160px;"></select>');
+		$('#sellDate3').append('<option value="">선택</option>');
+		$('#sellDate3').append('<option value="Y">년</option>');
+		$('#sellDate3').append('<option value="M">개월</option>');
+		$('#sellDate3').append('<option value="D">일</option>');
+		$('#sellDate3').append('<option value="H">시간</option>');
+		
+		if(sellDate1.length > 0){
+			$('#sellDate1 option[value='+sellDate1+']').prop('selected', true);
+			$("#sellDate2").val('${manufacturingNo.sellDate2}');
+			$('#sellDate3 option[value='+sellDate3+']').prop('selected', true);
+		}
+		
+		var sellDate4 = '${manufacturingNo.sellDate4}'.replaceAll(" ","");
+		var sellDate6 = '${manufacturingNo.sellDate6}';
+		
+		$("#dd_sellDate_modify").append('<br/> <select id="sellDate4" name="sellDate4"  class="selectbox_popup" style="width: 160px;"></select>');
+		$('#sellDate4').append('<option value="">선택</option>');
+		$('#sellDate4').append('<option value="D">제조일로부터</option>');
+		$('#sellDate4').append('<option value="H">제조시간으로부터</option>');
+		$('#sellDate4').append('<option value="B">할란 후</option>');
+		
+		$("#dd_sellDate_modify").append('<input type="text" id="sellDate5" name="sellDate5" style="width: 50px;"/>');
+
+		$("#dd_sellDate_modify").append('<select id="sellDate6" name="sellDate6"  class="selectbox_popup" style="width: 160px;"></select>');
+		$('#sellDate6').append('<option value="">선택</option>');
+		$('#sellDate6').append('<option value="Y">년</option>');
+		$('#sellDate6').append('<option value="M">개월</option>');
+		$('#sellDate6').append('<option value="D">일</option>');
+		$('#sellDate6').append('<option value="H">시간</option>');
+		
+		if(sellDate4.length > 0){	
+			$('#sellDate4 option[value='+sellDate4+']').prop('selected', true);
+			$("#sellDate5").val('${manufacturingNo.sellDate5}');
+			$('#sellDate6 option[value='+sellDate6+']').prop('selected', true);
+		}
+		
+		var createPlantList = '${manufacturingNo.createPlant}';
+		if( createPlantList.replaceAll(" ","").length > 0 ){
+			$("#referral_modify").attr("checked", true);
+			
+			loadPlant();
+			
+			var createPlant = createPlantList.replaceAll(" ","").split(",");
+			$(createPlant).each(function(i){
+				$('#plant_'+createPlant[i]).attr("checked", true);
+			})
+		}
+		
+		var oem = '${manufacturingNo.oem}';
+		if( oem == 'Y' ){
+			$("#oem").attr("checked", true);
+			$("#li_oemText_modify").show();
+			$("#oemText").val('${manufacturingNo.oemText}');
+		}
+		
+		var packageUnitList = '${manufacturingNo.packageUnits}';
+		if( packageUnitList.length > 0 ){
+			var packageUnit = packageUnitList.replaceAll(" ","").split(",");
+			$(packageUnit).each(function(i){
+				$('#packageUnit option[value='+packageUnit[i]+']').prop("selected", true);
+			})
+			if( $("#packageUnit option[value='8']").prop("selected") ){
+				$("#packageEtc").show();
+				$("#packageEtc").val('${manufacturingNo.packageEtc}');
+			}
+		}
+		
+		var comment = '${manufacturingNo.comment}';
+		if( comment.length > 0 ){
+			$("#comment").val(comment);
+		}
+	});
+
+	function goUpdateForm(seq) {
+		loadCodeList( "PRODCAT1", "productType1" );
+		loadCodeList( "KEEPCONDITION", "keepCondition" );
+		loadCodeList( "STERILIZATION", "sterilization" );
+		loadCodeList( "ETCDISPLAY", "etcDisplay" );
+		$("#keepConditionText").hide();
+		var URL = "../manufacturingNo/manufacturingNoLogAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"seq":seq
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				$("#no_seq").val(seq);
+				$("#productType1").selectOptions(data.productType1);
+				$("#label_productType1").html(data.productType1Name);
+				if( data.productType2 != '' ) {
+					loadProductType( '2', 'productType2' );	
+					$("#productType2").selectOptions(data.productType2);
+					$("#label_productType2").html(data.productType2Name);
+				}
+				if( data.productType3 != '' ) {
+					loadProductType( '3', 'productType3' );	
+					$("#productType3").selectOptions(data.productType3);
+					$("#label_productType2").html(data.productType2Name);
+				}
+				
+				$("#sterilization").selectOptions(data.sterilization);
+				if( data.sterilization == '' ) {
+					$("#label_sterilization").html("선택안함");
+				} else {
+					$("#label_sterilization").html(data.sterilizationName);
+				}
+				//$("#label_sterilization").html(data.sterilizationName);
+				$("#etcDisplay").selectOptions(data.etcDisplay);
+				if( data.etcDisplay == '' ) {
+					$("#label_etcDisplay").html("선택안함");
+				} else {
+					$("#label_etcDisplay").html(data.sterilizationName);
+				}
+				//$("#label_etcDisplay").html(data.etcDisplayName);
+				$("#keepCondition").selectOptions(data.keepCondition);
+				if( data.keepCondition == '7' ) {
+					$("#label_keepCondition").html("직접입력");
+					$("#keepConditionText").show();
+					$("#keepConditionText").val(data.keepConditionText);
+				} else {
+					$("#label_keepCondition").html(data.keepConditionName);
+				}
+				$("#sellDate").val(data.sellDate);
+				if( data.referral == 'Y' ) {
+					$("input:checkbox[name='referral']").prop("checked", true);
+				}
+				if( data.oem == 'Y' ) {
+					$("input:checkbox[name='oem']").prop("checked", true);
+				}
+				if( data.referral == 'Y' || data.oem == 'Y' ) {
+					loadPlant();
+					var productCode = data.createPlant.split(',');
+					for( var i = 0 ; i < productCode.length ; i++ ) {
+						//[value=" + splitCode[idx] + "]"
+						$("input[name=createPlant][value=" + productCode[i] + "]").prop("checked", true);
+					}
+				}
+			},
+			error:function(request, status, errorThrown){
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+		
+		openDialog('open');
+	}
+	
+	function goDeleteForm(seq) {
+		$("#no_seq").val(seq);
+		openDialog('open2');
+	}
+	
+	function loadCodeList( groupCode, objectId ) {
+		var URL = "../common/codeListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"groupCode":groupCode
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				$("#"+objectId).removeOption(/./);
+				$("#"+objectId).removeOption(/./);
+				if( groupCode == 'STERILIZATION' || groupCode == 'ETCDISPLAY' ) {
+					$("#"+objectId).addOption("", "선택안함", false);
+					$("#label_"+objectId).html("선택안함");
+				} else {
+					$("#"+objectId).addOption("", "전체", false);
+					$("#label_"+objectId).html("전체");
+				}
+				$.each(list, function( index, value ){ //배열-> index, value
+					$("#"+objectId).addOption(value.itemCode, value.itemName, false);
+				});
+			},
+			error:function(request, status, errorThrown){
+				$("#"+objectId).removeOption(/./);
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function loadPlant() {
+		var URL = "../common/plantListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				var html = "";
+				$("#create_plant_list_modify").html(html);
+				var count = 0
+				$.each(list, function( index, value ){ //배열-> index, value
+					html += "	<input type=\"checkbox\" name=\"createPlant\" id=\"plant_"+value.plantCode+"\" value=\""+value.plantCode+"\" readonly><label for=\"plant_"+value.plantCode+"\"><span></span>"+value.plantName+"("+value.plantCode+")</label>";
+					count++;
+					if( count != 0 && count % 4 == 0 ) {
+						html += "<br/>";
+					}
+				});
+				$("#create_plant_list_modify").html(html);
+				$("#li_create_plant_modify").show();
+			},
+			error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function oemCheck() {
+		if( $("input:checkbox[name=oem]").is(":checked") == false ) {
+			$("#li_oemText_modify").hide();
+			$("#oemText").val("");
+		} else {
+			$("#li_oemText_modify").show();
+		}
+	}
+	
+	function changeKeepCondition() {
+		if( $("#keepCondition").selectedValues()[0] == '4' ) {
+			$("#keepConditionText").show();
+		} else {
+			$("#keepConditionText").val("");
+			$("#keepConditionText").hide();
+		}
+	}
+	
+	
+	
+	function addFile(fileIdx) {
+		var filePath = document.getElementById(fileIdx).value;
+		var fileName = filePath.substring(filePath.lastIndexOf('\\') + 1,	filePath.length);
+		if (fileName.length == 0) {
+			//alert("파일을 선택해 주십시요.");
+			return;
+		}
+
+		var html = "";
+		$("#up"+fileIdx).html(html);
+		html += "		<a href='#' onClick='javascript:deleteFile(this)'><img src=\"/resources/images/icon_del_file.png\"></a>";
+		html += "		"+ fileName + "";
+		$("#up"+fileIdx).html(html);
+	}
+	
+	//추가 파일 삭제 함수
+	function deleteFile(e){
+		var fileSpanId = $(e).parent().prop("id");
+		var fileIndex = fileSpanId.slice(6);
+		var fileId = "file"+fileIndex;
+		$(e).parent().html("");
+		$("#"+ fileId).val("");
+		return;
+	}
+	
+	
+	
+	function goUpdate() {
+		//var formData = new FormData();
+		//첫번째 파일태그
+		//formData.append("uploadfile",$("input[name=uploadfile]")[0].files[0]);
+		//두번째 파일태그
+		//formData.append("uploadfile",$("input[name=uploadfile]")[1].files[0]);
+		if( !chkNull($("#manufacturingName").val()) ) {
+			alert("품목명을 입력해주세요.");
+			$("#manufacturingName").focus();
+			return;
+		} else if( !chkNull($("#productType1").selectedValues()[0]) ) {
+			alert("식품유형을 선택해주세요.");
+			$("#productType1").focus();
+			return;
+		} else if( !chkNull($("#productType2").selectedValues()[0]) ) {
+			alert("식품유형을 선택해주세요.");
+			$("#productType2").focus();
+			return;
+		} else if( !chkNull($("#keepCondition").selectedValues()[0]) ) {
+			alert("보관조건을 선택해주세요.");
+			$("#keepCondition").focus();
+			return;
+		} else if( $("#keepCondition").selectedValues()[0] == '7' && !chkNull($("#keepConditionText").val()) ) {
+			alert("보관조건을 입력해주세요.");
+			$("#keepConditionText").focus();
+			return;
+		} else if( !chkNull($("#sellDate").val()) ) {
+			alert("소비기한을 입력해주세요.");
+			$("#sellDate").focus();
+			return;
+		} else {
+			if(confirm("품목제조 보고서를 수정하시겠습니까?")){
+				var referral = "N";
+				var oem = "N";
+				if($('input:checkbox[name="referral"]').is(':checked')) {
+					referral = "Y";
+				}
+				if($('input:checkbox[name="oem"]').is(':checked')) {
+					oem = "Y";
+				}
+				var plantArray = new Array();
+				$('input:checkbox[name="createPlant"]').each(function() {
+				      if(this.checked){//checked 처리된 항목의 값
+				    	  plantArray.push(this.value);
+				      }
+				});
+				var formData = new FormData();
+				formData.append("no_seq",$("#no_seq").val());
+				formData.append("plantName",$("#plantName").val());
+				formData.append("manufacturingNo",$("#manufacturingNo").val());
+				formData.append("manufacturingName",$("#manufacturingName").val());
+				formData.append("productType1",$("#productType1").selectedValues()[0]);
+				formData.append("productType2",$("#productType2").selectedValues()[0]);
+				formData.append("productType3",$("#productType3").selectedValues()[0]);
+				formData.append("sterilization",$("#sterilization").selectedValues()[0]);
+				formData.append("etcDisplay",$("#etcDisplay").selectedValues()[0]);
+				formData.append("keepCondition",$("#keepCondition").selectedValues()[0]);
+				formData.append("keepConditionText",$("#keepConditionText").val());
+				formData.append("sellDate",$("#sellDate").val());
+				formData.append("referral",referral);
+				formData.append("oem",oem);
+				formData.append("createPlant",plantArray);
+				formData.append("comment",$("#comment").val());
+				//첫번째 파일태그
+				formData.append("file",$("input[name=file]")[0].files[0]);
+				//두번째 파일태그
+				formData.append("file",$("input[name=file]")[1].files[0]);
+				var URL = "../manufacturingNo/updateAjax";
+				$.ajax({
+					type:"POST",
+					url:URL,
+					traditional : true,
+					data:formData,
+					processData: false,
+					contentType: false,
+					success:function(result) {
+						if( result.status == 'success') {
+							alert("품목제조 보고서가 수정 되었습니다.");
+							goCancel('open');
+							goView($("#no_seq").val());
+						} else {
+							alert(result.msg+"오류가 발생하였습니다.\n다시 시도하여 주세요.");
+						}
+					},
+					error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});	
+			}
+		}
+	}
+	
+	function goDelete() {
+		if( !chkNull($("#deleteComment").val()) ) {
+			alert("삭제 사유를 입력해주세요.");
+			$("#deleteComment").focus();
+			return;
+		} else {
+			if(confirm("품목제조 보고서를 삭제하시겠습니까?")){
+				var URL = "../manufacturingNo/deleteAjax";
+				$.ajax({
+					type:"POST",
+					url:URL,
+					data:{
+						"seq":$("#no_seq").val(),
+						"no_seq":$("#no_seq").val(),
+						"plantName":$("#plantName").val(),
+						"manufacturingNo":$("#manufacturingNo").val(),
+						"manufacturingName":$("#manufacturingName").val(),
+						"comment":$("#deleteComment").val()
+					},
+					dataType:"json",
+					async:false,
+					success:function(result) {
+						if( result.status == 'success') {
+							alert("품목제조 보고서가 삭제처리 되었습니다.");
+							goCancel('open2');
+							goView($("#no_seq").val());
+						} else {
+							alert(result.msg+"오류가 발생하였습니다.\n다시 시도하여 주세요.");
+						}
+					},
+					error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});	
+			}
+		}
+	}
+	
+	function loadProductType( grade, objectId ) {
+		var URL = "../common/productTypeListAjax";
+		var groupCode = "PRODCAT"+grade;
+		var codeValue = "";
+		if( grade == '2' ) {
+			codeValue = $("#productType1").selectedValues()[0]+"-";
+			$("#li_productType2").hide();
+			$("#li_productType3").hide();
+		} else if( grade == '3' ) {
+			codeValue = $("#productType2").selectedValues()[0]+"-";
+			$("#li_productType3").hide();
+		}
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"groupCode":groupCode,
+				"codeValue":codeValue
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				$("#"+objectId).removeOption(/./);
+				$("#"+objectId).addOption("", "전체", false);
+				//$("#label_"+objectId).html("전체");
+				$.each(list, function( index, value ){ //배열-> index, value
+					$("#"+objectId).addOption(value.itemCode, value.itemName, false);
+				});
+				if( list.length > 0 ) {
+					$("#li_"+objectId).show();
+				} else {
+					$("#li_"+objectId).hide();
+				}
+			},
+			error:function(request, status, errorThrown){
+				element.removeOption(/./);
+				$("#li_"+element.prop("id")).hide();
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	//파일 다운로드
+	function fileDownload(fmNo, tbkey, tbType){
+		location.href="/file/fileDownload?fmNo="+fmNo+"&tbkey="+tbkey+"&tbType="+tbType;
+	}
+	
+	function goView(seq) {
+		window.location.href="../manufacturingNo/dbView?seq="+seq;
+	}
+	
+	
+	
+	function detailView(seq, popup) {
+		var URL = "../manufacturingNo/manufacturingNoDataAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"seq":seq
+			},
+			dataType:"json",
+			async:false,
+			success:function(result) {
+				var data = result.manufacturingNoData;
+				$("#dd_productType").html(data.productType1Name+" / "+data.productType2Name+" / "+nvl(data.productType3Name,''));
+				$("#dd_sterilization").html(data.sterilizationName);
+				$("#dd_keepCondition").html(data.keepConditionName);
+				//$("#dd_sellDate").html(data.sellDate1Text+" "+data.sellDate2+" "+data.sellDate3Text);
+				if( nvl(data.sellDate4Text,'') != '') {
+					$("#dd_sellDate").html(data.sellDate1Text+" "+data.sellDate2+" "+data.sellDate3Text+"<br/>"+data.sellDate4Text+" "+data.sellDate5+" "+data.sellDate6Text);
+				} else {
+					$("#dd_sellDate").html(data.sellDate1Text+" "+data.sellDate2+" "+data.sellDate3Text);
+				}
+				var oemText = "";
+				if( data.referral == 'Y' ) {
+					oemText += "위탁"
+				}
+				if( data.oem == 'Y' ) {
+					if( oemText != "" ) {
+						oemText += "/OEM"	
+					}else {
+						oemText += "OEM"
+					}					
+				}
+				$("#dd_oem").html(oemText);
+				if( data.createPlant != "" && data.referral == 'Y' ) {
+					loadPlant2();
+					$("#li_create_plant").show();
+					var productCode = data.createPlant.split(',');
+					for( var i = 0 ; i < productCode.length ; i++ ) {
+						$("#plant_"+productCode[i].trim()).show();
+					}
+				}
+				
+				if( data.oemText != "" && data.oem == 'Y') {
+					$("#li_oemText").show();
+					$("#dd_oemText").html(data.oemText);
+				}
+				//$("#dd_manufacturingReportFile").html(data.manufacturingReportFileName);
+				//$("#dd_sellDateReportFile").html(data.sellDateReportFileName);
+				$("#dd_comment").html(data.comment);
+				
+			},
+			error:function(request, status, errorThrown){
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});	
+		openDialog(popup);
+	}
+	
+	function loadPlant2() {
+		var URL = "../common/plantListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				var html = "";
+				$("#create_plant_list").html(html);
+				var count = 0
+				$.each(list, function( index, value ){ //배열-> index, value
+					html += "<span id=\"plant_"+value.plantCode+"\" style=\"display:none\">";
+					if( count > 0 ) {
+						html += " , ";
+					}
+					html += value.plantName
+					html += "("+value.plantCode+")";
+					html += "</span>";					
+					count++;
+				});
+				$("#create_plant_list").html(html);
+				$("#li_create_plant").show();
+			},
+			error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function addFilePopup(seq, popup) {
+		$("#seq").val(seq);
+		$("#mode").val('I');
+		openDialog(popup);
+	}
+	
+	function updateFilePopup(seq, fmNo, popup) {
+		$("#seq").val(seq);
+		$("#fmNo").val(fmNo);
+		$("#mode").val('U');
+		openDialog(popup);
+	}
+	
+	function insertFile() {
+		if(confirm("업로드 하시겠습니까?")){
+			if( !chkNull($("#file1").val()) ) {
+				 alert("품목제조보고서 파일을 선택하세요.");
+				 return;
+			} else {
+				var formData = new FormData();
+				formData.append("no_seq",$("#no_seq").val());
+				formData.append("seq",$("#no_seq").val());
+				formData.append("type",'manufacturingReport');
+				formData.append("mode",$("#mode").val());
+				formData.append("fmNo",$("#fmNo").val());
+				formData.append("prevStatus",'${manufacturingNo.prevStatus}');				
+				//첫번째 파일태그
+				formData.append("file",$("input[name=file]")[0].files[0]);
+				//두번째 파일태그
+				formData.append("file",$("input[name=file]")[1].files[0]);
+				var URL = "../manufacturingNo/insertFileAjax";
+				$('#lab_loading').show();
+				$.ajax({
+					type:"POST",
+					url:URL,
+					traditional : true,
+					data:formData,
+					processData: false,
+					contentType: false,
+					success:function(result) {
+						if( result.status == 'success') {
+							alert("품목제조 보고서가 업로드 되었습니다.");
+							window.location.href="../manufacturingNo/dbView?seq="+$("#no_seq").val();
+						} else {
+							alert(result.msg+"오류가 발생하였습니다.\n다시 시도하여 주세요.");
+						}
+					},
+					error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});
+			}
+		}
+	}
+	
+	function insertFile2() {
+		if(confirm("업로드 하시겠습니까?")){
+			if( !chkNull($("#file2").val()) ) {
+				 alert("소비기한설정사유서 파일을 선택하세요.");
+				 return;
+			} else {
+				var formData = new FormData();
+				formData.append("no_seq",$("#no_seq").val());
+				formData.append("seq",$("#no_seq").val());
+				formData.append("prevStatus",'${manufacturingNo.prevStatus}');
+				formData.append("mode",$("#mode").val());
+				formData.append("fmNo",$("#fmNo").val());
+				formData.append("type",'sellDateReport');
+				//첫번째 파일태그
+				formData.append("file",$("input[name=file]")[0].files[0]);
+				//두번째 파일태그
+				formData.append("file",$("input[name=file]")[1].files[0]);
+				var URL = "../manufacturingNo/insertFileAjax";
+				$('#lab_loading').show();
+				$.ajax({
+					type:"POST",
+					url:URL,
+					traditional : true,
+					data:formData,
+					processData: false,
+					contentType: false,
+					success:function(result) {
+						if( result.status == 'success') {
+							alert("소비기한설정사유서가 업로드 되었습니다.");
+							window.location.href="../manufacturingNo/dbView?seq="+$("#no_seq").val();
+						} else {
+							alert(result.msg+"오류가 발생하였습니다.\n다시 시도하여 주세요.");
+						}
+					},
+					error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});
+			}
+		}
+	}
+	
+	function deleteFile(fmNo){
+		if('파일을 삭제하시겠습니까?'){
+			$('#lab_loading').show();
+			$.ajax({
+				url: '/file/deleteFileAjax',
+				type: 'post',
+				data: { fmNo: fmNo },
+				success: function(data){
+					if(data == 'S'){
+						alert('정상적으로 삭제되었습니다')
+						window.location.href="../manufacturingNo/dbView?seq="+$("#no_seq").val();
+					} else if(data == 'E'){
+						alert('파일 삭제 오류(1)');
+						$('#lab_loading').hide();
+					} else {
+						alert('존재하지 않는 파일입니다');
+						$('#lab_loading').hide();
+					}
+				},
+				error: function(a,b,c){
+					//console.log(a,b,c)
+					alert('파일 삭제 오류(2)');
+					$('#lab_loading').hide();
+				}
+			})
+		}
+	}
+	
+	function goList() {
+		window.location.href="../manufacturingNo/dbList";
+	}
+	
+	function goCancel(id) {
+		goClear();
+		closeDialog(id);
+	}
+	
+	function goClear() {
+		$("#upfile1").html("");
+		$("#file1").val("");
+		$("#upfile2").html("");
+		$("#file2").val("");
+	}
+	
+	function readProductDevDoc(docNo, docVersion){
+		var form = document.createElement('form');
+		//$(form).hide();
+		form.style.display = 'none';
+		$('body').append(form);
+		form.action = '/dev/productDevDocDetail';
+		form.target = '_blank';
+		form.method = 'post';
+		
+		appendInput(form, 'docNo', docNo);
+		appendInput(form, 'docVersion', docVersion);
+		//appendInput(form, 'regUserId', regUserId);
+		
+		$(form).submit();
+	}
+	
+	//품보 수정
+	function modifyMNo(){
+		openDialog('modify')
+	}
+	
+	function loadCompany(selectBoxId) {
+		var URL = "../common/companyListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				$("#"+selectBoxId).removeOption(/./);
+				$("#"+selectBoxId).addOption("", "전체", false);
+				$("#label_"+selectBoxId).html("전체");
+				$.each(list, function( index, value ){ //배열-> index, value
+					$("#"+selectBoxId).addOption(value.companyCode, value.companyName, false);
+				});
+			},
+			error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function companyChange(companySelectBoxId, selectBoxId) {
+		var URL = "../common/plantListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"companyCode" : $("#"+companySelectBoxId).selectedValues()[0]
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;
+				$("#"+selectBoxId).removeOption(/./);
+				$("#"+selectBoxId).addOption("", "전체", false);
+				$("#label_"+selectBoxId).html("전체");
+				$.each(list, function( index, value ){ //배열-> index, value
+					$("#"+selectBoxId).addOption(value.plantCode, value.plantName, false);
+				});
+				$('#'+selectBoxId).parent().show();
+			},
+			error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function plantChange(licensingNo){
+		var URL = "../manufacturingNo/licensingNoListAjax";
+		if( licensingNo == 'searchLicensingNo' ) {
+			if( $("#searchCompany").selectedValues()[0] != '' && $("#searchPlant").selectedValues()[0] != '') {	
+				$.ajax({
+					type:"POST",
+					url:URL,
+					data:{
+						"companyCode" : $("#companyCode").selectedValues()[0],
+						"plantCode" : $("#plant").selectedValues()[0]
+					},
+					dataType:"json",
+					async:false,
+					success:function(data) {
+						var list = data;
+						$("#licensingNo").removeOption(/./);
+						$("#licensingNo").addOption("", "전체", false);
+						//$("#label_searchLicensingNo").html("전체");
+						$.each(list, function( index, value ){ //배열-> index, value
+							var licensingNoTxt = "";
+							if( nvl(value.plantName,'') == '' ) {
+								licensingNoTxt = value.licensingNo;
+							} else {
+								licensingNoTxt = value.licensingNo+"("+value.plantName+")";
+							}
+							$("#licensingNo").addOption(value.licensingNo, licensingNoTxt, false);
+						});
+					},
+					error:function(request, status, errorThrown){
+							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});	
+			}
+		} else {
+			if( $("#companyCode").selectedValues()[0] != '' && $("#plant").selectedValues()[0] != '') {	
+				$.ajax({
+					type:"POST",
+					url:URL,
+					data:{
+						"companyCode" : $("#companyCode").selectedValues()[0],
+						"plantCode" : $("#plant").selectedValues()[0]
+					},
+					dataType:"json",
+					async:false,
+					success:function(data) {
+						var list = data;
+						$("#licensingNo").removeOption(/./);
+						$("#licensingNo").addOption("", "전체", false);
+						//$("#label_licensingNo").html("전체");
+						$.each(list, function( index, value ){ //배열-> index, value
+							var licensingNoTxt = "";
+							if( nvl(value.plantName,'') == '' ) {
+								licensingNoTxt = value.licensingNo;
+							} else {
+								licensingNoTxt = value.licensingNo+"("+value.plantName+")";
+							}
+							$("#licensingNo").addOption(value.licensingNo, licensingNoTxt, false);
+						});
+					},
+					error:function(request, status, errorThrown){
+							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});	
+			}
+		}
+	}
+	
+	function referralCheck() {
+		if( $("input:checkbox[name=referral_modify]").is(":checked") == false ) {
+			$("#createPlant").is("checked", false);
+			$("#li_create_plant_modify").hide();
+			//$("#li_create_plant_modify").html("");
+		} else {
+			if($("#li_create_plant_modify").is(":visible") == false ) {
+				loadPlant();	
+			}
+		}
+	}
+	
+	function showPackageInput() {
+		var count = 0;
+		$('#packageUnit :selected').each(function(i, sel){ 
+		    if( $(sel).val() == '8' ) {
+		    	count++;
+		    }
+		});
+		if( count > 0 ) {
+			$("#packageEtc").val("");
+			$("#packageEtc").show();
+		} else {
+			$("#packageEtc").val("");
+			$("#packageEtc").hide();
+		}
+	}
+	
+	function loadPackage(groupCode) {
+		var URL = "../common/codeListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"groupCode":groupCode
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				var list = data.RESULT;			
+				$("#packageUnit").removeOption(/./);
+				$.each(list, function( index, value ){ //배열-> index, value
+					$("#packageUnit").addOption(value.itemCode, value.itemName, false);
+				});
+			},
+			error:function(request, status, errorThrown){
+				$("#packageUnit").removeOption(/./);
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	
+	function updateManufacturingNoData(){
+		if(confirm('품목제조보고서(품보번호:'+'${manufacturingNo.licensingNo }'+'-'+'${ manufacturingNo.manufacturingNo }'+')를 수정하시겠습니까?')){
+			if( !chkNull($('#manufacturingName').val()) ){
+				alert("품목명을 입력해주세요.");
+				$('#manufacturingName').focus();
+				$('#manufacturingName_temp').val($('#manufacturingName').val());
+				$('#isValid').val("N");
+				return;
+			} else if( $("#isValid").val() == 'N' ) {
+				alert("품목명을 확인 해주세요.");
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#manufacturingName").val() != $("#manufacturingName_temp").val() ) {
+				alert("품목명을 확인 해주세요.");
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#productType1").selectedValues()[0]) ) {
+				alert("식품유형을 선택해주세요.");
+				$("#productType1").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#productType2").selectedValues()[0]) ) {
+				alert("식품유형을 선택해주세요.");
+				$("#productType2").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#productType3").is(":visible") == true && !chkNull($("#productType3").selectedValues()[0])){
+				alert("식품유형을 선택해주세요.");
+				$("#productType3").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#keepCondition").selectedValues()[0]) ) {
+				alert("보관조건을 선택해주세요.");
+				$("#keepCondition").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if($("#keepCondition").val() == '4' & !chkNull($("#keepConditionText").val())){
+				alert("보관조건을 입력해주세요.");
+				$("#keepConditionText").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#sellDate1").selectedValues()[0]) ) {
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate1").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#sellDate2").val()) ) {
+				alert("소비기한을 입력해주세요.");
+				$("#sellDate2").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( !chkNull($("#sellDate3").selectedValues()[0]) ) {
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate3").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#sellDate4").selectedValues()[0].replaceAll(" ","").length > 0 && !chkNull($("#sellDate5").val())){
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate5").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#sellDate4").selectedValues()[0].replaceAll(" ","").length > 0 && !chkNull($("#sellDate6").selectedValues()[0])){
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate6").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#sellDate4").selectedValues()[0].replaceAll(" ","").length == 0 && chkNull($("#sellDate5").val())){
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate4").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#sellDate4").selectedValues()[0].replaceAll(" ","").length == 0 && chkNull($("#sellDate6").selectedValues()[0])){
+				alert("소비기한을 선택해주세요.");
+				$("#sellDate4").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#referral_modify").is(":checked") && $("input:checkbox[name=createPlant]:checked").length == 0 ){
+				alert("위탁 공장을 선택해주세요.")
+				$("#update").prop('disabled', false);
+				return;			
+			} else if( $("input:checkbox[name=oem]").is(":checked") == true && !chkNull($("#oemText").val())) {
+				alert("OEM 내용을 입력하세요.");
+				$("#oemText").focus();
+				return;
+			} else if( $('#packageUnit').selectedValues().length == 0 ) {
+				alert("포장재질을 선택해주세요.");
+				$("#update").prop('disabled', false);
+				return;
+			} else if( $("#packageUnit option[value='8']").prop('selected') && !chkNull($("#packageEtc").val()) ){
+				alert("포장재질을 입력해주세요.");
+				$("#packageEtc").focus();
+				$("#update").prop('disabled', false);
+				return;
+			} else {			
+				var licensingNo 	= ${manufacturingNo.licensingNo};
+				var manufacturingNo = ${manufacturingNo.manufacturingNo};
+				var referral 		= '';
+				var oem 			= '';
+				var productType3 	= '';
+				
+				if($("#referral_modify").is(":checked")){
+					referral = 'Y';
+				}else {
+					referral = 'N';
+				}
+
+				if($("#oem").is(":checked")){
+					oem = 'Y';
+				}else{
+					oem = 'N';
+				}
+				
+				var plantArray = new Array();
+				$('input:checkbox[name="createPlant"]:checked').each(function(i, sel) {
+					plantArray.push($(sel).val());
+				});
+				
+				var packageArray = new Array();
+				$('#packageUnit :selected').each(function(i, sel){ 
+					packageArray.push($(sel).val());
+				});
+				
+				var productType1, productType2, productType2, sterilization, keepCondition, keepConditionText, sellDate1, sellDate2, sellDate3, sellDate4, sellDate5, sellDate6;
+				var referral, oem, oemText, createPlant, packageUnit, packageEtc, comment;
+				
+				productType1	= nullCheck(productType1,	$("#productType1").selectedValues()[0]);
+				productType2	= nullCheck(productType2,	$("#productType2").selectedValues()[0]);
+				productType3	= nullCheck(productType3,	$("#productType3").selectedValues()[0]);
+				keepCondition	= nullCheck(keepCondition, 	$("#keepCondition").selectedValues()[0]);
+				if(keepCondition == '4'){
+					keepConditionText = nullCheck(keepConditionText, $("#keepConditionText").val());
+				}else{
+					keepConditionText = "";
+				}
+				sterilization	= nullCheck(sterilization,	$("#sterilization").selectedValues()[0]);
+				sellDate1		= nullCheck(sellDate1,		$("#sellDate1").selectedValues()[0]);
+				sellDate2		= nullCheck(sellDate2,		$("#sellDate2").val());
+				sellDate3		= nullCheck(sellDate3,		$("#sellDate3").selectedValues()[0]);
+				if($("#sellDate4").is(":visible") && $("#sellDate4").selectedValues()[0].length > 0){
+					sellDate4		= nullCheck(sellDate4,		$("#sellDate4").selectedValues()[0]);
+					sellDate5		= nullCheck(sellDate5,		$("#sellDate5").val());
+					sellDate6		= nullCheck(sellDate6,		$("#sellDate6").selectedValues()[0]);
+				}
+				referral		= nullCheck(referral,		referral);
+				oem				= nullCheck(oem,			oem);
+				oemText			= nullCheck(oemText,		$("#oemText").val());
+				plantArray		= nullCheck(plantArray,		plantArray);
+				packageArray	= nullCheck(packageArray,	packageArray);
+				packageEtc		= nullCheck(packageEtc,		$('#packageEtc').val());
+				comment			= nullCheck(comment,		$("#comment").val());
+				
+				var jsonData = {
+					"seq"				: '${manufacturingNo.seq }',
+					"dNoSeq"			: '${manufacturingNo.dNoSeq}',
+					"companyCode"		: '${manufacturingNo.companyCode }',
+					"plant"				: '${manufacturingNo.plantCode }',
+					"licensingNo"		: '${manufacturingNo.licensingNo }',
+					"manufacturingNo"	: '${manufacturingNo.manufacturingNo }',
+					"manufacturingName" : $("#manufacturingName").val(),
+					"productType1"		: productType1,
+					"productType2"		: productType2,
+					"productType3"		: productType3,
+					"sterilization"		: sterilization,
+					"keepCondition"		: keepCondition,
+					"keepConditionText"	: keepConditionText,
+					"sellDate1"			: sellDate1,
+					"sellDate2"			: sellDate2,
+					"sellDate3"			: sellDate3,
+					"sellDate4"			: sellDate4,
+					"sellDate5"			: sellDate5,
+					"sellDate6"			: sellDate6,
+					"referral"			: referral,
+					"oem"				: oem,
+					"oemText"			: oemText,
+					"createPlant"		: plantArray,
+					"packageUnit"		: packageArray,
+					"packageEtc"		: packageEtc,
+					"comment"			: comment
+				};
+				$('#lab_loading').show();
+				$.ajax({
+					url 		: '/manufacturingNo/updateManufacturingNo',
+					type 		: 'POST',
+					data		: jsonData,
+					traditional : true,
+					dataType	: "json",
+					success 	: function(result){
+						if(result.status == 'success'){
+							alert("품목제조보고서(품보번호:"+'${manufacturingNo.licensingNo }'+'-'+'${ manufacturingNo.manufacturingNo }'+")가 수정되었습니다.");
+							window.location.href = "../manufacturingNo/dbView?seq="+${manufacturingNo.seq };
+						} else if( result.status == 'fail') {
+							alert(result.msg);
+						} else {
+							alert(result.msg+"오류가 발생하였습니다.\n다시 시도하여 주세요.");
+						}
+					},
+					error		: function(request, status, error){
+						alert("code : "+request.status + "\n"+"message : " +request.responseText + "\n"+"error : "+error);
+					}
+				});
+			}
+		}
+	}
+	
+	function nullCheck(varName, varValue){
+		varName = varValue;
+		(varName.length > 0) ? varName = varValue : '';
+		return varName;
+	}
+	
+	function checkName() {			
+		var URL = "../manufacturingNo/checkName";
+ 		$.ajax({
+			type: 'post',
+			url: URL, 
+			data:{
+				"companyCode"		: '${manufacturingNo.companyName}',
+				"plantCode"			: '${manufacturingNo.plantName }',
+				"licensingNo"		: '${manufacturingNo.licensingNo}',
+				"manufacturingName"	: $("#manufacturingName").val()
+			},
+			dataType: 'json',
+			async : true,
+			success: function (data) {
+				if(data.result == 'F'){
+					$('#isValid').val("N");
+					$('#manufacturingName_temp').val($('#manufacturingName').val());				
+					return;
+				} else {
+					if(data.checkName > 0){
+						$('#checkName').html('<font color="red" font-size="10px">이미 사용중인 품목명 입니다.</font>');
+						$('#isValid').val("N");
+						$('#manufacturingName_temp').val("");
+					} else {
+						$('#checkName').html('<font color="blue" font-size="10px">사용가능한 품목명입니다.</font>');
+						$('#isValid').val("Y");
+						$('#manufacturingName_temp').val($('#manufacturingName').val());
+						isValid = true;
+					}
+				}
+			},error: function(XMLHttpRequest, textStatus, errorThrown){
+				$('#isValid').val("N");
+				$('#manufacturingName_temp').val("");
+			}
+		});
+	}
+	
+</script>
+<style>
+.selectbox_popup { border: 1px solid #cf451b; border-radius:5px;/* 테두리 설정 */ z-index: 1; background-color:#fff;font-family:'맑은고딕',Malgun Gothic; color:#000; font-size:13px; padding: 2px 3px  5px 3px;}
+</style>
+<div class="wrap_in" id="fixNextTag">
+	<input type="hidden" name="pageNo" id="pageNo" value="${pageNo}">
+	<span class="path">품목제조 보고서&nbsp;&nbsp;
+		<img src="/resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;
+		<a href="#">${strUtil:getSystemName()}</a>
+	</span>
+	<section class="type01">
+	<!-- 상세 페이지  start-->
+		<h2 style="position:relative">
+			<span class="title_s">Items Manufacturing Report</span>
+			<span class="title">품목제조보고서</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li><button class="btn_circle_nomal" onClick="goList();">&nbsp;</button></li>
+				</ul>
+			</div>
+		</h2>
+		<div class="group01" >
+			<div class="title"><!--span class="txt">연구개발시스템 공지사항</span--></div>
+			<div class="title5"><span class="txt">01.기준정보</span></div>
+			<div class="list_detail2">
+				<ul>
+					<li class="pt10">
+						<dt>공장</dt>
+						<dd>
+							${manufacturingNo.companyName} - ${manufacturingNo.plantName}
+						</dd>
+						<dt>소비기한</dt>
+						<dd>
+							${manufacturingNo.sellDate1Text}&nbsp;${manufacturingNo.sellDate2}${manufacturingNo.sellDate3Text}&nbsp;까지
+							<c:if test="${manufacturingNo.sellDate4Text != null && manufacturingNo.sellDate4Text != ''}">
+							<br/>
+							${manufacturingNo.sellDate4Text}&nbsp;${manufacturingNo.sellDate5}${manufacturingNo.sellDate6Text}&nbsp;까지
+							</c:if>
+							
+						</dd>
+					</li>
+					<li>
+						<dt>공장 인허가번호</dt>
+						<dd>
+							${manufacturingNo.licensingNo}
+						</dd>
+						<dt>보관조건</dt>
+						<dd>
+							${manufacturingNo.keepConditionName}&nbsp;${manufacturingNo.keepConditionText} 
+						</dd>
+					</li>
+					<li>
+						<dt>품목번호</dt>
+						<dd>
+							${manufacturingNo.manufacturingNo}
+						</dd>
+						<dt>살균여부</dt>
+						<dd>
+							${manufacturingNo.sterilizationName}
+						</dd>
+					</li>
+					<li>
+						<dt>품목명</dt>
+						<dd>
+							${manufacturingNo.manufacturingName}
+						</dd>
+						<dt>포장재질</dt>
+						<dd>
+							${manufacturingNo.packageUnitNames}
+						</dd>
+					</li>	
+					<li>
+						<dt>문서상태</dt>
+						<dd>
+							${manufacturingNo.statusName}
+						</dd>
+						<dt>위탁공장</dt>
+						<dd>
+							<c:if test="${fn:length(plantList) > 0}">
+								<c:forEach items="${plantList}" var="item">
+								${item.plantName}(${item.plantCode})&nbsp;/&nbsp; 
+								</c:forEach>
+							</c:if>
+						</dd>
+					</li>
+					<li>
+						<dt>식품유형</dt>
+						<dd>
+							${manufacturingNo.productType1Name} / ${manufacturingNo.productType2Name} / ${manufacturingNo.productType3Name}
+						</dd>
+						<dt>출시일</dt>
+						<dd>
+							${launchDate}
+						</dd>
+					</li>
+					<li>
+						<dt>생산일</dt>
+						<dd>
+							
+						</dd>
+						<dt>D-Day</dt>
+						<dd>
+							
+						</dd>
+					</li>				
+				</ul>			
+			</div>
+			
+			<div class="title5"><span class="txt">02.제조공정서</span></div>
+			<div class="main_tbl">
+				<table class="tbl01">
+					<colgroup>
+						<col width="8%">
+						<col width="5%">
+						<col width="10%">						
+						<col />
+						<col width="15%">
+						<col width="15%">
+						<col width="10%">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>문서번호</th>
+							<th>버전</th>
+							<th>제품코드</th>
+							<th>제품명</th>
+							<th>담당자</th>
+							<th>BOM 입력시점</th>
+							<th>포장지 투입시점</th>							
+						</tr>
+					</thead>
+					<tbody id="list">
+					<c:if test="${fn:length(manufacturingDocList)==0}">
+						<tr>
+							<td colspan="7">데이터가 없습니다.</td>
+						</tr>
+					</c:if>
+					<c:if test="${fn:length(manufacturingDocList)>0}">
+						<c:forEach items="${manufacturingDocList}" var="item">
+							<tr>
+								<td>${item.dNo}</td>
+								<td>${item.docVersion}</td>
+								<td>${item.productCode}</td>
+								<td><div class="ellipsis_txt tgnl"><a href="#none" onclick="readProductDevDoc(${item.docNo},${item.docVersion})">${item.productName}</a></div></td>
+								<td>${item.userName}</td>
+								<td>${item.regDate}</td>
+								<td>&nbsp;</td>	
+							</tr>	
+						</c:forEach>
+					</c:if>
+					</tbody>
+				</table>	
+			</div>
+			
+			
+			<div class="title5"><span class="txt">03.상세정보</span></div>
+			<div class="main_tbl">
+				<table class="tbl01">
+					<colgroup>
+						<col width="35%">
+						<col width="35%">
+						<col width="10%">
+						<col width="10%">	
+						<col width="10%">				
+					</colgroup>
+					<thead>
+						<tr>
+							<th>품목제조보고서(업로드)</th>
+							<th>소비기한설정사유서(업로드)</th>
+							<th>날짜</th>
+							<th>신규/변경</th>	
+							<th>&nbsp;</th>						
+						</tr>
+					</thead>
+					<tbody id="list">
+					<c:if test="${fn:length(manufacturingNoDataList)==0}">
+						<tr>
+							<td colspan="5">데이터가 없습니다.</td>
+						</tr>
+					</c:if>
+					<c:if test="${fn:length(manufacturingNoDataList)>0}">
+						<c:forEach items="${manufacturingNoDataList}" var="item" varStatus="status">
+							<tr>
+								<td>
+									<c:choose>
+										<c:when test="${item.manufacturingReport != null && item.manufacturingReport != ''}">
+											<% if( (isAdmin != null && "Y".equals(isAdmin)) || "dept1".equals(userDept) || "dept2".equals(userDept)|| "dept3".equals(userDept) || "dept4".equals(userDept) || "dept5".equals(userDept) || "dept6".equals(userDept) || "dept10".equals(userDept) || "dept11".equals(userDept) ) { %>
+											<a href="#" onClick="fileDownload('${item.manufacturingReport}', '${item.seq}', 'manufacturingReport')"><img src="/resources/images/icon_file01.png" style="vertical-align:middle;"/>&nbsp;${item.manufacturingReportFileName}</a>
+											<button class="btn_doc" onclick="updateFilePopup('${item.seq}','${item.manufacturingReport}','open2')"><img src="/resources/images/icon_doc03.png">수정</button>
+											<% } else { %> 
+											<img src="/resources/images/icon_file01.png" style="vertical-align:middle;"/>${item.manufacturingReportFileName}
+											<% } %>
+										</c:when>
+										<c:otherwise>
+											<c:if test="${ manufacturingNo.status.equals('RE') }">
+												<button class="btn_doc" onClick="addFilePopup('${item.seq}','open2')"><img src="/resources/images/icon_s_file.png">품목제조보고서 파일등록</button>
+											</c:if>
+										</c:otherwise>
+									</c:choose>	
+								</td>
+								<td>
+									<c:choose>
+										<c:when test="${item.sellDateReport != null && item.sellDateReport != ''}">
+											<% if( (isAdmin != null && "Y".equals(isAdmin)) || "dept1".equals(userDept) || "dept2".equals(userDept)|| "dept3".equals(userDept) || "dept4".equals(userDept) || "dept5".equals(userDept) || "dept6".equals(userDept) || "dept10".equals(userDept) || "dept11".equals(userDept) ) { %>
+												<a href="#" onClick="fileDownload('${item.sellDateReport}', '${item.seq}', 'sellDateReport')"><img src="/resources/images/icon_file01.png" style="vertical-align:middle;"/>&nbsp;${item.sellDateReportFileName}</a>
+												<button class="btn_doc" onclick="updateFilePopup('${item.seq}','${item.sellDateReport}','open3')"><img src="/resources/images/icon_doc03.png">수정</button>
+											<% } else { %>
+											<img src="/resources/images/icon_file01.png" style="vertical-align:middle;"/>${item.sellDateReportFileName}	
+											<% } %>
+										</c:when>
+										<c:otherwise>
+											<c:if test="${ manufacturingNo.status.equals('RE') || manufacturingNo.status.equals('C')}">
+												<button class="btn_doc" onClick="addFilePopup('${item.seq}','open3')"><img src="/resources/images/icon_s_file.png">소비기한설정사유서 파일등록</button>
+											</c:if>
+										</c:otherwise>
+									</c:choose>	
+								</td>
+								<td>${item.regDate}</td>
+								<td>${item.regTypeName}</td>
+								<td>
+									<ul class="list_ul">
+										<li><button class="btn_doc" onClick="detailView('${item.seq}','open')"><img src="/resources/images/icon_doc01.png"> 상세보기</button></li>
+										<!-- 
+										<c:if test="${manufacturingReport == null}">
+										<% if( (userGrade != null && "3".equals(userGrade)) || (isAdmin != null && "Y".equals(isAdmin)) ) { %>
+											<c:if test="${item.manufacturingReport == null || item.manufacturingReport == ''}">
+											<li><button class="btn_doc" onClick="addFilePopup('${item.seq}','open2')"><img src="/resources/images/icon_s_file.png"> 파일등록</button></li>
+											</c:if>											
+										<% } %>
+										</c:if>
+										 -->									
+									</ul>
+								</td>
+							</tr>
+						</c:forEach>
+					</c:if>
+					</tbody>
+				</table>	
+			</div>
+				
+			<div class="btn_box_con5">
+				<button class="btn_admin_gray" onClick="goList()"  style="width:120px;">목록</button>
+			</div>
+			<div class="btn_box_con4"> 
+				<c:if test="${(manufacturingNo.status == 'N' && fn:contains(manufacturingNo.devDocRegUserId, manufacturingNo.loginUserId)) || isUserAdmin == 'Y'}">
+					<button type="button" class="btn_admin_navi" style="width: 120px;" onclick="modifyMNo()">수정</button>
+				</c:if>
+			<% if( (userGrade != null && "3".equals(userGrade)) || (isAdmin != null && "Y".equals(isAdmin)) ) { %>
+				<!--  
+				<button class="btn_admin_navi" onClick="goUpdateForm('${manufacturingNoData.seq}')">수정</button> 
+				<button class="btn_admin_gray"onClick="goDeleteForm('${manufacturingNoData.seq}')">삭제</button>
+				-->
+			<% } %>	
+			</div>	
+			<hr class="con_mode"/><!-- 신규 추가 꼭 데려갈것 !-->	
+		</div>
+	</section>	
+</div>
+
+<!-- 레이어 start-->
+<div class="white_content" id="open">
+	<div class="modal" style="	width: 700px;margin-left:-350px;height: 670px;margin-top:-300px;">
+		<h5 style="position:relative">
+			<span class="title">품목제조보고서 상세</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="goCancel('open')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li class="pt10">
+					<dt>공장</dt>
+					<dd>
+						${manufacturingNo.companyName} - ${manufacturingNo.plantName}						
+					</dd>
+				</li>
+				<li>
+					<dt>인허가번호</dt>
+					<dd>
+						${manufacturingNo.licensingNo}
+					</dd>
+				</li>
+				<li>
+					<dt>품목번호</dt>
+					<dd>
+						${manufacturingNo.manufacturingNo}
+					</dd>
+				</li>
+				<li>
+					<dt>품목명</dt>
+					<dd>
+						${manufacturingNo.manufacturingName}						
+					</dd>
+				</li>
+				<li>
+					<dt>식품유형</dt>
+					<dd id="dd_productType">						
+					</dd>
+				</li>
+				<li>
+					<dt>살균여부</dt>
+					<dd id="dd_sterilization">						
+					</dd>
+				</li>
+				<li>
+					<dt>보관조건</dt>
+					<dd id="dd_keepCondition">						
+					</dd>
+				</li>
+				<li>
+					<dt>소비기한</dt>
+					<dd id="dd_sellDate">						
+					</dd>
+				</li>
+				<li>
+					<dt>위탁/OEM</dt>
+					<dd id="dd_oem">						
+					</dd>
+				</li>
+				<li id="li_create_plant" style="display:none">
+					<dt>위탁 공장</dt>
+					<dd id="create_plant_list"> 
+					</dd>
+				</li>
+				<li id="li_oemText" style="display:none">
+					<dt>OEM 내용</dt>
+					<dd id="dd_oemText">
+					</dd>
+				</li>
+				<!--li>
+					<dt>품복제조보고서</dt>
+					<dd id="dd_manufacturingReportFile">
+					</dd>
+				</li>
+				<li>
+					<dt>소비기한설정<br/>사유서</dt>
+					<dd id="dd_sellDateReportFile">
+					</dd>
+				</li-->
+				<li>
+					<dt>비고</dt>
+					<dd id="dd_comment">						
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="btn_box_con">
+			<input type="button" value="닫기" class="btn_admin_gray" onclick="goCancel('open')">
+		</div>
+	</div>
+</div>
+<!-- 레이어 close-->
+
+<!-- 수정 레이어 start-->
+<div class="white_content" id="modify">
+	<div class="modal" style="	width: 700px;margin-left:-350px;height: 670px;margin-top:-300px;">
+		<h5 style="position:relative">
+			<span class="title">품목제조보고서 수정</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="goCancel('modify')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li class="pt10">
+					<dt>공장 - 품목번호</dt>
+					<dd>
+					${manufacturingNo.companyName} / ${manufacturingNo.plantName } / ${manufacturingNo.licensingNo} - ${manufacturingNo.manufacturingNo}
+					</dd>
+				</li>
+				<li>
+					<dt>품목명</dt>
+					<dd>
+						<input id="manufacturingName" name="manufacturingName" type="text" value='${manufacturingNo.manufacturingName}' class="req" style="width:250px;float:left;"  placeholder="입력후 확인버튼을 눌러주세요."  />
+						<button type="button" class="btn_small01 ml5" onClick="checkName()">확인</button>	
+							<input type="hidden" name="manufacturingName_temp" id="manufacturingName_temp">
+						<input type="hidden" name="isValid" id="isValid" value="N">
+						<span id="checkName"></span>
+					</dd>
+				</li>
+				<li>
+					<dt>식품유형</dt>
+					<dd id="dd_productType_modify">
+						<select id="productType1" name="productType1" onChange="loadProductType('2','productType2')" class="selectbox_popup" style="width: 160px;">
+						</select>
+						<span id="li_productType2" style="width:130px; display: none">
+						<select id="productType2" name="productType2" onChange="loadProductType('3','productType3')" class="selectbox_popup" style="width: 130px;">
+						</select>
+						</span>	
+						<span id="li_productType3" style="width:130px; display: none">
+						<select id="productType3" name="productType3" class="selectbox_popup" style="width: 130px;">
+						</select>
+						</span>	
+					</dd>
+				</li>
+				<li>
+					<dt>살균여부</dt>
+					<dd id="dd_sterilization_modify">	
+						<select id="sterilization" name="sterilization" class="selectbox_popup" style="width: 160px;"></select>
+					</dd>
+				</li>
+				<li>
+					<dt>보관조건</dt>
+					<dd id="dd_keepCondition_modify">		
+						<select id="keepCondition" name="keepCondition" class="selectbox_popup" style="width: 160px;" onchange="changeKeepCondition()"></select>
+						<input type="text" class="req" style="width: 200px; display: none;" name="keepConditionText" id="keepConditionText">				
+					</dd>
+				</li>
+				<li>
+					<dt>소비기한</dt>
+					<dd id="dd_sellDate_modify">						
+					</dd>
+				</li>
+				<li>
+					<dt>위탁/OEM</dt>
+					<dd id="dd_oem_modify">
+						<input type="checkbox" id="referral_modify" name="referral_modify" value="Y" onClick="referralCheck()"><label for="referral_modify"><span></span>위탁</label>
+						<input type="checkbox" id="oem" name="oem" value="Y" onClick="oemCheck()"><label for="oem"><span></span>OEM</label>
+					</dd>
+				</li>
+				<li id="li_create_plant_modify" style="display:none">
+					<dt>위탁 공장</dt>
+					<dd id="create_plant_list_modify"> 
+					</dd>
+				</li>
+				<li id="li_oemText_modify" style="display:none">
+					<dt>OEM 내용</dt>
+					<dd id="dd_oemText_modify">
+							<textarea style="width:80%; height:40px" name="oemText" id="oemText"></textarea>
+					</dd>
+				</li>
+				<!--li>
+					<dt>품복제조보고서</dt>
+					<dd id="dd_manufacturingReportFile">
+					</dd>
+				</li>
+				<li>
+					<dt>소비기한설정<br/>사유서</dt>
+					<dd id="dd_sellDateReportFile">
+					</dd>
+				</li-->
+				
+				<li>
+					<dt>포장재질</dt>
+					<dd>
+						<select id="packageUnit" name="packageUnit" style="width:300px;" class="selectbox_popup" multiple size="3" onChange="showPackageInput()"> 
+						</select>
+						<input type="text" class="req ml5" style="width:300px;display:none" name="packageEtc" id="packageEtc">
+						<br>다중선택 : Ctrl or Shift + 클릭
+					</dd>
+				</li>
+				<li>
+					<dt>비고</dt>
+					<dd id="dd_comment_modify">
+						<textarea style="width:100%; height:40px" name="comment" id="comment"></textarea>				
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="btn_box_con">
+            <button type="button" class="btn_admin_red" id="update" name="update" onclick="updateManufacturingNoData()">품목제조보고서 수정</button>
+			<input type="button" value="닫기" class="btn_admin_gray" onclick="goCancel('modify')">
+		</div>
+	</div>
+</div>
+<!-- 수정 레이어 close-->
+
+<input type="hidden" name="no_seq" id="no_seq" value="${manufacturingNo.seq}">
+<input type="hidden" name="seq" id="seq" value="">
+<input type="hidden" name="mode" id="mode" value="">
+<input type="hidden" name="fmNo" id="fmNo" value="">
+<!-- 레이어 start-->
+<div class="white_content" id="open2">
+	<div class="modal" style="	width: 600px;margin-left:-350px;height: 250px;margin-top:-250px;">
+		<h5 style="position:relative">
+			<span class="title">품목제조보고서 등록</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="goCancel('open2')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>				
+					<dt>품목제조보고서</dt>
+					<dd>
+						<span id="upfile1"></span>
+						<span class="file_load" id="fileSpan1">
+							<input type="file" name="file" id="file1" onChange="javaScript:addFile('file1')" style="display:none"><label for="file1">첨부파일 등록 <img src="/resources/images/icon_add_file.png"></label>
+						</span>
+						
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="btn_box_con">
+		<% if( (userGrade != null && "3".equals(userGrade)) || (isAdmin != null && "Y".equals(isAdmin)) ) { %>
+			<input type="button" value="등록" class="btn_admin_red" id="addFile" onclick="javascript:insertFile();"> 
+		<% } %>		
+			<input type="button" value="취소" class="btn_admin_gray" onclick="goCancel('open2')">
+		</div>
+	</div>
+</div>
+
+<div class="white_content" id="open3">
+	<div class="modal" style="	width: 700px;margin-left:-350px;height: 250px;margin-top:-250px;">
+		<h5 style="position:relative">
+			<span class="title">소비기한설정사유서 등록</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="goCancel('open3')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>
+					<dt>소비기한설정사유서</dt>
+					<dd>
+						<span id="upfile2"></span>
+						<span class="file_load" id="fileSpan2">
+							<input type="file" name="file" id="file2" onChange="javaScript:addFile('file2')" style="display:none"><label for="file2">첨부파일 등록 <img src="/resources/images/icon_add_file.png"></label>
+						</span>
+					</dd>
+				</li>				
+			</ul>
+		</div>
+		<div class="btn_box_con">
+		<% if( (userGrade != null && "3".equals(userGrade)) || (isAdmin != null && "Y".equals(isAdmin)) ) { %>
+			<input type="button" value="등록" class="btn_admin_red" id="addFile" onclick="javascript:insertFile2();"> 
+		<% } %>		
+			<input type="button" value="취소" class="btn_admin_gray" onclick="goCancel('open3')">
+		</div>
+	</div>
+</div>
+<!-- 레이어 close-->

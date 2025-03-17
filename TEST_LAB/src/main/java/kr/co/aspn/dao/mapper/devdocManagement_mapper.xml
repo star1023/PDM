@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="devDocManagement">
+	<select id="devDocList" parameterType="map" resultType="map">
+	/*devdocManagement.devDocList*/
+	SELECT 
+		ddNo, 
+		t.docNo, 
+		t.docVersion, 
+		productCode, 
+		productName,
+		explanation, 
+		isLatest, 
+		regDate, 
+		regUserName, 
+		modDate, 
+		modUserName, 
+		launchDate, 
+		regUserId, 
+		modUserId, 
+		versionUpMemo,
+		isClose,
+		productCategoryName,
+		docType, 
+		dNo,
+		ifnull(stateCnt1, 0) as stateCnt1,
+		ifnull(stateCnt4, 0) as stateCnt4, 
+		productType1Text, 
+		productType2Text, 
+		productType3Text
+	FROM (
+		(SELECT 
+			ddNo, 
+			docNo, 
+			docVersion, 
+			productCode, 
+			productName,
+			explanation, 
+			isLatest, 
+			DATE_FORMAT(regDate,'%Y-%m-%d') as regDate, 
+ 			getUserName(regUserId) as regUserName, 
+ 			DATE_FORMAT(modDate,'%Y-%m-%d') as modDate, 
+			getUserName(modUserId) as modUserName, 
+			launchDate, 
+			regUserId, 
+			modUserId, 
+			versionUpMemo,
+			isClose,
+			getCodeName('PRODCAT',productCategory)  as productCategoryName, 
+			getCodeName('PRODCAT1', productType1) as productType1Text, 
+			getCodeName('PRODCAT2', productType2) as productType2Text, 
+			getCodeName('PRODCAT3', productType3) as productType3Text
+			FROM devDoc
+			WHERE 1 =1
+			<if test='userId != null and userId != ""'>
+			AND regUserId = #{userId}
+			</if>
+			<if test='searchField != null and searchField != "" and searchValue != null and searchValue != ""'>
+			AND ${searchField} LIKE concat('%',#{searchValue},'%')
+			</if>
+			AND isLatest = '1'
+			AND isHidden != 'Y'
+			) t
+		LEFT OUTER JOIN 
+			(SELECT 		
+				docNo, 
+				docVersion, 
+				max(docType) as docType, 
+				max(dNo) as dNo,
+				sum(case when state = 1 then 1 else 0 end) as stateCnt1,
+				sum(case when state = 4 then 1 else 0 end) as stateCnt4,
+				max(docProdName) as docProdName
+			FROM 			
+				manufacturingProcessDoc
+			GROUP BY docNo, docVersion
+			)m
+		ON				
+		t.docNo = m.docNo AND t.docVersion = m.docVersion
+	) ORDER BY t.docNo, t.docVersion ASC 
+    </select>
+    
+    <select id="menuDocList" parameterType="map" resultType="map">
+	/*devdocManagement.menuDocList*/
+		SELECT 	 pNo
+		      ,productName
+		      ,getPlantName(companyCode, plant) as plantName
+			  ,getCodeName('PRODCAT',productCategory)  as productCategoryName
+		      ,getCompanyName(companyCode) as companyName
+		      ,regUserId
+		      ,getUserName(regUserId) as regUserName
+		FROM		
+			productDesignDoc 
+		WHERE 1 = 1
+			<if test='userId != null and userId != ""'>
+			AND regUserId = #{userId}
+			</if>
+			<if test='searchField != null and searchField != "" and searchValue != null and searchValue != ""'>
+			AND ${searchField} LIKE concat('%',#{searchValue},'%')
+			</if>
+    </select>
+    
+    <update id="userChange" parameterType="map">
+	/*	devdocManagement.userChange 제품개발 문서 담당자 변경 */
+	UPDATE devDoc 
+	SET 
+      regUserId =  #{userId}
+	WHERE	1 = 1
+		AND docNo = #{docNo}
+    </update>
+    
+    <update id="userChangeMenuDoc" parameterType="map">
+	/*	devdocManagement.userChangeMenuDoc 제품설계서 담당자 변경 */
+	UPDATE productDesignDoc 
+	SET 
+      regUserId =  #{userId}
+	WHERE	1 = 1
+		AND pNo = #{pNo}
+    </update>
+    
+    <insert id="insertChangeLog" parameterType="map">
+		/* user.insertChangeLog   */
+		INSERT INTO userChange_log(
+			docNo
+		    ,beforeUserId
+		    ,changeUserId
+		    ,regDate
+		    ,docName
+		)	VALUES (
+			#{docNo}
+			,#{regUserId}
+			,#{userId}
+			,sysdate()
+			,#{docName}
+		)
+	</insert>
+	
+	<select id="manufacturingProcessDocList" parameterType="map" resultType="map">
+		SELECT 
+		dpNo, dNo, mpd.docNo, mpd.docVersion, dd.productCode, 
+		dd.productName, plantCode, plantName, stdAmount, divWeight, 
+		lineCode, lineName, bagAmout, bomRate, numBong, 
+		numBox, totWeight, docProdName, loss, getCodeName('PRODCAT',dd.productCategory), 
+		compWeight, regNum,adminWeight, distPeriDoc, dispWeight, 
+		distPeriSite, prodStandard, ingredient, keepCondition, packUnit,
+		childHarm, note, menuProcess, standard , DATE_FORMAT(mpd.regDate,'%Y-%m-%d') as regDate,  
+		getUserName(mpd.regUserId) as regUserName, DATE_FORMAT(mpd.modDate,'%Y-%m-%d') as modDate, getUserName(mpd.modUserId) as modUserName,state,mpd.regUserId,
+		mpd.modUserId, docType, apprNo, (select count(*) from comment where tbType = 'manufacturingProcessDoc' and tbKey = mpd.dNo) as editCnt
+		, (select count(dSNo) from manufacturingProcessDocSubProd where dNo = mpd.dNo) as subProdCnt
+		, (select sum(convert(replace(excRate, 'NaN', '0'),float)) from manufacturingProcessDocDisp where dNo = mpd.dNo) as sumExcRate
+		, (select sum(convert(replace(incRate, 'NaN', '0'),float)) from manufacturingProcessDocDisp where dNo = mpd.dNo) as sumIncRate
+		, ifnull(mpd.stlal, '') as stlal
+		, DATE_FORMAT(dd.launchDate,'%Y-%m-%d') as launchDate
+	 FROM devDoc dd inner join manufacturingProcessDoc mpd on dd.docNo = mpd.docNo and dd.docVersion = mpd.docVersion 
+		where mpd.docNo = #{docNo}
+		     and mpd.docVersion = #{docVersion}#
+		     and dd.isHidden != 'Y'
+		     order by dpNo desc
+	</select>
+	<update id="launchDateUpdate">
+		UPDATE 	devDoc 
+		SET launchDate='${launchDate}'
+		WHERE docNo =${docNo}
+		AND docVersion =${docVersion}
+	</update>
+</mapper>

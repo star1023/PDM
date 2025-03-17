@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="file">
+	<select id="fileList" resultType="FileVO">
+		SELECT  
+			fmNo
+			,tbKey
+			,tbType
+			,fileName
+			,orgFileName
+			,path
+			,regUserId
+			,regDate
+			,isOld
+		FROM fileManager 
+		WHERE 1 = 1
+			<if test="tbKey != null and tbKey != '' ">
+				AND tbKey = #{tbKey}
+			</if>
+			<if test="tbType != null and tbType != '' ">	
+				AND tbType = #{tbType}
+			</if>
+	</select>
+	
+	<select id="fileList_1" resultType="FileVO">
+		SELECT  
+			fmNo
+			,tbKey
+			,orgFileName
+		FROM fileManager 
+		WHERE 1 = 1
+			<if test="tbKey != null and tbKey != '' ">
+				AND tbKey = #{tbKey}
+			</if>
+			<if test="tbType != null and tbType != '' ">	
+				AND tbType = #{tbType}
+			</if>
+	</select>
+	
+	<select id="imageFileList" resultType="FileVO">
+		SELECT  
+			fmNo
+			,tbKey
+			,tbType
+			,fileName
+			,orgFileName
+			,path
+			,regUserId
+			,regDate
+		FROM imageFileManager 
+		WHERE 1 = 1
+			<if test="tbKey != null and tbKey != '' ">
+				AND tbKey = #{tbKey}
+			</if>
+			<if test="tbType != null and tbType != '' ">	
+				AND tbType = #{tbType}
+			</if>
+	</select>
+	
+	<select id="fileView" resultType="hashmap">
+		SELECT  * FROM fileManager WHERE tbKey = #{nNo} and tbType = #{tbType}
+	</select>
+	
+	<insert id="fileSave">
+		insert into fileManager(tbKey,tbType,fileName,regDate) values(#{tbKey},#{tbType},#{fileName},GETDATE())
+	</insert>
+	
+	<delete id="fileDeleteBytbKeytbType">
+		delete from fileManager WHERE tbKey = #{nNo} and tbType = #{tbType}
+	</delete>
+
+	<delete id="fileManagerFileDelete" parameterType="map">
+		  /* fileManagerFileDelete : 첨부파일 filemanager table에서 삭제*/
+		  delete from fileManager
+		  where fmNo in
+		    <foreach item="item" index="index" collection="fmNo" open="(" separator="," close=")">
+		        #{item}
+		    </foreach>
+		  and tbType = #{tbType}
+	</delete>
+	
+   <select id="fileViewByFmNo"  resultType="hashmap">
+		SELECT * FROM fileManager WHERE fmNo = #{fmNo}
+	</select> 
+	
+	<select id="getOneFileInfo" parameterType="FileVO" resultType="FileVO">
+		/* FileDaoImpl.getOneFileInfo 첨부파일 정보-단일건, 다운로드 */
+		SELECT 		fmNo
+						,	tbKey
+						,	tbType
+						,	fileName
+						,	orgFileName
+						,	path
+						,	regUserId
+						,	regDate
+						,	isOld
+		FROM FILEMANAGER
+		WHERE 1 = 1
+		<if test="tbKey != null and tbKey != '' ">
+			AND tbKey = #{tbKey}
+		</if>
+		<if test="tbType != null and tbType != '' ">	
+			AND tbType = #{tbType}
+		</if>
+		<if test="fmNo != null and fmNo != '' ">	
+			AND fmNo = #{fmNo}
+		</if>	
+	</select>
+	
+	<insert id="insertFile" parameterType="FileVO">
+		/* FileDaoImpl.insertFile 첨부파일 등록 */
+		INSERT INTO FILEMANAGER (
+				tbKey
+			,	tbType
+			,	fileName
+			,	orgFileName
+			,	path
+			,	regUserId
+			,	regDate
+		) VALUES (
+				#{tbKey}
+			,	#{tbType}
+			,	#{fileName}
+			,	#{orgFileName}
+			,	#{path}
+			,	#{regUserId}
+			,	GETDATE()
+		)
+	</insert>
+	
+	<delete id="deleteFile" parameterType="FileVO">
+	DELETE FROM FILEMANAGER
+	WHERE 1 = 1
+		AND tbKey = #{tbKey}
+		AND tbType = #{tbType}
+		AND fmNo = #{fmNo}
+	</delete>
+	
+	<delete id="deleteFileByTbKey" parameterType="map">
+	DELETE FROM FILEMANAGER
+	WHERE 1 = 1
+		AND tbKey = #{tbKey}
+		AND tbType = #{tbType}
+	</delete>
+	
+	<select id="fileInfo" parameterType="map" resultType="FileVO">
+		SELECT  
+			fmNo
+			,tbKey
+			,tbType
+			,fileName
+			,orgFileName
+			,path
+			,regUserId
+			,regDate
+			,isOld
+		FROM fileManager 
+		WHERE 1 = 1
+			AND fmNo IN
+			<foreach collection="fmNos" item="fmNo" index="index"  open="(" close=")" separator=",">
+            #{fmNo}
+       	 	</foreach>
+	</select>
+	
+	<insert id="insertDevDocFile">
+		INSERT INTO devDocFile (
+			docNo
+			, docVersion
+			, gubun
+			, fileName
+			, orgFileName
+			, path
+			, regDate
+			, regUserId
+		) VALUES (
+			#{docNo}
+			, #{docVersion}
+			, #{gubun}
+			, #{fileName}
+			, #{orgFileName}
+			, #{path}
+			, getDate()
+			, #{regUserId}
+		)
+	</insert>
+
+	
+	<insert id="insertImageFile" parameterType="FileVO">
+		/* FileDaoImpl.insertImageFile 이미지 첨부파일 등록 */
+		INSERT INTO IMAGEFILEMANAGER (
+				tbKey
+			,	tbType
+			,	fileName
+			,	orgFileName
+			,	path
+			,	regUserId
+			,	regDate
+		) VALUES (
+				#{tbKey}
+			,	#{tbType}
+			,	#{fileName}
+			,	#{orgFileName}
+			,	#{path}
+			,	#{regUserId}
+			,	GETDATE()
+		)
+	</insert>
+	<select id="imageFileInfo" parameterType="FileVO" resultType="FileVO">
+		/* FileDaoImpl.imageFileInfo 이미지 첨부파일 정보*/
+		SELECT 		fmNo
+						,	tbKey
+						,	tbType
+						,	fileName
+						,	orgFileName
+						,	path
+						,	regUserId
+						,	regDate
+		FROM IMAGEFILEMANAGER
+		WHERE 1 = 1
+		<if test="tbKey != null and tbKey != '' ">
+			AND tbKey = #{tbKey}
+		</if>
+		<if test="tbType != null and tbType != '' ">	
+			AND tbType = #{tbType}
+		</if>
+		<if test="fmNo != null and fmNo != '' ">	
+			AND fmNo = #{fmNo}
+		</if>
+	</select>
+	
+	<delete id="deleteImageFile" parameterType="FileVO">
+	DELETE FROM IMAGEFILEMANAGER
+	WHERE 1 = 1
+		AND tbKey = #{tbKey}
+		AND tbType = #{tbType}
+		AND fmNo = #{fmNo}
+	</delete>
+
+	
+	<select id="getDevDocFileInfo" resultType="kr.co.aspn.vo.DevDocFileVO">
+		SELECT * FROM devDocFile WHERE ddfNo = #{ddfNo}
+	</select>
+	
+	<delete id="deleteDevDocFile">
+		DELETE FROM devDocFile WHERE ddfNo = #{ddfNo}
+	</delete>
+	<select id="fileViewByTbKey" parameterType="string" resultType="hashmap">
+		select fmNo from fileManager where tbType='team' and tbKey = #{nNo} 
+	</select>
+	
+	<select id="getDevDocFileList" resultType="kr.co.aspn.vo.DevDocFileVO">
+		SELECT * FROM devDocFile WHERE docNo = #{docNo} AND docVersion = #{docVersion} ORDER BY ddfNO DESC
+	</select>
+	
+	<delete id="deleteDevDocList">
+		DELETE FROM devDocFile WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</delete>
+	
+	
+	<select id="getTrialFileInfo" resultType="kr.co.aspn.vo.TrialReportFile">
+		/* file.getTrialFileInfe 시생산보고서 첨부파일 정보 조회(다운로드용) */
+		SELECT * FROM trialReportFile WHERE fNo = #{fNo}
+	</select>
+	
+	<delete id="deleteTrialFile">
+		/* file.deleteTrialFile 시생산보고서 첨부파일 삭제 */
+		DELETE FROM trialReportFile WHERE fNo = #{fNo}
+	</delete>
+</mapper>

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="excelTest">
+	<insert id="no" parameterType="map">
+		/*excelTest.no*/
+		INSERT INTO manufacturingNo
+		(
+			companyCode
+		<if test="tempKey != null">
+			, tempKey
+		</if>
+		<if test="plantCode != null">
+			, plantCode
+		</if>
+		<if test="manufacturingNo != null">
+			, manufacturingNo
+		</if>
+		<if test="manufacturingName != null">
+			, manufacturingName
+		</if>
+		<if test="licensingNo != null">
+			, licensingNo
+		</if>
+		, isDelete
+		<if test="status != null">
+			, status
+		</if>
+		<if test="reportSDate != null">
+			, reportSDate
+		</if>
+		<if test="stopReqDate != null">
+			, stopReqDate
+		</if>
+		<if test="stopDate != null">
+			, stopDate
+		</if>
+		)
+		VALUES
+		(
+			'${companyCode}'
+		<if test="tempKey != null">
+			, ${tempKey}
+		</if>
+		<if test="plantCode != null">
+			, '${plantCode}'
+		</if>
+		<if test="manufacturingNo != null">
+			, ${manufacturingNo}
+		</if>
+		<if test="manufacturingName != null">
+			, '${manufacturingName}'
+		</if>
+		<if test="licensingNo != null">
+			, '${licensingNo}'
+		</if>
+			,'N'
+		<if test="status != null">
+			,
+			<choose>
+				<when test='status.equals("진행중")'>
+					'P'
+				</when>
+				<when test='status.equals("완료")'>
+					'C'
+				</when>
+				<when test='status.equals("삭제")'>
+					'D'
+				</when>
+				<when test='status.equals("중단요청")'>
+					'RS'
+				</when>
+				<when test='status.equals("중단")'>
+					'S'
+				</when>
+				<when test='status.equals("변경요청")'>
+					'RC'
+				</when>
+				<when test='status.equals("신고중")'>
+					'RE'
+				</when>
+			</choose>
+		</if>
+		<if test="reportSDate != null">
+			, '${reportSDate}'
+		</if>
+		<if test="stopReqDate != null">
+			, '${stopReqDate}'
+		</if>
+		<if test="stopDate != null">
+			, '${stopDate}'
+		</if>
+		)
+	</insert>
+	
+	<select id="getSeq" resultType="Integer">
+		SELECT MAX(seq) from manufacturingNo
+	</select>
+	
+	<select id="getNoDataSeq" resultType="Integer">
+		SELECT MAX(seq) from manufacturingNoData
+	</select>
+	
+	<select id="selectVersionNo" parameterType="Integer" resultType="Integer">
+		SELECT ISNULL(MAX(versionNo), 1) from manufacturingNoData where tempKey = #{tempKey}
+	</select>
+	
+	<insert id="noData" parameterType="map">
+		/*excelTest.noData*/
+		/*INSERT INTO manufacturingNoDataTemp*/
+		INSERT INTO manufacturingNoData
+		(
+			no_seq
+			<if test="tempKey != null">
+			, tempKey
+			</if>
+			<if test="dataTempKey != null">
+			, dataTempKey
+			</if>
+			<if test="productType1 != null">
+			, productType1
+			</if>
+			<if test="productType2 != null">
+			, productType2
+			</if>
+			<if test="productType3 != null">
+			, productType3
+			</if>
+			<if test="comment != null">
+			, comment
+			</if>
+			<if test="keepCondition != null">
+			, keepCondition
+			</if>
+			<if test="keepConditionText != null">
+			, keepConditionText
+			</if>
+			<if test="sterilization != null">
+			, sterilization
+			</if>
+			<if test="sellDate1 != null">
+			, sellDate1
+			</if>
+			<if test="sellDate2 != null">
+			, sellDate2
+			</if>
+			<if test="sellDate3 != null">
+			, sellDate3
+			</if>
+			<if test="sellDate4 != null">
+			, sellDate4
+			</if>
+			<if test="sellDate5 != null">
+			, sellDate5
+			</if>
+			<if test="sellDate6 != null">
+			, sellDate6
+			</if>
+			<if test="referral != null">
+			, referral
+			</if>
+			<if test="createPlant != null">
+			,createPlant
+			</if>
+			<if test="oem != null">
+			, oem
+			</if>
+			<if test="oemText != null">
+			, oemText
+			</if>
+			<if test="packageEtc != null">
+			, packageEtc
+			</if>
+			<if test="regUserId != null">
+			, regUserId
+			</if>
+			<if test="versionNo != null">
+			, versionNo
+			</if>
+		)
+		VALUES
+		(
+			${no_seq}
+			<if test="tempKey != null">
+			, ${tempKey}
+			</if>
+			<if test="dataTempKey != null">
+			, ${dataTempKey}
+			</if>
+			<if test="productType1 != null">
+			, ${productType1}
+			</if>
+			<if test="productType2 != null">
+			, #{productType2}
+			</if>
+			<if test="productType3 != null">
+			, #{productType3}
+			</if>
+			<if test="comment != null">
+			, #{comment}
+			</if>
+			<if test="keepCondition != null">
+			, ${keepCondition}
+			</if>
+			<if test="keepConditionText != null">
+			, #{keepConditionText}
+			</if>
+			<if test="sterilization != null">
+			, ${sterilization}
+			</if>
+			<if test="sellDate1 != null">
+			, #{sellDate1}
+			</if>
+			<if test="sellDate2 != null">
+			, ${sellDate2}
+			</if>
+			<if test="sellDate3 != null">
+			, #{sellDate3}
+			</if>
+			<if test="sellDate4 != null">
+			, #{sellDate4}
+			</if>
+			<if test="sellDate5 != null">
+			, ${sellDate5}
+			</if>
+			<if test="sellDate6 != null">
+			, #{sellDate6}
+			</if>
+			<if test="referral != null">
+			, #{referral}
+			</if>
+			<if test="createPlant != null">
+			, #{createPlant}
+			</if>
+			<if test="oem != null">
+			, #{oem}
+			</if>
+			<if test="oemText != null">
+			, #{oemText}
+			</if>
+			<if test="packageEtc != null">
+			, #{packageEtc}
+			</if>
+			<if test="regUserId != null">
+			, #{regUserId}
+			</if>
+			<if test="versionNo != null">
+			, ${versionNo}
+			</if>
+		)
+	</insert>
+	
+	<insert id="noPackageUnit" parameterType="map">
+		/*excelTest.PackageUnit*/
+		/*INSERT INTO manufacturingNoPackageUnitTemp*/
+		INSERT INTO manufacturingNoPackageUnit
+		(
+			dNoSeq
+			, dataTempKey
+			, packageUnit
+		)
+		VALUES
+		(
+			${dNoSeq}
+			, ${dataTempKey}
+			, #{packageUnit}
+		)
+	</insert>
+	
+	<insert id="noMapping" parameterType="map">
+		/*excelTest.noMapping*/
+		/*INSERT INTO manufacturingNoMappingTemp*/
+		INSERT INTO manufacturingNoMapping
+		(
+			mNoSeq
+			<if test="dNo != null">
+			, dNo
+			</if>
+			<if test="regUserId != null">
+			, regUserId
+			</if>
+			, regDate
+			, tempKey
+		)
+		VALUES
+		(
+			${mNoSeq}
+			<if test="dNo != null">
+			, ${dNo}
+			</if>
+			<if test="regUserId != null">
+			, #{regUserId}
+			</if>
+			, GETDATE()
+			, ${tempKey}
+		)
+	</insert>
+	
+	<select id="selectSeq" parameterType="Integer" resultType="Integer">
+		SELECT seq FROM manufacturingNo WHERE tempKey = ${_parameter}
+	</select>
+	
+	<update id="updateNoMapping" parameterType="map">
+		/*excelTest.updateNoMapping*/
+		UPDATE manufacturingNoMapping
+		SET	mNoSeq = ${mSeq}
+		WHERE
+			tempKey = ${tempKey}
+			and dNo = #{dNo}
+	</update>
+	
+	<select id="selectSeqFromNoData" parameterType="Integer" resultType="Integer">
+		SELECT seq FROM manufacturingNoData WHERE dataTempKey = #{dataTempKey}
+	</select>
+	
+	<update id="updateNoPackage" parameterType="map">
+		/*excelTest.updateNoPackage*/
+		UPDATE manufacturingNoPackageUnit
+		SET dNoSeq = ${dNoSeq}
+		WHERE
+			dataTempKey = ${dataTempKey}
+	</update>
+	
+	<select id="selectSeqFromNo" parameterType="Integer" resultType="Integer">
+		SELECT seq FROM manufacturingNo WHERE tempKey = #{tempKey}
+	</select>
+	
+	<update id="updateNoData" parameterType="map">
+		UPDATE manufacturingNoData
+		SET no_seq = #{no_seq}
+		WHERE tempKey = #{tempKey}
+	</update>
+	
+</mapper>

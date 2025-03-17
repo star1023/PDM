@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="selling">
+<!-- 공통 조건 -->
+	<sql id="whereSellingList">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('name')">
+			AND productName LIKE '%'+#{searchValue}+'%'
+			</when>
+      		<when test="searchType.equals('code')">
+      		AND productCode LIKE '%'+#{searchValue}+'%'
+      		</when>
+      		<when test="searchType.equals('userName')">
+      		AND dbo.getUserName(userId) LIKE '%'+#{searchValue}+'%'
+      		</when>
+      		<when test="searchType.equals('deptName')">
+      		AND dbo.getUserDeptName(userId) LIKE '%'+#{searchValue}+'%'
+      		</when>
+      		<when test="searchType.equals('teamName')">
+      		AND dbo.getUserTeamName(userId) LIKE '%'+#{searchValue}+'%'
+      		</when>
+      	</choose>
+		</if>
+		<if test='searchTeam != null and searchTeam != "" '>
+			<choose>
+				<when test='searchUser != null and searchUser != ""'>
+				AND userId = #{searchUser}
+				</when>
+	      		<when test='searchUser == null or searchUser == "" '>
+	      		AND userId in (SELECT userId FROM userTable2 WHERE teamCode = #{searchTeam} AND isDelete = 'N')
+	      		</when>
+	      	</choose>
+		</if>
+		AND isDelete = 'N'
+	</sql>
+    <select id="sellingMasterTotalCount" parameterType="map" resultType="int">
+		/** selling.sellingMasterTotalCount */
+		SELECT COUNT(seq)
+	 	FROM sellingMaster
+	 	WHERE 1=1
+	 		<include refid="selling.whereSellingList" />
+	</select>
+    <select id="sellingMasterList" parameterType="map" resultType="map">
+	/** selling.sellingMasterList */
+	SELECT seq
+		,productName
+		,productCode
+		,erpProductCode
+		,userId
+		,startDate
+		,endDate
+		,isDelete
+		,dbo.getUserName(userId) as userName
+		,dbo.getUserDeptName(userId) as userDeptName
+		,dbo.getUserTeamName(userId) as userTeamName
+		,isDelete
+		,regUserId
+		,dbo.getUserName(regUserId) as regUserName
+		,regDate
+	 FROM (
+		SELECT 
+			row_number() over (order by seq desc) as rnum
+			,seq
+			,productName
+			,productCode
+			,erpProductCode
+			,userId
+			,startDate
+			,endDate
+			,isDelete
+			,regUserId
+			,regDate
+		FROM sellingMaster
+		WHERE 1=1 
+			<include refid="selling.whereSellingList" />		
+	) tmp WHERE rnum between #{startRow} and #{endRow}
+    </select>
+    <select id="sellingDataCount" parameterType="map" resultType="int">
+		/** selling.sellingDataCount */
+		SELECT COUNT(seq)
+	 	FROM sellingMaster
+	 	WHERE 1=1
+	 		AND productCode = #{productCode}
+	 		AND CONVERT(varchar(7), #{startDate},120) BETWEEN CONVERT(varchar(7), startDate,120) AND CONVERT(varchar(7), endDate,120)  
+			AND isDelete = 'N'
+	</select>
+	<insert id="insertMaster" parameterType="map">
+		/** selling.insertMaster */
+		INSERT
+			INTO sellingMaster
+		(
+			productName
+			,productCode
+			,erpProductCode
+			,userId
+			,startDate
+			,endDate
+			,isDelete
+			,regUserId
+			,regDate
+		) VALUES (
+			#{productName}
+			,#{productCode}
+			,#{erpProductCode}
+			,#{userId}
+			,#{startDate}
+			,#{endDate}
+			,'N'
+			,#{regUserId}
+			,GETDATE()
+		)
+	</insert>
+	<select id="sellingDataList" parameterType="map" resultType="map">
+	/* selling.sellingDataList  개인별-제품별 매출정보*/
+		SELECT 
+			productCode, 
+			productName  as titleName, 
+			userId, 
+			(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '1' ) AS upSelling , 
+			(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
+		FROM sellingView v
+		WHERE 1 = 1 
+			AND v.userId = #{userId}
+			AND v.year = #{year}
+			GROUP BY v.productCode, v.productName, v.userid, v.year
+			ORDER BY v.productCode ASC
+	</select>
+	
+	<select id="teamSellingDataList" parameterType="map" resultType="map">
+	/* selling.sellingDataList 팀-개인별 매출정보*/
+		SELECT 
+			a.userId
+			,dbo.getUserName(a.userId) as titleName
+			,sum(a.upSelling) AS upSelling
+			,sum(a.downSelling) AS downSelling 
+		FROM (
+			SELECT 
+				productCode, 
+				productName, 
+				userId,
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '1' ) AS upSelling , 
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
+			FROM sellingView v
+			WHERE 1 = 1 
+				AND v.userid in( select userId FROM userTable2 where userId != #{userId} AND deptCode = #{deptCode})
+				AND v.year = #{year}
+			GROUP BY v.productCode, v.productName, v.userid, v.year
+		) a 
+		GROUP BY a.userId
+	</select>
+	<select id="deptSellingDataList" parameterType="map" resultType="map">
+	/* selling.deptSellingDataList 부서별 매출정보*/
+		SELECT 
+			a.deptName  as titleName
+			,sum(a.upSelling) AS upSelling
+			,sum(a.downSelling) AS downSelling 
+		FROM (
+			SELECT 
+				dbo.getUserDeptName(v.userid)  as deptName,
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '1' ) AS upSelling , 
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
+			FROM sellingView v
+			WHERE 1 = 1
+				AND v.year = #{year}
+			GROUP BY v.productCode, v.productName, v.userid, v.year
+		) a 
+		GROUP BY a.deptName
+	</select>
+	<select id="allSellingDataList" parameterType="map" resultType="map">
+	/* selling.allSellingDataList 부서/개인 매출정보(차길홍 팀장님 만)*/
+		SELECT * FROM 
+		(
+		SELECT 
+			a.deptName  as titleName
+			,sum(a.upSelling) AS upSelling
+			,sum(a.downSelling) AS downSelling 
+		FROM (
+			SELECT 
+				dbo.getUserDeptName(v.userid)  as deptName,
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '1' ) AS upSelling , 
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
+			FROM sellingView v
+			WHERE 1 = 1
+				AND v.year = #{year}
+			GROUP BY v.productCode, v.productName, v.userid, v.year
+		) a 
+		GROUP BY a.deptName
+		)c
+		UNION ALL
+		(SELECT 
+			dbo.getUserName(a.userId) as titleName
+			,sum(a.upSelling) AS upSelling
+			,sum(a.downSelling) AS downSelling 
+		FROM (
+			SELECT 
+				productCode, 
+				productName, 
+				userId,
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '1' ) AS upSelling , 
+				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
+			FROM sellingView v
+			WHERE 1 = 1 
+				AND v.userid in( select userId FROM userTable2 where userId != #{userId} AND deptCode = #{deptCode})
+				AND v.year = #{year}
+			GROUP BY v.productCode, v.productName, v.userid, v.year
+		) a 
+		GROUP BY a.userId
+		)
+	</select>
+	
+	<delete id="deleteSellingData" parameterType="map">
+	/* selling.deleteSellingData 매출 데이터 삭제*/
+		DELETE FROM sellingData
+		WHERE 1 = 1
+			AND master_seq = #{seq}
+	</delete>
+	
+	<update id="deleteSellingMaster" parameterType="map">
+	/* selling.deleteSellingMaster 매출 마스터 데이터 삭제*/
+		UPDATE 
+			sellingMaster
+		SET
+			isDelete = 'Y'	 
+		WHERE 1 = 1
+			AND seq = #{seq}
+	</update>
+	
+	<select id="sellingMaster" parameterType="map" resultType="map">
+		/** selling.sellingMaster */
+		SELECT 
+			seq
+			,productName
+			,productCode
+			,erpProductCode
+			,userId
+			,dbo.getUserName(userId) as userName
+			,startDate
+			,endDate		
+	 	FROM sellingMaster
+	 	WHERE 1=1
+	 		AND isDelete = 'N'
+	 		AND seq = #{seq}
+	</select>
+	
+	<update id="updateMaster" parameterType="map">
+		/** selling.updateMaster */
+		UPDATE 
+			sellingMaster
+		SET
+			productName = #{productName}
+			,productCode = 	#{productCode}
+			,userId = #{userId}
+			,startDate = #{startDate}
+			,endDate = #{endDate}
+		
+		WHERE 
+			1 = 1
+			AND seq = #{seq}
+	</update>
+	 <select id="sellingDataCountBySeq" parameterType="map" resultType="int">
+		/** selling.sellingDataCount */
+		SELECT COUNT(seq)
+	 	FROM sellingMaster
+	 	WHERE 1=1
+	 		AND seq = #{seq}
+	</select>
+</mapper>

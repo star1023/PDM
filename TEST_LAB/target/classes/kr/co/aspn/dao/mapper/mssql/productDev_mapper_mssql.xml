@@ -1,0 +1,2266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="productDev">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+			<if test="page.sortField != null and page.sortOrder != null">
+				ORDER BY ${page.sortField} ${page.sortOrder}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="countForDevDoc" resultType="int" parameterType="string">
+		/** productDev.countForDevDoc */
+		select count(*) from devDoc where regUserId = #{regUserId} and isHidden != 'Y'
+	</select>
+	
+	<select id = "countForDesignRequestDoc" resultType="int" parameterType="string" >
+		/** productDev.countForDesignRequestDoc */
+		select count(*) from designRequestDoc where regUserId = #{regUserId}
+	</select>
+	
+	<select id="countForManuFacturingProcessDoc" resultType="int" parameterType="string">
+		/** productDev.countForManuFacturingProcessDoc */
+		select count(*) from manufacturingProcessDoc where regUserId = #{regUserId}
+	</select>
+	
+	<select id="getProductDevDocListCount" resultType="int">
+		/** productDev.getProductDevDocListCount */
+		SELECT count(*) FROM (
+			SELECT row_number() over (order by a.docNo desc) as rn
+				, a.docNo
+			FROM devDoc a
+			LEFT JOIN manufacturingProcessDoc b on A.docNo = b.docNo
+			WHERE 1=1 AND a.isLatest = 1 and a.isHidden != 'Y'
+			<if test="search != null">
+				<if test='search.ownerType == "user"'>
+					AND a.regUserId = #{search.ownerId}
+				</if>
+				<if test='search.ownerType == "team"'>
+					<if test='search.teamCode == ""'>
+						AND a.regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+					</if>
+					<if test='search.teamCode != ""'>
+						AND a.regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+					</if>
+				</if>
+				<if test="search.searchField != null and search.searchValue != null">
+					<choose>
+						<when test='search.searchField == "userName"'>
+							<if test='search.searchField == "userName"'>
+								AND dbo.getUserName(a.regUserId) like '%'+#{search.searchValue}+'%'
+							</if>
+						</when>
+						<when test='search.searchField == "productName"'>
+							<if test="search.searchValue != ''">
+								AND (CASE ISNULL(a.storeDiv,'') WHEN '' THEN a.productName ELSE '[' + a.storeDiv + ']' + a.productName END) LIKE '%'+#{search.searchValue}+'%'
+							</if>
+						</when>
+						<otherwise>
+							<if test='search.searchField != "" and search.searchValue != ""'>
+								AND a.${search.searchField} like '%'+#{search.searchValue}+'%'
+							</if>
+						</otherwise>
+					</choose>
+				</if>
+				<if test='search.companyCode != "" and search.companyCode != null'>
+					AND b.companyCode = #{search.companyCode}
+				</if>
+				<if test='search.plantCode != "" and search.plantCode != null'>
+					AND b.plantCode = #{search.plantCode}
+				</if>
+				<if test='search.isNew == "Y"'>
+					AND a.isNew = 'Y'
+				</if>
+				<if test='search.productDocType != "" and search.productDocType != null '>
+					AND ISNULL(a.productDocType,'0') = #{search.productDocType}
+				</if>
+				<if test='search.storeDiv != "" and search.storeDiv != null '>
+					AND a.storeDiv = #{search.storeDiv}
+				</if>
+			</if>
+			GROUP BY a.docNo
+		) a
+	</select>
+	
+	<select id="getProductDevDocList" resultType="hashmap">
+		/** productDev.getProductDevDocList  */
+		SELECT a.ddNo
+			, a.docNo
+			, a.docVersion
+			, a.productCode
+			, (CASE ISNULL(a.storeDiv,'') WHEN '' THEN a.productName ELSE '[' + dbo.getCodeName('STORE', a.storeDiv) + ']' + a.productName END) AS productName
+			, a.productCategory
+			, a.productCategoryText
+			, a.explanation
+			, a.isLatest
+			, a.versionUpMemo
+			, a.launchDate
+			, CONVERT(varchar(20), a.regDate, 120) as regDate
+			, a.regUserId
+			, CONVERT(varchar(20), a.modDate, 120) as modDate
+			, a.modUserId
+			, a.state1
+			, a.state2
+			, ISNULL(a.isClose, 0) isClose
+			, (SELECT count(state) FROM manufacturingProcessDoc WHERE docNo = a.docNo and docVersion = a.docVersion AND state = 1) state1cnt
+			, (SELECT count(state) FROM manufacturingProcessDoc WHERE docNo = a.docNo and docVersion = a.docVersion AND state = 4) state4cnt
+			, a.closeMemo
+			, a.nonHeat
+			, a.manufacturingNo
+			, (SELECT manufacturingName FROM manufacturingNo WHERE seq = a.manufacturingNoSeq) manufacturingName
+			, dbo.getCodeName('PRODCAT', a.productCategory) productCategoryName
+			, dbo.getUserName(regUserId) userName 
+			,(select top 1 dNo from manufacturingProcessDoc where docNo=a.docNo and docVersion=a.docVersion order by dNo desc) as dNo
+			,(select top 1 docType from manufacturingProcessDoc where docNo=a.docNo and docVersion=a.docVersion order by dNo desc) as docType  
+			, (SELECT COUNT(fileName) FROM devDocFile WHERE docNo =	a.docNo AND docVersion = a.docVersion and gubun = '10') draftCnt
+			, (SELECT COUNT(fileName) FROM devDocFile WHERE docNo =	a.docNo AND docVersion = a.docVersion and gubun = '60') imageCnt
+			, (SELECT COUNT(1) FROM trialReportHeader WHERE docNo =	a.docNo AND docVersion = a.docVersion) trialCnt
+			, a.sterilization
+			, a.etcDisplay
+			, a.productDocType
+			, a.storeDiv
+			, dbo.getCodeName('STORE', a.storeDiv) as storeDivText
+		FROM devDoc a WHERE docNo in (
+			SELECT docNo FROM (
+				SELECT row_number() over (order by a.docNo desc) as rn
+					, a.docNo
+				FROM devDoc a
+				LEFT JOIN manufacturingProcessDoc b on A.docNo = b.docNo
+				WHERE 1=1 AND a.isLatest = 1 and a.isHidden != 'Y'
+				<if test="search != null">
+					<if test='search.ownerType == "user"'>
+						AND a.regUserId = #{search.ownerId}
+					</if>
+					<if test='search.ownerType == "team"'>
+						<if test='search.teamCode == ""'>
+							AND a.regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+						</if>
+						<if test='search.teamCode != ""'>
+							AND a.regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+						</if>
+					</if>
+					<if test="search.searchField != null and search.searchValue != null">
+						<choose>
+							<when test='search.searchField == "userName"'>
+								<if test='search.searchField == "userName"'>
+									AND dbo.getUserName(a.regUserId) like '%'+#{search.searchValue}+'%'
+								</if>
+							</when>
+							<when test='search.searchField == "productName"'>
+								<if test="search.searchValue != ''">
+									AND (CASE ISNULL(a.storeDiv,'') WHEN '' THEN a.productName ELSE '[' + a.storeDiv + ']' + a.productName END) LIKE '%'+#{search.searchValue}+'%'
+								</if>
+							</when>
+							<otherwise>
+								<if test='search.searchField != "" and search.searchValue != ""'>
+									AND a.${search.searchField} like '%'+#{search.searchValue}+'%'
+								</if>
+							</otherwise>
+						</choose>
+					</if>
+					<if test='search.productType1 != "" and search.productType1 != null'>
+						AND a.productType1 = #{search.productType1}
+					</if>
+					<if test='search.productType2 != "" and search.productType2 != null'>
+						AND a.productType2 = #{search.productType2}
+					</if>
+					<if test='search.productType3 != "" and search.productType3 != null'>
+						AND a.productType3 = #{search.productType3}
+					</if>
+					<if test='search.companyCode != "" and search.companyCode != null'>
+						AND b.companyCode = #{search.companyCode}
+					</if>
+					<if test='search.plantCode != "" and search.plantCode != null'>
+						AND b.plantCode = #{search.plantCode}
+					</if>
+					<if test='search.isNew == "Y"'>
+						AND a.isNew = 'Y'
+					</if>
+					<if test='search.productDocType != "" and search.productDocType != null '>
+						AND ISNULL(a.productDocType,'0') = #{search.productDocType}
+					</if>
+					<if test='search.storeDiv != "" and search.storeDiv != null '>
+						AND a.storeDiv = #{search.storeDiv}
+					</if>
+				</if>
+				GROUP BY a.docNo
+			) a
+			<include refid="pagenation"></include>
+		) ORDER BY docNo DESC, docVersion DESC
+	</select>
+	
+	<select id="getProductDevDoc" resultType="kr.co.aspn.vo.ProductDevDocVO">
+		/** productDev.getProductDevDoc */
+		SELECT ddNo
+			, docNo
+			, docVersion
+			, productCode
+			, productName
+			, productCategory
+			, CASE productCategory WHEN '999' THEN productCategoryText
+				ELSE (SELECT itemName FROM CODEITEM WHERE groupCode = 'PRODCAT' AND itemCOde = productCategory)
+			END AS productCategoryText
+			, explanation
+			, isLatest
+			, versionUpMemo
+			, launchDate
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, regUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+			, modUserId
+			, state1
+			, state2
+			, isClose
+			, closeMemo
+			, nonHeat
+			, manufacturingNo
+			, manufacturingNoSeq
+			, (SELECT manufacturingName FROM manufacturingNo WHERE seq = devDoc.manufacturingNoSeq) manufacturingName
+			, (SELECT TOP 1 isOld FROM devDocFile WHERE docNo = devDoc.docNo AND docVersion = devDoc.docVersion AND gubun = '60') AS isoldFile
+			, (SELECT TOP 1 path+'/'+fileName FROM devDocFile WHERE docNo = devDoc.docNo AND docVersion = devDoc.docVersion AND gubun = '60') imageFileName
+			, (SELECT TOP 1 REPLACE(path,'\','/')+fileName FROM devDocFile WHERE docNo = devDoc.docNo AND docVersion = devDoc.docVersion AND gubun = '60') oldFileName
+			, (SELECT TOP 1 isOld FROM devDocFile WHERE docNo = devDoc.docNo AND docVersion = devDoc.docVersion AND gubun = '60') isOldImage
+			, productType1
+			, productType2
+			, productType3
+			, sterilization
+			, etcDisplay
+			, dbo.getCodeName('PRODCAT1', productType1) as productType1Text
+			, dbo.getCodeName('PRODCAT2', productType2) as productType2Text
+			, dbo.getCodeName('PRODCAT3', productType3) as productType3Text
+			, dbo.getCodeName('STERILIZATION', sterilization) as sterilizationText
+			, dbo.getCodeName('ETCDISPLAY', etcDisplay) etcDisplayText
+			, imNo
+			, isNew
+			, productDocType
+			, storeDiv
+			, dbo.getCodeName('STORE', storeDiv) as storeDivText
+		FROM devDoc WHERE docNo = #{docNo} AND docVersion = #{docVersion} and isHidden != 'Y'
+	</select>
+	
+	<!-- <select id="getManufacturingProcessDocList" resultType="kr.co.aspn.vo.ManufacturingProcessDocVO">
+		SELECT dNo
+			, dpNo
+			, docNo
+			, docVersion
+			, docType
+			, calcType
+			, apprNo
+			, companyCode
+			, state
+			, CASE state WHEN '0' THEN '등록'
+				WHEN '1' THEN '승인'
+				WHEN '2' THEN '반려'
+				WHEN '3' THEN '결재중'
+				WHEN '4' THEN 'ERP반영 완료'
+				WHEN '5' THEN 'ERP반영 오류'
+				WHEN '6' THEN '사용중지'
+				WHEN '7' THEN '임시저장'
+			END as stateText
+			, ErrorMessage
+			, memo
+			, plantCode
+			, plantName
+			, stdAmount
+			, divWeight
+			, lineCode
+			, lineName
+			, mixWeight
+			, bagAmout
+			, bomRate
+			, numBong
+			, numBox
+			, totWeight
+			, docProdName
+			, loss
+			, compWeight
+			, regNum
+			, regGubun
+			, adminWeight
+			, distPeriDoc
+			, dispWeight
+			, distPeriSite
+			, prodStandard
+			, ingredient
+			, usage
+			, packMaterial
+			, keepCondition
+			, packUnit
+			, childHarm
+			, note
+			, menuProcess
+			, standard
+			, docHtml
+			, stlal
+			, isAutoDisp
+			, lineProcessType
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, adminWeightFrom
+			, adminWeightUnitFrom
+			, adminWeightTo
+			, adminWeightUnitTo
+			, keepConditionCode 
+			, (SELECT COUNT(*) FROM comment WHERE tbKey = dNo AND tbType = 'manufacturingProcessDoc' AND isDelete = 0) commentCnt
+		FROM manufacturingProcessDoc 
+		WHERE docNo = #{docNo} 
+		  AND docVersion = #{docVersion}
+	</select> -->
+	
+	<select id="getManufacturingProcessDocList" resultType="kr.co.aspn.vo.ManufacturingProcessDocVO">
+		/** productDev.getManufacturingProcessDocList */
+		SELECT 
+		mpd.dNo
+			, mpd.dpNo
+			, mpd.docNo
+			, mpd.docVersion
+			, mpd.docType
+			, mpd.calcType
+			, mpd.apprNo
+			, mpd.companyCode
+			, mpd.state
+			, CASE mpd.state WHEN '0' THEN '등록'
+				WHEN '1' THEN '승인'
+				WHEN '2' THEN '반려'
+				WHEN '3' THEN '결재중'
+				WHEN '4' THEN 'ERP반영 완료'
+				WHEN '5' THEN 'ERP반영 오류'
+				WHEN '6' THEN '사용중지'
+				WHEN '7' THEN '임시저장'
+			END as stateText
+			, mpd.ErrorMessage
+			, mpd.memo
+			, mpd.plantCode
+			, mpd.plantName
+			, mpd.stdAmount
+			, mpd.divWeight
+			, mpd.lineCode
+			, (select lineName from plantLine where lineCode = mpd.lineCode and companyCode = mpd.companyCode and plantCode = mpd.plantCode) AS lineName
+			, mpd.mixWeight
+			, mpd.bagAmout
+			, mpd.bomRate
+			, mpd.numBong
+			, mpd.numBox
+			, mpd.totWeight
+			, mpd.docProdName
+			, mpd.loss
+			, mpd.compWeight
+			, mpd.regNum
+			, mpd.regGubun
+			, mpd.adminWeight
+			, mpd.distPeriDoc
+			, mpd.dispWeight
+			, mpd.distPeriSite
+			, mpd.prodStandard
+			, mpd.ingredient
+			, mpd.usage
+			, mpd.packMaterial
+			, mpd.keepCondition
+			, mpd.packUnit
+			, mpd.childHarm
+			, mpd.note
+			, mpd.menuProcess
+			, mpd.standard
+			, mpd.docHtml
+			, mpd.stlal
+			, mpd.isAutoDisp
+			, mpd.lineProcessType
+			, CONVERT(varchar(20), mpd.regDate, 120) as regDate
+			, mpd.regUserId
+			, dbo.getUserName(mpd.regUserId) regUserName
+			, CONVERT(varchar(20), mpd.modDate, 120) as modDate
+			, mpd.modUserId
+			, dbo.getUserName(mpd.modUserId) modUserName
+			, mpd.adminWeightFrom
+			, mpd.adminWeightUnitFrom
+			, mpd.adminWeightTo
+			, mpd.adminWeightUnitTo
+			, mpd.keepConditionCode
+			, (SELECT COUNT(*) FROM comment WHERE tbKey = dNo AND tbType = 'manufacturingProcessDoc' AND isDelete = 0) commentCnt
+			, ISNULL((select sum(convert(float, replace(excRate, 'NaN', '0'))) from manufacturingProcessDocDisp where dNo = mpd.dNo),0) as sumExcRate
+			, ISNULL((select sum(convert(float, replace(incRate, 'NaN', '0'))) from manufacturingProcessDocDisp where dNo = mpd.dNo),0) as sumIncRate
+			, (select count(dSNo) from manufacturingProcessDocSubProd where dNo = mpd.dNo) as subProdCnt
+			, isnull(DATEDIFF(day , (SELECT max(regDate) FROM devDocBomHeader WHERE MATNR = dd.productCode AND WERKS = plantCode AND STLAL = stlal), getdate()), 99) as term
+			, mpd.qns
+			, mpd.isQnsReviewTarget
+		FROM devDoc dd 
+		INNER JOIN manufacturingProcessDoc mpd ON dd.docNo = mpd.docNo AND dd.docVersion = mpd.docVersion 
+		WHERE mpd.docNo = #{docNo}
+		  AND mpd.docVersion = #{docVersion}
+		  AND dd.isHidden != 'Y'
+		ORDER BY dNo DESC
+	</select>
+	
+	<select id="getDesignRequestDocList" resultType="kr.co.aspn.vo.DesignRequestDocVO">
+		/** productDev.getDesignRequestDocList */
+		SELECT a.*
+			, dbo.getUserName(a.regUserId) as regUserName
+			, dbo.getUserName(a.modUserId) as modUserName
+			, case state when  0 then '등록' 
+				when 1 then '검토중'
+				when 2 then '완료'
+				when 3 then '반려'
+			end stateText 
+		FROM designRequestDoc a
+		WHERE docNo = #{docNo} AND docVersion = #{docVersion} ORDER BY drNo DESC
+	</select>
+	
+	<select id="getAttatchFile" resultType="kr.co.aspn.vo.ProductDevDocFileVO">
+		SELECT a.*
+			, dbo.getUserName(a.regUserId) regUserName 
+		FROM devDocFile a 
+		WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</select>
+	
+	<select id="getProductDevDocVersionList" resultType="integer">
+		/** productDev.getProductDevDocVersionList */
+		SELECT docVersion FROM devDoc WHERE docNo = #{docNo} ORDER BY docVersion DESC
+	</select>
+	
+	<select id="getNextDevDocNo" resultType="string">
+		/** productDev.getNextDevDocNo */
+		SELECT ISNULL(MAX(docNo),0)+1 FROM devDoc
+	</select>
+	
+	<insert id="saveProductDevDoc" parameterType="kr.co.aspn.vo.DevDocVO">
+		INSERT INTO devDoc (
+			docNo
+			, docVersion
+			<if test="productCode != '' and productCode != null">, productCode</if>
+			, productName
+			, productCategory
+			, productCategoryText
+			, explanation
+			, isLatest
+			, versionUpMemo
+			, launchDate
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, state1
+			, state2
+			, isClose
+			, closeMemo
+			, nonHeat
+			<if test="manufacturingNo != '' and manufacturingNo != null">, manufacturingNo</if>
+			, productType1
+			, productType2
+			, productType3
+			<if test="imNo != '' and imNo != null">, imNo</if>
+			<if test="manufacturingNoSeq != '' and manufacturingNoSeq != null">, manufacturingNoSeq</if>
+			, sterilization
+			, etcDisplay
+			, isHidden
+			, isNew
+			, productDocType
+			, storeDiv
+		) VALUES (
+			#{docNo}
+			, 1
+			<if test="productCode != '' and productCode != null">, #{productCode}</if>
+			, #{productName}
+			, #{productCategory}
+			, #{productCategoryText}
+			, #{explanation}
+			, 1
+			, null
+			<choose>
+				<when test='launchDate == ""'>, null</when>
+				<otherwise>, #{launchDate}</otherwise>
+			</choose>
+			, getDate()
+			, #{regUserId}
+			, null
+			, null
+			, #{state1}
+			, #{state2}
+			, 0
+			, null
+			, #{nonHeat}
+			<if test="manufacturingNo != '' and manufacturingNo != null">, #{manufacturingNo}</if>
+			, #{productType1}
+			, #{productType2}
+			, #{productType3}
+			<if test="imNo != '' and imNo != null">, #{imNo}</if>
+			<if test="manufacturingNoSeq != '' and manufacturingNoSeq != null">, #{manufacturingNoSeq}</if>
+			, #{sterilization}
+			, #{etcDisplay}
+			, 'N'
+			, #{isNew}
+			, #{productDocType}
+			, #{storeDiv}
+		)
+		<selectKey keyProperty="ddNo" resultType="int" order="AFTER">
+			SELECT IDENT_CURRENT('devDoc')
+		</selectKey>	
+	</insert>
+	
+	<update id="updateProductDevDoc">
+		UPDATE devDoc SET
+			productCode = #{productCode}
+			, productName = #{productName}
+			, productCategory = #{productCategory}
+			, productCategoryText = #{productCategoryText, jdbcType=VARCHAR}
+			, explanation = #{explanation, jdbcType=VARCHAR}
+			<choose>
+				<when test='launchDate == ""'>, launchDate = null</when>
+				<otherwise>, launchDate = #{launchDate}</otherwise>
+			</choose>
+			, modDate = getDate()
+			, modUserId = #{modUserId}
+			, nonHeat = #{nonHeat}
+			, manufacturingNo = #{manufacturingNo}
+			, productType1 = #{productType1}
+			, productType2 = #{productType2}
+			, productType3 = #{productType3}
+			, imNo = #{imNo}
+			, manufacturingNoSeq = #{manufacturingNoSeq}
+			, sterilization = #{sterilization}
+			, etcDisplay = #{etcDisplay}
+			, isNew = #{isNew}
+		    , productDocType = #{productDocType}
+		    , storeDiv = #{storeDiv}
+		WHERE ddNo = #{ddNo}
+	</update>
+	
+	<delete id="deleteProductDevDoc">
+		DELETE devDoc WHERE ddNo = #{ddNo}
+	</delete>
+	
+	<select id="getdNo" resultType="string">
+		SELECT dNo FROM manufacturingProcessDoc WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</select>
+	
+	<select id="getProductDevDocLatest" resultType="int">
+		SELECT COUNT(*) FROM devDoc WHERE docNo = #{docNo} AND isLatest != 0
+	</select>
+	
+	<update id="updateProductDevDocLatest">
+		UPDATE devDoc SET isLatest = 1 
+		WHERE ddNo = (
+			SELECT TOP 1 ddNo FROM devDoc 
+			WHERE docNo = #{docNo}
+			ORDER BY docVersion DESC
+		)
+	</update>
+	
+	<insert id="loggingDevDoc">
+		INSERT INTO devDoc_log (
+			docNo
+			, docVersion
+			, type
+			, description
+			, userId
+			, regDate
+		) VALUES (
+			#{docNo}
+			, #{docVersion}
+			, #{type}
+			, #{description}
+			, #{userId}
+			, getDate()
+		)
+	</insert>
+	
+	<insert id="saveMfgProcessDoc" parameterType="kr.co.aspn.vo.MfgProcessDoc">
+		/* manufacturingProcessDoc insert */
+		INSERT INTO manufacturingProcessDoc (
+			docNo, docVersion, docType, calcType, companyCode
+			, state, errorMessage, memo, plantCode, plantName
+			, stdAmount, lineCode, lineName, mixWeight, bagAmout
+			, bomRate, numBong, numBox, totWeight, docProdName
+			, loss, compWeight, regNum, regGubun, adminWeight
+			, distPeriDoc, dispWeight, distPeriSite, prodStandard, ingredient
+			, keepCondition, keepConditionCode, packUnit, childHarm, note, noteText, menuProcess
+			, standard, stlal, isAutoDisp, regDate, regUserId
+			, modDate, modUserId, adminWeightFrom, adminWeightUnitFrom, adminWeightTo
+			, adminWeightUnitTo, lineProcessType, usage, packMaterial
+			, compWeightUnit, dispWeightUnit, compWeightText, dispWeightText, qns
+			, isQnsReviewTarget, sellDate
+		) VALUES (
+			#{docNo, jdbcType=VARCHAR}, #{docVersion, jdbcType=VARCHAR}, #{docType, jdbcType=VARCHAR}, #{calcType, jdbcType=VARCHAR}, #{companyCode, jdbcType=VARCHAR}
+			, #{state}, #{errorMessage, jdbcType=VARCHAR}, #{memo, jdbcType=VARCHAR}, #{plantCode, jdbcType=VARCHAR}, #{plantName, jdbcType=VARCHAR}
+			, #{stdAmount, jdbcType=VARCHAR}, #{lineCode, jdbcType=VARCHAR}, #{lineName, jdbcType=VARCHAR}, #{mixWeight, jdbcType=VARCHAR}, #{bagAmout, jdbcType=VARCHAR}
+			, #{bomRate, jdbcType=VARCHAR}, #{numBong, jdbcType=VARCHAR}, #{numBox, jdbcType=VARCHAR}, #{totWeight, jdbcType=VARCHAR}, #{docProdName, jdbcType=VARCHAR}
+			, #{loss, jdbcType=VARCHAR}, #{compWeight, jdbcType=VARCHAR}, #{regNum, jdbcType=VARCHAR}, #{regGubun, jdbcType=VARCHAR}, #{adminWeight, jdbcType=VARCHAR}
+			, #{distPeriDoc, jdbcType=VARCHAR}, #{dispWeight, jdbcType=VARCHAR}, #{distPeriSite, jdbcType=VARCHAR}, #{prodStandard, jdbcType=VARCHAR}, #{ingredient, jdbcType=VARCHAR}
+			, #{keepCondition, jdbcType=VARCHAR}, #{keepConditionCode, jdbcType=VARCHAR}, #{packUnit, jdbcType=VARCHAR}, #{childHarm, jdbcType=VARCHAR}, #{note, jdbcType=VARCHAR}, #{noteText, jdbcType=VARCHAR}, #{menuProcess, jdbcType=VARCHAR}
+			, #{standard, jdbcType=VARCHAR}, #{stlal, jdbcType=VARCHAR}, #{isAutoDisp, jdbcType=VARCHAR}, getDate(), #{regUserId, jdbcType=VARCHAR}
+			, null, null, #{adminWeightFrom, jdbcType=VARCHAR}, #{adminWeightUnitFrom, jdbcType=VARCHAR}, #{adminWeightTo, jdbcType=VARCHAR}
+			, #{adminWeightUnitTo, jdbcType=VARCHAR}, #{lineProcessType, jdbcType=VARCHAR}, #{usage, jdbcType=VARCHAR}, #{packMaterial, jdbcType=VARCHAR}
+			, #{compWeightUnit, jdbcType=VARCHAR}, #{dispWeightUnit, jdbcType=VARCHAR}, #{compWeightText, jdbcType=VARCHAR}, #{dispWeightText, jdbcType=VARCHAR},  #{qns, jdbcType=VARCHAR}
+			, #{isQnsReviewTarget, jdbcType=VARCHAR}, #{sellDate, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDoc')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocSub" parameterType="kr.co.aspn.vo.MfgProcessDocSubProd">
+		INSERT INTO manufacturingProcessDocSubProd (
+			dNo
+			, docNo
+			, docVersion
+			, subProdName
+			, stdAmount
+			, subProdBomRateTotal
+			, divWeight
+			, divWeightTxt
+			, unitWeight
+			, unitVolume
+			, regDate
+			, regUserId
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{subProdName, jdbcType=VARCHAR}
+			, #{stdAmount, jdbcType=VARCHAR}
+			, #{subProdBomRateTotal, jdbcType=VARCHAR}
+			, #{divWeight, jdbcType=VARCHAR}
+			, #{divWeightTxt, jdbcType=VARCHAR}
+			, #{unitWeight, jdbcType=VARCHAR}
+			, #{unitVolume, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dsNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocSubProd')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocMix" parameterType="kr.co.aspn.vo.MfgProcessDocBase">
+		INSERT INTO manufacturingProcessDocMix (
+			dNo
+			, docNo
+			, docVersion
+			, mixName
+			, parCode
+			, bakerySum
+			, bomRateSum
+			, regDate
+			, regUserId
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{baseName, jdbcType=VARCHAR}
+			, #{parCode, jdbcType=VARCHAR}
+			, #{baseBakerySum, jdbcType=VARCHAR}
+			, #{baseBomRateSum, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dmNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocMix')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocCont" parameterType="kr.co.aspn.vo.MfgProcessDocBase">
+		INSERT INTO manufacturingProcessDocCont (
+			dNo
+			, docNo
+			, docVersion
+			, contName
+			, parCode
+			, divWeight
+			, divWeightTxt
+			, contBakerySum
+			, contBomRateSum
+			, regDate
+			, regUserId
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{baseName, jdbcType=VARCHAR}
+			, #{parCode, jdbcType=VARCHAR}
+			, #{divWeight, jdbcType=VARCHAR}
+			, #{divWeightTxt, jdbcType=VARCHAR}
+			, #{baseBakerySum, jdbcType=VARCHAR}
+			, #{baseBomRateSum, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dcNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocCont')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocItem" parameterType="kr.co.aspn.vo.MfgProcessDocItem">
+		INSERT INTO manufacturingProcessDocItem (
+			dNo
+			, docNo
+			, docVersion
+			, itemType
+			, itemImNo
+			, itemCode
+			, itemName
+			, dispName
+			, compCode
+			, compName
+			, bomAmount
+			, weight
+			, unit
+			, orgUnit
+			, bomRate
+			, fomulaType
+			, parCode
+			, scrap
+			, storageCode
+			, storageName
+			, posnr
+			, coo
+			, cooName
+			, regDate
+			, regUserId
+			, manuCompany
+			, ingradient
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{itemType, jdbcType=VARCHAR}
+			, #{itemImNo, jdbcType=VARCHAR}
+			, #{itemCode, jdbcType=VARCHAR}
+			, #{itemName, jdbcType=VARCHAR}
+			, #{dispName, jdbcType=VARCHAR}
+			, #{compCode, jdbcType=VARCHAR}
+			, #{compName, jdbcType=VARCHAR}
+			, #{bomAmount, jdbcType=VARCHAR}
+			, #{weight, jdbcType=VARCHAR}
+			, #{unit, jdbcType=VARCHAR}
+			, #{orgUnit, jdbcType=VARCHAR}
+			, #{bomRate, jdbcType=VARCHAR}
+			, #{fomulaType, jdbcType=VARCHAR}
+			, #{parCode, jdbcType=VARCHAR}
+			, #{scrap, jdbcType=VARCHAR}
+			, #{storageCode, jdbcType=VARCHAR}
+			, #{storageName, jdbcType=VARCHAR}
+			, #{posnr, jdbcType=VARCHAR}
+			, #{coo, jdbcType=VARCHAR}
+			, #{cooName, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+			, #{manuCompany, jdbcType=VARCHAR}
+			, #{ingradient, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="diNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocItem')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocDisp" parameterType="kr.co.aspn.vo.MfgProcessDocDisp">
+		INSERT INTO manufacturingProcessDocDisp (
+			dNo
+			, docNo
+			, docVersion
+			, matName
+			, excRate
+			, incRate
+			, regDate
+			, regUserId
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{matName, jdbcType=VARCHAR}
+			, #{excRate, jdbcType=VARCHAR}
+			, #{incRate, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dpNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocDisp')
+		</selectKey>	
+	</insert>
+	
+	<insert id="saveMfgProcessDocProdSpec" parameterType="kr.co.aspn.vo.MfgProcessDocProdSpec">
+		INSERT INTO manufacturingProcessDocProdSpec (
+			dNo
+			, docNo
+			, docVersion
+			, size
+			, sizeErr
+			, feature
+			, productWater
+			, productAw
+			, productPh
+			, productTone
+			, productBrightness
+			, productHardness
+			, contentWater
+			, contentWaterErr
+			, contentAw
+			, contentAwErr
+			, contentPh
+			, contentPhErr
+			, contentTone
+			, contentToneErr
+			, contentSalinity
+			, contentSalinityErr
+			, contentBrix
+			, contentBrixErr
+			, noodlesWater
+			, noodlesPh
+			, noodlesAcidity
+			, deoxidizer
+			, nitrogenous
+			, regUserId
+			, regDate
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{size, jdbcType=VARCHAR}
+			, #{sizeErr, jdbcType=VARCHAR}
+			, #{feature, jdbcType=VARCHAR}
+			, #{productWater, jdbcType=VARCHAR}
+			, #{productAw, jdbcType=VARCHAR}
+			, #{productPh, jdbcType=VARCHAR}
+			, #{productTone, jdbcType=VARCHAR}
+			, #{productBrightness, jdbcType=VARCHAR}
+			, #{productHardness, jdbcType=VARCHAR}
+			, #{contentWater, jdbcType=VARCHAR}
+			, #{contentWaterErr, jdbcType=VARCHAR}
+			, #{contentAw, jdbcType=VARCHAR}
+			, #{contentAwErr, jdbcType=VARCHAR}
+			, #{contentPh, jdbcType=VARCHAR}
+			, #{contentPhErr, jdbcType=VARCHAR}
+			, #{contentTone, jdbcType=VARCHAR}
+			, #{contentToneErr, jdbcType=VARCHAR}
+			, #{contentSalinity, jdbcType=VARCHAR}
+			, #{contentSalinityErr, jdbcType=VARCHAR}
+			, #{contentBrix, jdbcType=VARCHAR}
+			, #{contentBrixErr, jdbcType=VARCHAR}
+			, #{noodlesWater, jdbcType=VARCHAR}
+			, #{noodlesPh, jdbcType=VARCHAR}
+			, #{noodlesAcidity, jdbcType=VARCHAR}
+			, #{deoxidizer, jdbcType=VARCHAR}
+			, #{nitrogenous, jdbcType=VARCHAR}
+			, #{regUserId, jdbcType=VARCHAR}
+			, getDate()
+		)
+		<selectKey keyProperty="deNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocProdSpec')
+		</selectKey>
+	</insert>
+	
+	<insert id="saveMfgProcessDocProdSpecMD">
+		INSERT INTO manufacturingProcessDocProdSpecMD (
+			dNo
+			, docNo
+			, docVersion
+			, moisture
+			, moistureUnit
+			, ashFrom
+			, ashTo
+			, protein
+			, proteinErr
+			, waterAbsFrom
+			, waterAbsTo
+			, stabilityFrom
+			, stabilityTo
+			, devTime
+			, devTimeUnit
+			, plFrom
+			, plTo
+			, maxVisc
+			, maxViscUnit
+			, fnFrom
+			, fnTo
+			, particleSize
+			, color
+			, colorUnit
+			, wetGlutenFrom
+			, wetGlutenTo
+			, visc
+			, viscUnit
+			, regUserId
+			, regDate
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{moisture, jdbcType=VARCHAR}
+			, #{moistureUnit, jdbcType=VARCHAR}
+			, #{ashFrom, jdbcType=VARCHAR}
+			, #{ashTo, jdbcType=VARCHAR}
+			, #{protein, jdbcType=VARCHAR}
+			, #{proteinErr, jdbcType=VARCHAR}
+			, #{waterAbsFrom, jdbcType=VARCHAR}
+			, #{waterAbsTo, jdbcType=VARCHAR}
+			, #{stabilityFrom, jdbcType=VARCHAR}
+			, #{stabilityTo, jdbcType=VARCHAR}
+			, #{devTime, jdbcType=VARCHAR}
+			, #{devTimeUnit, jdbcType=VARCHAR}
+			, #{plFrom, jdbcType=VARCHAR}
+			, #{plTo, jdbcType=VARCHAR}
+			, #{maxVisc, jdbcType=VARCHAR}
+			, #{maxViscUnit, jdbcType=VARCHAR}
+			, #{fnFrom, jdbcType=VARCHAR}
+			, #{fnTo, jdbcType=VARCHAR}
+			, #{particleSize, jdbcType=VARCHAR}
+			, #{color, jdbcType=VARCHAR}
+			, #{colorUnit, jdbcType=VARCHAR}
+			, #{wetGlutenFrom, jdbcType=VARCHAR}
+			, #{wetGlutenTo, jdbcType=VARCHAR}
+			, #{visc, jdbcType=VARCHAR}
+			, #{viscUnit, jdbcType=VARCHAR}
+			, #{regUserId, jdbcType=VARCHAR}
+			, getDate()
+		)
+		<selectKey keyProperty="dfNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocProdSpecMD')
+		</selectKey>
+	</insert>
+	
+	<update id="updateMfgProcessDoc">
+		/* manufacturingProcessDoc update */
+		UPDATE manufacturingProcessDoc 
+		SET docNo			= #{docNo, jdbcType=VARCHAR}		
+			, docVersion	= #{docVersion, jdbcType=VARCHAR}
+			, docType		= #{docType, jdbcType=VARCHAR}
+			, state			= #{state, jdbcType=VARCHAR}
+			, calcType		= #{calcType, jdbcType=VARCHAR}
+			, companyCode	= #{companyCode, jdbcType=VARCHAR}
+			, errorMessage	= #{errorMessage, jdbcType=VARCHAR}
+			, memo			= #{memo, jdbcType=VARCHAR}
+			, plantCode		= #{plantCode, jdbcType=VARCHAR}
+			, plantName		= #{plantName, jdbcType=VARCHAR}
+			, stdAmount		= #{stdAmount, jdbcType=VARCHAR}
+			, lineCode		= #{lineCode, jdbcType=VARCHAR}
+			, lineName		= #{lineName, jdbcType=VARCHAR}
+			, mixWeight		= #{mixWeight, jdbcType=VARCHAR}
+			, bagAmout		= #{bagAmout, jdbcType=VARCHAR}
+			, bomRate		= #{bomRate, jdbcType=VARCHAR}
+			, numBong		= #{numBong, jdbcType=VARCHAR}
+			, numBox		= #{numBox, jdbcType=VARCHAR}
+			, totWeight		= #{totWeight, jdbcType=VARCHAR}
+			, docProdName	= #{docProdName, jdbcType=VARCHAR}
+			, loss			= #{loss, jdbcType=VARCHAR}
+			, compWeight	= #{compWeight, jdbcType=VARCHAR}
+			, compWeightUnit	= #{compWeightUnit, jdbcType=VARCHAR}
+			, compWeightText	= #{compWeightText, jdbcType=VARCHAR}
+			, regNum		= #{regNum, jdbcType=VARCHAR}
+			, regGubun		= #{regGubun, jdbcType=VARCHAR}
+			, adminWeight	= #{adminWeight, jdbcType=VARCHAR}
+			, distPeriDoc	= #{distPeriDoc, jdbcType=VARCHAR}
+			, dispWeight	= #{dispWeight, jdbcType=VARCHAR}
+			, dispWeightUnit	= #{dispWeightUnit, jdbcType=VARCHAR}
+			, dispWeightText	= #{dispWeightText, jdbcType=VARCHAR}
+			, distPeriSite	= #{distPeriSite, jdbcType=VARCHAR}
+			, prodStandard	= #{prodStandard, jdbcType=VARCHAR}
+			, ingredient	= #{ingredient, jdbcType=VARCHAR}
+			, keepCondition	= #{keepCondition, jdbcType=VARCHAR}
+			, keepConditionCode	= #{keepConditionCode, jdbcType=VARCHAR}
+			, packUnit		= #{packUnit, jdbcType=VARCHAR}
+			, childHarm		= #{childHarm, jdbcType=VARCHAR}
+			, note			= #{note, jdbcType=VARCHAR}
+			, noteText		= #{noteText, jdbcType=VARCHAR}
+			, menuProcess	= #{menuProcess, jdbcType=VARCHAR}
+			, standard		= #{standard, jdbcType=VARCHAR}
+			, stlal			= #{stlal, jdbcType=VARCHAR}
+			, isAutoDisp	= #{isAutoDisp, jdbcType=VARCHAR}
+			, modDate		= getDate()
+			, modUserId		= #{modUserId, jdbcType=VARCHAR}
+			, adminWeightFrom		= #{adminWeightFrom, jdbcType=VARCHAR}
+			, adminWeightUnitFrom	= #{adminWeightUnitFrom, jdbcType=VARCHAR}
+			, adminWeightTo			= #{adminWeightTo, jdbcType=VARCHAR}
+			, adminWeightUnitTo		= #{adminWeightUnitTo, jdbcType=VARCHAR}
+			, lineProcessType		= #{lineProcessType, jdbcType=VARCHAR}
+			, usage					= #{usage, jdbcType=VARCHAR}
+			, packMaterial			= #{packMaterial, jdbcType=VARCHAR}
+			, qns					= #{qns, jdbcType=VARCHAR}
+			, isQnsReviewTarget		= #{isQnsReviewTarget, jdbcType=VARCHAR}
+			, sellDate				= #{sellDate, jdbcType=VARCHAR}
+		WHERE dNo = #{dNo}
+	</update>
+	
+	<delete id="deleteMfgProcessDoc">
+		DELETE FROM manufacturingProcessDoc WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocSub">
+		DELETE FROM manufacturingProcessDocSubProd WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocMix">
+		DELETE FROM manufacturingProcessDocMix WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocCont">
+		DELETE FROM manufacturingProcessDocCont WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocItem">
+		DELETE FROM manufacturingProcessDocItem WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocDisp">
+		DELETE FROM manufacturingProcessDocDisp WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocSpec">
+		DELETE FROM manufacturingProcessDocProdSpec WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocSpecMD">
+		DELETE FROM manufacturingProcessDocProdSpecMD WHERE dNo = #{dNo}
+	</delete>
+	<delete id="deleteMfgProcessDocStoreMethod">
+		/* 점포 제조공정서_제조방법 삭제*/
+		DELETE FROM manufacturingProcessDocStoreMethod WHERE dNo = #{dNo}
+	</delete>
+	
+	<update id="updateManufacturingProcessDoc">
+		UPDATE manufacturingProcessDoc 
+		SET 
+			state = #{state}
+			, modUserId = #{userId}
+			, modDate = getDate() 
+		WHERE dNo = #{dNo}
+	</update>
+	
+	<update id="changeMfgProcessDoc">
+		UPDATE manufacturingProcessDocItem SET dNo = #{dNo_origin} WHERE dNo = #{dNo}
+	</update>
+	
+	<insert id="saveDesignRequestDoc">
+		INSERT INTO designRequestDoc (
+			drpNo
+			, docNo
+			, docVersion
+			, title
+			, content
+			, department
+			, director
+			, reqDate
+			, regDate
+			, regUserId
+			, state
+		) VALUES (
+			(
+				SELECT CASE WHEN MAX(drpNo) > 0 THEN MAX(drpNo)+1 ELSE 1 END AS drpNo 
+				FROM designRequestDoc 
+				WHERE docNo = #{docNo} and docVersion = #{docVersion}
+			)
+			,#{docNo}
+			, #{docVersion}
+			, #{title}
+			, <![CDATA[#{content}]]>
+			, #{department}
+			, #{director}
+			, #{reqDate}
+			, getDate()
+			, #{regUserId}
+			, #{state}
+		)
+		<selectKey keyProperty="drNo" resultType="int" order="AFTER">
+			SELECT IDENT_CURRENT('designRequestDoc')
+		</selectKey>
+	</insert>
+	
+	<insert id="saveNutritionLabel">
+		INSERT INTO nutritionLabel (
+			drNo
+			, nutritionType
+			, natriumType
+			, weight
+			, weightText
+			, unit
+			, kcal
+			, kcalText
+			, pieceText
+			, unitNatrium
+			, unitCarbohydrate
+			, unitSugars
+			, unitFat
+			, unitTransFat
+			, unitSaturatedFat
+			, unitCholesterol
+			, unitProtein
+			, contNatrium
+			, contCarbohydrate
+			, contSugars
+			, contFat
+			, contTransFat
+			, contSaturatedFat
+			, contCholesterol
+			, contProtein
+		) VALUES (
+			#{drNo}
+			, #{nutritionType, jdbcType=VARCHAR}
+			, #{natriumType, jdbcType=VARCHAR}
+			, #{weight, jdbcType=VARCHAR}
+			, #{weightText, jdbcType=VARCHAR}
+			, #{unit, jdbcType=VARCHAR}
+			, #{kcal, jdbcType=VARCHAR}
+			, #{kcalText, jdbcType=VARCHAR}
+			, #{pieceText, jdbcType=VARCHAR}
+			, #{unitNatrium, jdbcType=VARCHAR}
+			, #{unitCarbohydrate, jdbcType=VARCHAR}
+			, #{unitSugars, jdbcType=VARCHAR}
+			, #{unitFat, jdbcType=VARCHAR}
+			, #{unitTransFat, jdbcType=VARCHAR}
+			, #{unitSaturatedFat, jdbcType=VARCHAR}
+			, #{unitCholesterol, jdbcType=VARCHAR}
+			, #{unitProtein, jdbcType=VARCHAR}
+			, #{contNatrium, jdbcType=VARCHAR}
+			, #{contCarbohydrate, jdbcType=VARCHAR}
+			, #{contSugars, jdbcType=VARCHAR}
+			, #{contFat, jdbcType=VARCHAR}
+			, #{contTransFat, jdbcType=VARCHAR}
+			, #{contSaturatedFat, jdbcType=VARCHAR}
+			, #{contCholesterol, jdbcType=VARCHAR}
+			, #{contProtein, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="updateNutritionLabel">
+		MERGE nutritionLabel AS a
+		USING (SELECT #{drNo} drNo) AS b
+		ON a.drNo = b.drNo
+		WHEN MATCHED THEN
+			UPDATE SET
+				nutritionType = #{nutritionType, jdbcType=VARCHAR}
+				, natriumType = #{natriumType, jdbcType=VARCHAR}
+				, weight = #{weight, jdbcType=VARCHAR}
+				, weightText = #{weightText, jdbcType=VARCHAR}
+				, unit = #{unit, jdbcType=VARCHAR}
+				, kcal = #{kcal, jdbcType=VARCHAR}
+				, kcalText = #{kcalText, jdbcType=VARCHAR}
+				, pieceText = #{pieceText, jdbcType=VARCHAR}
+				, unitNatrium = #{unitNatrium, jdbcType=VARCHAR}
+				, unitCarbohydrate = #{unitCarbohydrate, jdbcType=VARCHAR}
+				, unitSugars = #{unitSugars, jdbcType=VARCHAR}
+				, unitFat = #{unitFat, jdbcType=VARCHAR}
+				, unitTransFat = #{unitTransFat, jdbcType=VARCHAR}
+				, unitSaturatedFat = #{unitSaturatedFat, jdbcType=VARCHAR}
+				, unitCholesterol = #{unitCholesterol, jdbcType=VARCHAR}
+				, unitProtein = #{unitProtein, jdbcType=VARCHAR}
+				, contNatrium = #{contNatrium, jdbcType=VARCHAR}
+				, contCarbohydrate = #{contCarbohydrate, jdbcType=VARCHAR}
+				, contSugars = #{contSugars, jdbcType=VARCHAR}
+				, contFat = #{contFat, jdbcType=VARCHAR}
+				, contTransFat = #{contTransFat, jdbcType=VARCHAR}
+				, contSaturatedFat = #{contSaturatedFat, jdbcType=VARCHAR}
+				, contCholesterol = #{contCholesterol, jdbcType=VARCHAR}
+				, contProtein = #{contProtein, jdbcType=VARCHAR}
+		WHEN NOT MATCHED THEN
+			INSERT (
+				drNo
+				, nutritionType
+				, natriumType
+				, weight
+				, weightText
+				, kcal
+				, kcalText
+				, pieceText
+				, unitNatrium
+				, unitCarbohydrate
+				, unitSugars
+				, unitFat
+				, unitTransFat
+				, unitSaturatedFat
+				, unitCholesterol
+				, unitProtein
+				, contNatrium
+				, contCarbohydrate
+				, contSugars
+				, contFat
+				, contTransFat
+				, contSaturatedFat
+				, contCholesterol
+				, contProtein
+			) VALUES (
+				#{drNo}
+				, #{nutritionType, jdbcType=VARCHAR}
+				, #{natriumType, jdbcType=VARCHAR}
+				, #{weight, jdbcType=VARCHAR}
+				, #{weightText, jdbcType=VARCHAR}
+				, #{kcal, jdbcType=VARCHAR}
+				, #{kcalText, jdbcType=VARCHAR}
+				, #{pieceText, jdbcType=VARCHAR}
+				, #{unitNatrium, jdbcType=VARCHAR}
+				, #{unitCarbohydrate, jdbcType=VARCHAR}
+				, #{unitSugars, jdbcType=VARCHAR}
+				, #{unitFat, jdbcType=VARCHAR}
+				, #{unitTransFat, jdbcType=VARCHAR}
+				, #{unitSaturatedFat, jdbcType=VARCHAR}
+				, #{unitCholesterol, jdbcType=VARCHAR}
+				, #{unitProtein, jdbcType=VARCHAR}
+				, #{contNatrium, jdbcType=VARCHAR}
+				, #{contCarbohydrate, jdbcType=VARCHAR}
+				, #{contSugars, jdbcType=VARCHAR}
+				, #{contFat, jdbcType=VARCHAR}
+				, #{contTransFat, jdbcType=VARCHAR}
+				, #{contSaturatedFat, jdbcType=VARCHAR}
+				, #{contCholesterol, jdbcType=VARCHAR}
+				, #{contProtein, jdbcType=VARCHAR}
+			);
+	</update>
+	
+	<update id="updateDesignRequestDoc">
+		<![CDATA[
+			UPDATE designRequestDoc SET 
+				title = #{title}
+				, content = #{content}
+				, department = #{department}
+				, director = #{director}
+				, reqDate = #{reqDate}
+				, modDate = getDate()
+				, modUserId = #{regUserId}
+			WHERE drNo = #{drNo}
+		]]>
+	</update>
+	
+	<delete id="deleteDesignRequestDoc">
+		DELETE FROM designRequestDoc WHERE drNo = #{drNo}
+	</delete>
+	
+	<delete id="deleteAllDesignRequestDoc">
+		DELETE FROM designRequestDoc WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</delete>
+	
+	<select id="getDesignRequestDocDetail" resultType="kr.co.aspn.vo.DesignRequestDocVO">
+		SELECT drNo
+			, drpNo
+			, docNo
+			, docVersion
+			, title
+			, content
+			, department
+			, director
+			, CONVERT(varchar(10), reqDate, 120) as reqDate
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, regUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+			, modUserId
+			, state
+		FROM designRequestDoc WHERE drNo = #{drNo}
+	</select>
+	
+	<select id="getNutritionLabel" resultType="kr.co.aspn.vo.NutritionLabel">
+		SELECT a.*
+			, dbo.getCodeName('NATRIUMTYPE', a.natriumType) natriumTypeText
+			, dbo.getNatriumLevel(convert(numeric,contNatrium)) natriumLevel
+		FROM nutritionLabel a WHERE drNo = #{drNo}
+	</select>
+	
+	<select id="getMfgProcessDocDetail" resultType="kr.co.aspn.vo.MfgProcessDoc">
+		SELECT dNo
+			, dpNo
+			, docNo
+			, docVersion
+			, docType
+			, LTRIM(RTRIM(calcType)) calcType
+			, apprNo
+			, companyCode
+			, state
+			, ErrorMessage
+			, memo
+			, plantCode
+			, plantName
+			, stdAmount
+			, divWeight
+			, lineCode
+			, (
+				select lineName 
+				from plantLine 
+				where lineCode = manufacturingProcessDoc.lineCode 
+				  and companyCode = manufacturingProcessDoc.companyCode 
+				  and plantCode = manufacturingProcessDoc.plantCode
+			) AS lineName
+			, mixWeight
+			, bagAmout
+			, bomRate
+			, numBong
+			, numBox
+			, totWeight
+			, docProdName
+			, loss
+			, compWeight
+			, compWeightUnit
+			, compWeightText
+			, regNum
+			, regGubun
+			, adminWeight
+			, distPeriDoc
+			, dispWeight
+			, dispWeightUnit
+			, dispWeightText
+			, distPeriSite
+			, prodStandard
+			, ingredient
+			, usage
+			, packMaterial
+			, keepConditionCode
+			, CASE calcType WHEN '40' THEN keepCondition ELSE (
+				CASE keepConditionCode WHEN '7' THEN keepCondition
+				ELSE dbo.getCodeName('KEEPCONDITION', keepConditionCode)
+				END
+			  ) END AS keepCondition
+			, packUnit
+			, childHarm
+			, note
+			, noteText
+			, menuProcess
+			, standard
+			, docHtml
+			, stlal
+			, isAutoDisp
+			, lineProcessType
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, adminWeightFrom
+			, adminWeightUnitFrom
+			, adminWeightTo
+			, adminWeightUnitTo
+			, CASE WHEN modDate BETWEEN CONVERT(DATE, '2020-01-16') AND CONVERT(DATE, '2020-03-27') THEN 'Y' ELSE 'N' END AS isOld
+			, qns
+			, isQnsReviewTarget
+			, sellDate
+		FROM manufacturingProcessDoc WHERE dNo = #{dNo}
+	</select>
+	
+	<select id="getMfgProcessDocSub" resultType="kr.co.aspn.vo.MfgProcessDocSubProd">
+		SELECT * FROM manufacturingProcessDocSubProd WHERE dNo = #{dNo} ORDER BY dSNo
+	</select>
+	
+	<select id="getMfgProcessDocMix" resultType="kr.co.aspn.vo.MfgProcessDocBase">
+		SELECT dmNo, dNo, docNo, docVersion, parCode, '' divWeight, '' divWeightTxt
+			, 'MI' baseType
+			, mixCode baseCode
+			, mixName baseName
+			, bakerySum baseBakerySum
+			, bomRateSum baseBomRateSum
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, regUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+			, modUserId
+		FROM manufacturingProcessDocMix WHERE dNo = #{dNo} and parCode = #{parCode}
+		ORDER BY dMNo
+	</select>
+	<select id="getMfgProcessDocCont" resultType="kr.co.aspn.vo.MfgProcessDocBase">
+		SELECT dcNo, dNo, docNo, docVersion, parCode, divWeight, divWeightTxt
+			, 'CI' baseType
+			, contCode baseCode
+			, contName baseName
+			, contBakerySum baseBakerySum
+			, contBomRateSum baseBomRateSum
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, regUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+			, modUserId
+		FROM manufacturingProcessDocCont WHERE dNo = #{dNo} and parCode = #{parCode}
+		ORDER BY dCNo
+	</select>
+	<select id="getMfgProcessDocItem" resultType="kr.co.aspn.vo.MfgProcessDocItem">
+	     SELECT * 
+	        <if test="plantCode != '' and plantCode != null ">
+	        ,dbo.getMatCodeCheck(#{plantCode}, itemCode) AS matStatus
+	        </if>
+	     FROM manufacturingProcessDocItem WHERE dNo = #{dNo} and itemType = #{itemType}
+	     <if test="itemParCode == ''">
+	        and (parCode = #{itemParCode} or parCode IS NULL)
+	     </if>
+	     <if test="itemParCode != ''">
+	        and parCode = #{itemParCode}
+	     </if>
+	     <choose>
+	        <when test='isOld == "Y"'>ORDER BY POSNR, dINo</when>
+	        <otherwise>ORDER BY dINo</otherwise>
+	      </choose>
+	 </select>
+	<select id="getMfgProcessDocDisp" resultType="kr.co.aspn.vo.MfgProcessDocDisp">
+		SELECT dPNo
+			, dNo
+			, docNo
+			, docVersion
+			, matName
+			, CASE excRate WHEN 'NaN' THEN '0' ELSE excRate END AS excRate
+			, CASE incRate WHEN 'NaN' THEN '0' ELSE incRate END AS incRate
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, etc
+		FROM manufacturingProcessDocDisp WHERE dNo = #{dNo}
+		ORDER BY dPNo
+	</select>
+	
+	<select id="getMfgProcessDocSpec" resultType="kr.co.aspn.vo.MfgProcessDocProdSpec">
+		SELECT deNo
+			, dNo
+			, size
+			, sizeErr
+			, feature
+			, productWater
+			, productAw
+			, productPh
+			, productTone
+			, productBrightness
+			, productHardness
+			, contentWater
+			, contentWaterErr
+			, contentAw
+			, contentAwErr
+			, contentPh
+			, contentPhErr
+			, contentTone
+			, contentToneErr
+			, contentSalinity
+			, contentSalinityErr
+			, contentBrix
+			, contentBrixErr
+			, noodlesWater
+			, noodlesPh
+			, noodlesAcidity
+			, deoxidizer
+			, nitrogenous
+			, regUserId
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, modUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+			, (
+				SELECT 1 FROM manufacturingProcessDocProdSpec 
+				WHERE dNo = a.dNo
+				  and (
+					(productAw != '' and productAw is not null)
+				  or (productBrightness != '' and productBrightness is not null)
+				  or (productHardness != '' and productHardness is not null)
+				  or (productPh != '' and productPh is not null)
+				  or (productTone != '' and productTone is not null)
+				  or (productWater != '' and productWater is not null)
+				  )
+			) hasProduct
+			, (
+				SELECT 1 FROM manufacturingProcessDocProdSpec 
+				WHERE dNo = a.dNo
+				  and (
+					(contentBrix != '' and contentBrix is not null)
+					or (contentPh != '' and contentPh is not null)
+					or (contentSalinity != '' and contentSalinity is not null)
+					or (contentTone != '' and contentTone is not null)
+					or (contentWater != '' and contentWater is not null)
+					or (contentAw != '' and contentAw is not null)
+				  )
+			) hasContent
+			, (
+				SELECT 1 FROM manufacturingProcessDocProdSpec 
+				WHERE dNo = a.dNo
+				  and (
+					(noodlesAcidity != '' and noodlesAcidity is not null)
+					or (noodlesPh != '' and noodlesPh is not null)
+					or (noodlesWater != '' and noodlesWater is not null)
+				  )
+			) hasNoodles
+		FROM manufacturingProcessDocProdSpec a WHERE dNO = #{dNo}
+	</select>
+	
+	<select id="getMfgProcessDocSpecMD" resultType="kr.co.aspn.vo.MfgProcessDocProdSpecMD">
+		SELECT dfNo
+			, moisture
+			, moistureUnit
+			, ashFrom
+			, ashTo
+			, protein
+			, proteinErr
+			, waterAbsFrom
+			, waterAbsTo
+			, stabilityFrom
+			, stabilityTo
+			, devTime
+			, devTimeUnit
+			, plFrom
+			, plTo
+			, maxVisc
+			, maxViscUnit
+			, fnFrom
+			, fnTo
+			, particleSize
+			, color
+			, colorUnit
+			, wetGlutenFrom
+			, wetGlutenTo
+			, visc
+			, viscUnit
+			, regUserId
+			, CONVERT(varchar(20), regDate, 120) as regDate
+			, modUserId
+			, CONVERT(varchar(20), modDate, 120) as modDate
+		FROM manufacturingProcessDocProdSpecMD a WHERE dNO = #{dNo}
+	</select>
+	
+	<update id="updateDevDocCloseState">
+		UPDATE devDoc 
+		SET isClose = #{isClose}
+			, closeMemo = #{closeMemo} 
+		WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</update>
+	
+	<update id="updateDevDocLatestState">
+		UPDATE devDoc SET isLatest = #{isLatest} WHERE docNo = #{docNo}
+	</update>
+	
+	<insert id="versionUpDevDoc" parameterType="kr.co.aspn.vo.DevDocVO">
+		INSERT INTO devDoc (
+			docNo, docVersion, productCode, productName, productCategory
+			, productCategoryText, explanation, isLatest, regDate, regUserId, versionUpMemo
+			, nonHeat, manufacturingNo, launchDate, productType1, productType2, productType3
+			, imNo, manufacturingNoSeq, isClose, isHidden,productDocType,storeDiv
+		) 
+		SELECT docNo, docVersion+1, productCode, productName, productCategory
+			, productCategoryText, explanation, 1, getDate(), #{regUserId}, #{versionUpMemo}
+			, nonHeat, manufacturingNo, launchDate, productType1, productType2, productType3
+			, imNo, manufacturingNoSeq, isClose, isHidden,productDocType,storeDiv
+		FROM devDoc WHERE docNo = #{docNo} and docVersion = #{docVersion}
+		<selectKey keyProperty="docVersion" resultType="int" order="AFTER">
+			SELECT MAX(docVersion)+1 docVersion FROM devDoc WHERE docNo = #{docNo} and docVersion = #{docVersion}
+		</selectKey>
+	</insert>
+	
+	<select id="copyDesignRequestDocList">
+		/* 미사용이나 차후 사용될 가능성이 있어 남겨둠 */
+		INSERT INTO designRequestDoc (
+			drpNo
+			, docNo
+			, docVersion
+			, title
+			, content
+			, department
+			, director
+			, state
+			, reqDate
+			, regUserId
+			, regDate
+		)
+		SELECT drpNo, docNo, #{createdDocVersion}, title, content
+			, department, director, 0, reqDate, regUserId, regDate 
+		FROM DESIGNREQUESTDOC 
+		WHERE drNo in <foreach collection="drNoArr" item="drNo" open="(" close=")" separator=",">#{drNo}</foreach>
+	</select>
+	
+	<select id="copyDevDocFile">
+		INSERT devDocFile (
+			dpNo, docNo, docVersion, gubun, fileName
+			, orgFileName, path, regDate, regUserId, isOld
+		) 		
+		SELECT dpNo, docNo, #{createdDocVersion}, gubun, fileName
+			, orgFileName, path, regDate, regUserId , isOld
+		FROM devDocFile WHERE docNo = #{docNo} and docVersion = #{docVersion}
+	</select>
+	
+	<select id="getMfgsummaryList" resultType="hashmap">
+		SELECT a.dNo
+			, a.memo
+			, a.plantName
+			, a.lineName 
+			, b.productCode
+			, b.productName
+			--, dbo.getCodeName('MFG_STATE', a.state) mfgState
+			--, dbo.getCodeName('DEVDOC_STATE', b.isClose) devDocState
+		FROM manufacturingProcessDoc a
+		LEFT OUTER JOIN devDoc b ON a.docNo = b.docNo AND a.docVersion = b.docVersion
+		WHERE b.docNo = #{docNo} and b.docVersion = #{docVersion}
+	</select>
+	
+	<select id="getDevDocVersion" resultType="hashmap">
+		SELECT docVersion FROM devDoc WHERE docNo = #{docNo}
+	</select>
+	
+	<select id="getDevDocSummaryList" resultType="hashmap">
+		SELECT TOP 1000 ddNo, docNo, docVersion, productName
+		FROM devDoc 
+		WHERE productType1 like '%'+ #{productType1}+'%'
+		  AND productType2 like '%'+ #{productType2}+'%'
+		  AND productType3 like '%'+ #{productType3}+'%'
+		  AND productName like '%'+#{productName}+'%'
+		<if test='isAdmin == null or isAdmin == ""'>
+		  <if test="teamCode == ''">
+		  	<if test="userGrade == 2">
+			  AND regUserId IN (
+			    SELECT userId FROM userTable2 WHERE deptCode = #{deptCode}
+			  )
+		  	</if>
+		  	<if test="userGrade != 2">
+		  	  AND regUserId = #{userId}
+		  	</if>
+		  </if>
+		  <if test="teamCode != ''">
+			AND regUserId IN (
+			  SELECT userId FROM userTable2 WHERE teamCode = #{teamCode}
+			)
+		  </if>
+		</if>
+		  AND isHidden != 'Y'
+		ORDER BY docNo DESC, docVersion, ddNo DESC
+	</select>
+	
+	<select id="getBomHeaderList" resultType="hashmap">
+		SELECT	productCode	as MATNR
+			, m.plantCode as WERKS
+			, '1' as STLAN
+			, stlal as STLAL
+			, (select top 1 divWeight from manufacturingProcessDocSubProd where dNo = m.dNo order by dSNo) as ZTEXT
+			, numBong as STKTX
+			, case when companyCode = 'SL' then (select floor(avg(CONVERT(float, stdAmount))) from manufacturingProcessDocSubProd where dNo = m.dNo) 
+	          when companyCode = 'SN' then (select min(stdAmount) from manufacturingProcessDocSubProd where dNo = m.dNo) 
+	          				ELSE (select min(stdAmount) from manufacturingProcessDocSubProd where dNo = m.dNo) 
+	          end as BMENG
+			, productName as MAKTX2
+			, companyCode					
+			, isnull(DATEDIFF(day , (SELECT max(regDate) FROM devDocBomHeader WHERE MATNR = d.productCode AND WERKS = plantCode AND STLAL = stlal), getdate()), 99) as term				
+			, (SELECT max(regDate) FROM devDocBomHeader WHERE MATNR = d.productCode AND WERKS = plantCode AND STLAL = stlal)	as updDate
+			, m.dNo
+		FROM devDoc d
+		INNER JOIN manufacturingProcessDoc m ON d.docNo = m.docNo and d.docVersion = m.docVersion
+		WHERE 1=1
+		<foreach collection="dNoList" item="dNo" open="and dNo in (" separator="," close=")">#{dNo}</foreach>
+	</select>
+	
+	<!--  S201110-00001  -->
+   <select id="getCheckBomHeaderList" resultType="hashmap">
+      SELECT   
+         productCode
+         , m.plantCode
+         , dbo.getPlantName(companyCode, m.plantCode) AS plantName
+         , productName
+         , companyCode
+         , dbo.getCompanyName(companyCode) AS companyName               
+         , m.dNo
+      	 , d.productDocType
+      FROM devDoc d
+         INNER JOIN manufacturingProcessDoc m ON d.docNo = m.docNo and d.docVersion = m.docVersion
+         WHERE 1=1
+      <foreach collection="dNoList" item="dNo" open="and dNo in (" separator="," close=")">#{dNo}</foreach>
+   </select>
+	
+	<select id="getBomItemList" resultType="hashmap">
+		SELECT companyCode
+			, MATNR
+			, WERKS
+			, STLAN
+			, STLAL
+			, ZTEXT
+			, STKTX
+			, BMENG
+			, POSNR
+			, IDNRK
+			, MENGE
+			, MEINS
+			, AUSCH
+			, SANFE
+			, LGORT
+			, ISNULL(POTX1_CONT, ISNULL(POTX1_dCNo, '')) POTX1
+			, MAKTX2
+			, OJTXP
+		FROM (
+			SELECT	m.companyCode
+				, d.productCode as MATNR
+				, m.plantCode as WERKS
+				, '1' as STLAN
+				, m.stlal as STLAL
+				, (select top 1 divWeight from manufacturingProcessDocSubProd where dNo = m.dNo order by dSNo)  as ZTEXT
+				, m.numBong as STKTX
+				, case when companyCode = 'SL' then (select floor(avg(CONVERT(float, stdAmount))) from manufacturingProcessDocSubProd where dNo = m.dNo)  
+						when companyCode = 'SN' then (select min(stdAmount) from manufacturingProcessDocSubProd where dNo = m.dNo)
+					       						ELSE (SELECT min(stdAmount) FROM manufacturingProcessDocSubProd WHERE dNo = m.dNo)
+					end as BMENG
+				, item.posnr as POSNR
+				, item.itemCode as IDNRK
+				, item.bomRate  as MENGE
+				, ISNULL(item.unit, '') as MEINS
+				, scrap as AUSCH
+				, 'X' as SANFE
+				, item.storageCode as LGORT
+				, (SELECT divWeight FROM  manufacturingProcessDocCont WHERE dNo = item.dNo AND contCode = item.parCode) as POTX1_CONT
+				, (SELECT divWeight FROM  manufacturingProcessDocCont WHERE dNo = item.dNo AND convert(varchar, dCNo) = item.parCode) as POTX1_dCNo
+				, d.productName as MAKTX2
+				, item.itemName as OJTXP
+			FROM devDoc d
+				, manufacturingProcessDoc m
+				, manufacturingProcessDocItem item
+			WHERE d.docNo = m.docNo
+						and d.docVersion = m.docVersion
+						and m.dNo = item.dNo
+						and m.dNo = #{dNo}
+		) a ORDER BY posnr
+	</select>
+	
+	<select id="getCheckBomItemList" resultType="hashmap">
+      SELECT 
+         itemCode
+         , unit
+         , itemName
+         , matStatus
+      FROM (
+         SELECT   
+            item.itemCode
+            , ISNULL(item.unit, '') as unit
+            , item.itemName
+            , dbo.getMatCodeCheck(m.plantCode, item.itemCode) as matStatus
+         FROM devDoc d
+            , manufacturingProcessDoc m
+            , manufacturingProcessDocItem item
+         WHERE 1 = 1         
+            and d.docNo = m.docNo
+            and d.docVersion = m.docVersion
+            and m.dNo = item.dNo
+            and m.dNo = #{dNo}
+      )a WHERE 1 = 1
+         AND a.matStatus != 'O'
+   </select>
+	
+	<select id="getLatestMaterailOfSapCode" resultType="hashmap">
+		SELECT TOP 1 material.* FROM material
+		WHERE sapCode = #{itemSapCode}
+		  AND company = (SELECT companyCode FROM manufacturingProcessDoc WHERE dNo = #{dNo})
+		  AND plant = (SELECT plant FROM manufacturingProcessDoc WHERE dNo = #{dNo})
+		  AND isHidden != 'Y'
+		  AND isDelete != 'Y'
+		ORDER BY regDate DESC
+	</select>
+	
+	<select id="getLatestMaterailOfImNo" resultType="hashmap">
+		SELECT TOP 1 material.* FROM material
+		WHERE imNo = #{itemImNo}
+		  AND company = (SELECT company FROM material WHERE imNo = #{itemImNo})
+		  AND plant = (SELECT plant FROM material WHERE imNo = #{itemImNo})
+		  AND isHidden != 'Y'
+		  AND isDelete != 'Y'
+		ORDER BY regDate DESC
+	</select>
+	
+	<select id="MfgProcessDetail" resultType="hashmap">
+		SELECT 
+		mpd.dNo
+			, mpd.dpNo
+			, mpd.docNo
+			, mpd.docVersion
+			, mpd.docType
+			, mpd.calcType
+			, mpd.apprNo
+			, mpd.companyCode
+			, mpd.state
+			, CASE mpd.state WHEN '0' THEN '등록'
+				WHEN '1' THEN '승인'
+				WHEN '2' THEN '반려'
+				WHEN '3' THEN '결재중'
+				WHEN '4' THEN 'ERP반영 완료'
+				WHEN '5' THEN 'ERP반영 오류'
+				WHEN '6' THEN '사용중지'
+				WHEN '7' THEN '임시저장'
+			END as stateText
+			, mpd.ErrorMessage
+			, mpd.memo
+			, mpd.plantCode
+			, mpd.plantName
+			, mpd.stdAmount
+			, mpd.divWeight
+			, mpd.lineCode
+			, mpd.lineName
+			, mpd.mixWeight
+			, mpd.bagAmout
+			, mpd.bomRate
+			, mpd.numBong
+			, mpd.numBox
+			, mpd.totWeight
+			, mpd.docProdName
+			, mpd.loss
+			, mpd.compWeight
+			, mpd.regNum
+			, mpd.regGubun
+			, mpd.adminWeight
+			, mpd.distPeriDoc
+			, mpd.dispWeight
+			, mpd.distPeriSite
+			, mpd.prodStandard
+			, mpd.ingredient
+			, mpd.usage
+			, mpd.packMaterial
+			, mpd.keepCondition
+			, mpd.packUnit
+			, mpd.childHarm
+			, mpd.note
+			, mpd.menuProcess
+			, mpd.standard
+			, mpd.docHtml
+			, mpd.stlal
+			, mpd.isAutoDisp
+			, mpd.lineProcessType
+			, CONVERT(varchar(20), mpd.regDate, 120) as regDate
+			, mpd.regUserId
+			, CONVERT(varchar(20), mpd.modDate, 120) as modDate
+			, mpd.modUserId
+			, mpd.adminWeightFrom
+			, mpd.adminWeightUnitFrom
+			, mpd.adminWeightTo
+			, mpd.adminWeightUnitTo
+			, mpd.keepConditionCode
+			, ISNULL((select sum(convert(float, replace(excRate, 'NaN', '0'))) from manufacturingProcessDocDisp where dNo = mpd.dNo),0) as sumExcRate
+			, ISNULL((select sum(convert(float, replace(incRate, 'NaN', '0'))) from manufacturingProcessDocDisp where dNo = mpd.dNo),0) as sumIncRate
+			, (select count(dSNo) from manufacturingProcessDocSubProd where dNo = mpd.dNo) as subProdCnt
+			, (select count(*) from docAuthManagement dam where dam.srcUserId = mpd.regUserId and dam.trgUserId = '${userId}') as hasAuthorityCnt 
+	 FROM devDoc dd inner join manufacturingProcessDoc mpd on dd.docNo = mpd.docNo and dd.docVersion = mpd.docVersion
+	 where mpd.dNo=${dNo} and dd.isHidden != 'Y'
+	</select>
+	<select id="hasAuthority" resultType="int">
+		select count(*) from docAuthManagement dam where dam.srcUserId = '{1}' and dam.trgUserId = '{0}'
+	</select>
+	<select id="detailDdNo" resultType="hashmap" parameterType="int">
+		SELECT docNo,docVersion  FROM devDoc WHERE ddNo = #{ddNo}
+	</select>
+	
+	<select id="getDispInfo" resultType="hashmap">
+		select dPNo
+			, dNo
+			, docNo
+			, docVersion
+			, matName
+			, CASE excRate WHEN 'NaN' THEN '0' ELSE excRate END AS excRate
+			, CASE incRate WHEN 'NaN' THEN '0' ELSE incRate END AS incRate
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, etc 
+		from manufacturingProcessDocDisp where dNo = #{dNo} order by dpNo
+	</select>
+	
+	<update id="updateDisp">
+		UPDATE manufacturingProcessDocDisp 
+		SET etc = #{etc}
+			, modDate = getDate() 
+		WHERE dNo = #{dNo} AND dpNo = #{dpNo} 
+	</update>
+	
+	<update id="updateMfgProcessDocState0">
+		UPDATE manufacturingProcessDoc
+		SET state = 0
+			, modDate = getDate() 
+		WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</update>
+	
+	<update id="updateDesignRequestDocState0">
+		/** productDev.updateDesignRequestDocState0 */
+		UPDATE designRequestDoc
+		SET state = 0
+			, modDate = getDate() 
+		WHERE docNo = #{docNo} AND docVersion = #{docVersion}
+	</update>
+	
+	<select id="getBomHeaderNextSeq" resultType="int">
+		SELECT ISNULL(MAX(SEQ), 0) +1
+		FROM devDocBomHeader
+		WHERE companyCode = #{companyCode}
+		  AND MATNR = #{MANTR}
+		  AND WERKS = #{WERKS}
+		  AND STLAN = #{STLAN}
+		  AND STLAL = #{STLAL}
+	</select>
+	
+	<update id="insertBomHeader">
+		/** productDev.insertBomHeader */
+		INSERT INTO devDocBomHeader(
+			  seq, companyCode, MATNR, WERKS, STLAN
+			, STLAL, ZTEXT, STKTX, BMENG, MAKTX2
+			, regDate, regUserId
+		) VALUES (
+			  #{seq}, #{companyCode}, #{MATNR}, #{WERKS}, #{STLAN}
+			, #{STLAL}, #{ZTEXT}, #{STKTX}, #{BMENG}, #{MAKTX2}
+			, getdate(), #{regUserId}
+		)
+	</update>
+	
+	<update id="updateMgfProcessDocBom">
+		/** productDev.updateMgfProcessDocBom */
+		UPDATE  manufacturingProcessDoc 
+		SET stlal = #{STLAL}
+			, state = #{state}
+			, errorMessage = #{errorMessage} 
+		WHERE dNo = #{dNo} 
+	</update>
+	
+	<update id="checkDevDocFile">
+		/** productDev.checkDevDocFile */
+		UPDATE devDocFile 
+		SET reviewUserName = #{userId}
+			, reviewDate = getDate()
+		WHERE ddfNo = #{ddfNo}
+	</update>
+	
+	<delete id="deleteMfgProcessDocPkgItem">
+		/** productDev.deleteMfgProcessDocPkgItem */
+		DELETE FROM manufacturingProcessDocItem WHERE dNo = #{dNo} and itemType = 'MT'
+	</delete>
+	
+	<insert id="copyDesignRequestDoc">
+		INSERT INTO designRequestDoc (
+			drpNo
+			, docNo
+			, docVersion
+			, title
+			, content
+			, department
+			, director
+			, reqDate
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, state
+			, isOld
+		) 
+		SELECT (
+				SELECT CASE WHEN MAX(drpNo) > 0 THEN MAX(drpNo)+1 ELSE 1 END AS drpNo 
+				FROM designRequestDoc
+				WHERE drNo = a.drNo
+			)
+			, docNo
+			, docVersion
+			, title
+			, content
+			, department
+			, director
+			, reqDate
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, state
+			, isOld
+		FROM designRequestDoc a
+		WHERE drNo = #{drNo}
+	</insert>
+	
+	<insert id="copyNutiritionLabel">
+		INSERT INTO nutritionLabel (
+			drNo
+			, nutritionType
+			, natriumType
+			, weight
+			, weightText
+			, unit
+			, kcal
+			, kcalText
+			, unitNatrium
+			, unitCarbohydrate
+			, unitSugars
+			, unitFat
+			, unitTransFat
+			, unitSaturatedFat
+			, unitCholesterol
+			, unitProtein
+			, contNatrium
+			, contCarbohydrate
+			, contSugars
+			, contFat
+			, contTransFat
+			, contSaturatedFat
+			, contCholesterol
+			, contProtein
+		)
+		SELECT (SELECT IDENT_CURRENT('designRequestDoc'))
+			, nutritionType
+			, natriumType
+			, weight
+			, weightText
+			, unit
+			, kcal
+			, kcalText
+			, unitNatrium
+			, unitCarbohydrate
+			, unitSugars
+			, unitFat
+			, unitTransFat
+			, unitSaturatedFat
+			, unitCholesterol
+			, unitProtein
+			, contNatrium
+			, contCarbohydrate
+			, contSugars
+			, contFat
+			, contTransFat
+			, contSaturatedFat
+			, contCholesterol
+			, contProtein
+		FROM nutritionLabel
+		WHERE drNo = #{drNo}
+	</insert>
+	
+	 <select id="searchDevDocLatest" resultType="hashmap">
+	 	select *
+	 	from devDoc
+	 	where isLatest = 1 and isHidden != 'Y'
+	 	<if test="searchType!=null and searchType !='' and searchType !=undefined">
+			 <if test="searchValue !=null and searchValue !='' and searchValue !=undefined">
+	 		 	<choose>
+	 		 		<when test="searchType =='number'">
+	 		 			and docNo = #{searchValue}
+	 		 		</when>
+	 		 		<when test="searchType =='name'">
+	 		 			and productName like '%'+#{searchValue}+'%'
+	 		 		</when>
+	 		 		<otherwise>
+	 		 			and productCode = #{searchValue}
+	 		 		</otherwise>
+	 		 	</choose>
+			 </if> 	
+	 	</if>
+	 </select>
+	 
+	 <update id="updateProductLaunchDate">
+	 	update devDoc
+	 	set launchDate = #{launchDate}
+	 	where ddNo = #{ddNo}
+	 </update>
+	 
+	 <select id="searchLaunchListByDate" resultType="hashmap">
+	 	select 
+	 	* from
+	 	devDoc
+	 	where launchDate = #{launchDate}
+	 	and isLatest = 1
+	 </select>
+	 
+	 <select id="selectDesignReqDocApprNo" resultType="string">
+	 	SELECT apprno FROM approvalBoxHeader WHERE tbKey = #{drNo} and tbType = 'designRequestDoc'
+	 </select>
+	 
+	 <update id="updateMfgProcessDocEtc">
+	 	UPDATE manufacturingProcessDoc
+	 	SET
+	 		compWeight				= #{compWeight, jdbcType=VARCHAR}
+	 		, compWeightUnit		= #{compWeightUnit, jdbcType=VARCHAR}
+	 		, compWeightText		= #{compWeightText, jdbcType=VARCHAR}
+	 		, dispWeight			= #{dispWeight, jdbcType=VARCHAR}
+	 		, dispWeightUnit		= #{dispWeightUnit, jdbcType=VARCHAR}
+	 		, dispWeightText		= #{dispWeightText, jdbcType=VARCHAR}
+	 		, adminWeightFrom		= #{adminWeightFrom, jdbcType=VARCHAR}
+	 		, adminWeightUnitFrom	= #{adminWeightUnitFrom, jdbcType=VARCHAR}
+	 		, adminWeightTo			= #{adminWeightTo, jdbcType=VARCHAR}
+	 		, adminWeightUnitTo		= #{adminWeightUnitTo, jdbcType=VARCHAR}
+	 		, regGubun				= #{regGubun, jdbcType=VARCHAR}
+	 		, regNum				= #{regNum, jdbcType=VARCHAR}
+	 		, distPeriDoc			= #{distPeriDoc, jdbcType=VARCHAR}
+	 		, distPeriSite			= #{distPeriSite, jdbcType=VARCHAR}
+	 		, ingredient			= #{ingredient, jdbcType=VARCHAR}
+	 		, keepCondition			= #{keepCondition, jdbcType=VARCHAR}
+	 		, keepConditionCode		= #{keepConditionCode, jdbcType=VARCHAR}
+	 		, usage					= #{usage, jdbcType=VARCHAR}
+	 		, packMaterial			= #{packMaterial, jdbcType=VARCHAR}
+	 		, packUnit				= #{packUnit, jdbcType=VARCHAR}
+	 		, childHarm				= #{childHarm, jdbcType=VARCHAR}
+	 		, note					= #{note, jdbcType=VARCHAR}
+	 		, qns					= #{qns, jdbcType=VARCHAR}
+	 		, isQnsReviewTarget		= #{isQnsReviewTarget, jdbcType=VARCHAR}
+	 	
+	 		, menuProcess	= #{menuProcess, jdbcType=VARCHAR}
+			, standard		= #{standard, jdbcType=VARCHAR}
+			, modDate		= getDate()
+			, modUserId		= #{modUserId, jdbcType=VARCHAR}
+		WHERE dNo = #{dNo}
+	 </update>
+	 
+	 <insert id="copyMfgProcessDocDetail" parameterType="kr.co.aspn.vo.MfgProcessDoc">
+	 	INSERT INTO manufacturingProcessDoc (
+			docNo, docVersion, docType, calcType, companyCode
+			, state, errorMessage, memo, plantCode, plantName
+			, stdAmount, lineCode, lineName, mixWeight, bagAmout
+			, bomRate, numBong, numBox, totWeight, docProdName
+			, loss, compWeight, regNum, regGubun, adminWeight
+			, distPeriDoc, dispWeight, distPeriSite, prodStandard, ingredient
+			, keepCondition, keepConditionCode, packUnit, childHarm, note, noteText, menuProcess
+			, standard, stlal, isAutoDisp, regDate, regUserId
+			, modDate, modUserId, adminWeightFrom, adminWeightUnitFrom, adminWeightTo
+			, adminWeightUnitTo, lineProcessType, usage, packMaterial
+			, compWeightUnit, dispWeightUnit, compWeightText, dispWeightText
+		) 
+		SELECT docNo, docVersion, docType, calcType, companyCode
+			, '0', null, memo, plantCode, plantName
+			, stdAmount, lineCode, lineName, mixWeight, bagAmout
+			, bomRate, numBong, numBox, totWeight, docProdName
+			, loss, compWeight, regNum, regGubun, adminWeight
+			, distPeriDoc, dispWeight, distPeriSite, prodStandard, ingredient
+			, keepCondition, keepConditionCode, packUnit, childHarm, note, noteText, menuProcess
+			, standard, stlal, isAutoDisp, GETDATE(), #{regUserId}
+			, null, null, adminWeightFrom, adminWeightUnitFrom, adminWeightTo
+			, adminWeightUnitTo, lineProcessType, usage, packMaterial
+			, compWeightUnit, dispWeightUnit, compWeightText, dispWeightText
+		FROM manufacturingProcessDoc WHERE dNo = #{dNo}
+	 	<selectKey keyProperty="dNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDoc')
+		</selectKey>	
+	 </insert>
+	
+	 <update id="updateQns"> /* S201109-00014, S210705-00010 */
+	 	UPDATE manufacturingProcessDoc SET qns = #{qns}, isQnsReviewTarget = #{isQnsReviewTarget} WHERE dNo = #{dNo}
+	 </update>
+	 
+	 <select id="getDocInfo" resultType="map">
+	 	SELECT docNo, docVersion FROM manufacturingProcessDoc where dNo = #{dNo}
+	 </select>
+	 
+	 <update id="updateDocProdName">
+	 	UPDATE manufacturingProcessDoc SET docProdName = #{docProdName} WHERE dNo = #{dNo}
+	 </update>
+	
+	<update id="updateDocStopMonth">
+		UPDATE manufacturingProcessDoc SET stopMonth = #{stopMonth} WHERE dNo = #{dNo}
+	</update>
+	
+	
+	<insert id="saveMfgProcessDocStoreMethod" parameterType="kr.co.aspn.vo.MfgProcessDocStoreMethod">
+		/* 점포용 제조공정서 제조방법 저장 saveMfgProcessDocStoreMethod*/
+		INSERT INTO manufacturingProcessDocStoreMethod (
+			dNo
+			, docNo
+			, docVersion
+			, methodName 
+			, methodExplain
+			, regDate
+			, regUserId
+		) VALUES (
+			#{dNo, jdbcType=VARCHAR}
+			, #{docNo, jdbcType=VARCHAR}
+			, #{docVersion, jdbcType=VARCHAR}
+			, #{methodName , jdbcType=VARCHAR}
+			, #{methodExplain, jdbcType=VARCHAR}
+			, getDate()
+			, #{regUserId, jdbcType=VARCHAR}
+		)
+		<selectKey keyProperty="dSMNo" resultType="string" order="AFTER">
+			SELECT IDENT_CURRENT('manufacturingProcessDocStoreMethod')
+		</selectKey>	
+	</insert>
+	
+	<select id="getMfgProcessDocStoreMethod" resultType="kr.co.aspn.vo.MfgProcessDocStoreMethod">
+		/* 점포용 제조공정서 제조방법 조회 getMfgProcessDocStoreMethod*/
+		SELECT dSMNo
+			, dNo
+			, docNo
+			, docVersion
+			, CASE 
+				WHEN methodName IS NULL THEN ''
+				ELSE methodName
+			  END AS methodName
+			, CASE 
+				WHEN methodExplain IS NULL THEN ''
+				ELSE methodExplain
+			  END AS methodExplain
+			, regDate
+			, regUserId
+			, modDate
+			, modUserId
+			, etc
+		FROM manufacturingProcessDocStoreMethod WHERE dNo = #{dNo}
+		ORDER BY dSMNo
+	</select>
+	
+	<select id="getimageFileForStores" parameterType="string" resultType="kr.co.aspn.vo.ImageFileForStores">
+		/* 점포용 제조공정서 첨부파일 목록조회 getimageFileForStores*/
+		SELECT fNo
+			, tbKey 
+			, tbType 
+			, gubun 
+			, fileName 
+			, orgFileName 
+			, path 
+			, regDate 
+			, regUserId 
+			, isDelete 
+			, imgDescript 
+		FROM imageFileForStores
+		WHERE 1=1
+		AND tbKey = #{dNo}
+		AND isDelete != 'Y'
+	</select>
+	
+	<insert id="insertImageFileForStores" parameterType="kr.co.aspn.vo.ImageFileForStores" useGeneratedKeys="true" keyProperty="fNo">
+		/* 점포용 제조공정서 첨부파일 insert insertImageFileForStores*/
+		INSERT INTO imageFileForStores
+			(tbKey 
+			, tbType 
+			, gubun 
+			, fileName 
+			, orgFileName 
+			, path 
+			, regDate 
+			, regUserId 
+			, isDelete)
+		VALUES
+			(#{tbKey} 
+			, #{tbType} 
+			, #{gubun} 
+			, #{fileName} 
+			, #{orgFileName} 
+			, #{path} 
+			, GETDATE() 
+			, #{regUserId}
+			, #{isDelete})
+	</insert>
+	
+	<update id="updateImageFileForStores" parameterType="kr.co.aspn.vo.ImageFileForStores">
+		/* 점포용 제조공정서 첨부파일 update updateImageFileForStores*/
+		UPDATE imageFileForStores
+		SET tbKey = #{tbKey}
+			, tbType = #{tbType}
+			, gubun	= #{gubun}
+			, fileName = #{fileName}
+			, orgFileName = #{orgFileName}
+			, path = #{path}
+			, regDate = GETDATE()
+			, regUserId = #{regUserId}
+			, isDelete = #{isDelete}
+		WHERE 1=1
+		AND fNo = #{fNo}
+	</update>
+	
+	<update id="updateImageDescript" parameterType="kr.co.aspn.vo.ImageFileForStores">
+	/* 점포용 제조공정서 첨푸파일 설명 update updateImageDescript */
+		UPDATE imageFileForStores
+		SET imgDescript = #{imgDescript}
+		WHERE 1=1
+		AND tbKey = #{tbKey}
+		AND gubun = #{gubun}
+	</update>
+	
+	<select id="getimageFileForStoresCnt" resultType="int">
+		/** productDev.countForDevDoc */
+		SELECT count(*) 
+		FROM imageFileForStores
+		WHERE 1=1
+		AND tbKey = #{dNo}
+		AND isDelete != 'Y'
+	</select>
+		
+	<select id="getCheckBomItemSampleList" resultType="hashmap">
+	/* 임시 자재코드 조회  getCheckBomItemSampleList */
+      SELECT 
+         itemCode
+         , unit
+         , itemName
+         , isSample
+      FROM (
+         SELECT   
+            item.itemCode
+            , ISNULL(item.unit, '') as unit
+            , item.itemName
+            , dbo.getMatSampleCheck(m.plantCode, item.itemCode) as isSample
+         FROM devDoc d
+            , manufacturingProcessDoc m
+            , manufacturingProcessDocItem item
+         WHERE 1 = 1         
+            and d.docNo = m.docNo
+            and d.docVersion = m.docVersion
+            and m.dNo = item.dNo
+            and m.dNo = #{dNo}
+      )a WHERE 1 = 1
+      and a.isSample != 'N'
+   </select>	
+</mapper>

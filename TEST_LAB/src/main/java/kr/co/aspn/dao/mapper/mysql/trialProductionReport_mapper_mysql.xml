@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="trialProductionReport">
+	
+	<!-- 검색 조건 : 리스트, 카운트 -->
+	<sql id="searchCondition">
+		<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(docNo)'>
+			AND docNo = #{docNo}
+		</if>
+		<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(docVersion)'>
+			AND docVersion = #{docVersion}
+		</if>
+	</sql>
+	
+	<!-- 시생산 보고서 리스트 -->
+	<select id="selectTrialProductionReportList" resultType="TrialProductionReportVO" parameterType="map">
+		/* trialProductionReport.selectTrialProductionReportList */
+		SELECT R.*
+		  FROM (
+		  	SELECT ROW_NUMBER() OVER (ORDER BY RNO DESC) AS RN
+		  		 , A.*
+		  		 , (SELECT lineName FROM plantLine WHERE lineCode = A.line AND companyCode = B.companyCode AND plantCode = B.plantCode) AS lineName
+		  		 , CASE A.state WHEN '0' THEN '등록' WHEN '3' THEN '결재중' WHEN '4' THEN '결재완료' WHEN '5' THEN '결재완료' END AS stateName
+		  		 , getCodeName('TRIALPRODREPORT1', A.devIntensity) AS devIntensityName
+		  		 , getCodeName('TRIALPRODREPORT2', A.result) AS resultName
+		  		 , (SELECT COUNT(*) CNT FROM fileManager WHERE fmNo IS NOT NULL AND tbType = 'trialprodreport' AND tbKey = A.rNo ) AS fileCount
+		  		 , (SELECT COUNT(*) FROM comment WHERE tbKey = A.rNo AND tbType = 'trialProductionReport' AND isDelete = 0) commentCnt
+		  	  FROM trialProductionReport A, (SELECT dNo, companyCode, plantCode FROM manufacturingProcessDoc) B
+		  	 WHERE A.dNo = B.dNo
+		  	   AND rNo IS NOT NULL
+		  	 
+		  	 <include refid="searchCondition" /> 
+		  ) R
+	</select>
+	
+	<!-- 시생산 보고서 카운트 -->
+	<select id="selectTrialProductionReportCount" resultType="int" parameterType="map">
+		/* trialProductionReport.selectTrialProdReportCount */
+		SELECT COUNT(*) CNT
+		  FROM trialProductionReport A
+		 WHERE rNo IS NOT NULL
+		 <include refid="searchCondition" /> 
+	</select>
+	
+	<!-- 시생산 보고서 상세 -->
+	<select id="selectTrialProductionReportDetail" resultType="TrialProductionReportVO" parameterType="int">
+		/* trialProductionReport.selectTrialProductionReportDetail */
+		SELECT A.*
+			, (SELECT lineName FROM plantLine WHERE lineCode = A.line AND companyCode = B.companyCode AND plantCode = B.plantCode) AS lineName
+			, B.plantCode
+			, B.companyCode
+		FROM trialProductionReport A , (SELECT dNo, companyCode, plantCode FROM manufacturingProcessDoc) B
+		WHERE A.dNo = b.dNo
+		 AND rNo = #{rNo}
+		<!-- AND docNo = #{docNo} -->
+	</select>
+	
+	<!-- 라인코드 이름 가져오기 -->
+	<select id="selectLineDetailFromPlantLine" resultType="kr.co.aspn.vo.PlantLineVO" parameterType="string">
+		SELECT lineCode, lineName FROM plantLine WHERE lineCode = #{lineCode} AND companyCode = #{companyCode} AND plantCode = #{plantCode}
+	</select>
+	
+	<!-- 시생산 보고서 등록 -->
+	<insert id="insertTrialProductionReport" parameterType="TrialProductionReportVO">
+		/* trialProductionReport.insertTrialProdReport */
+		<selectKey keyProperty="rNo" resultType="int" order="AFTER">
+			INSERT INTO trialProductionReport (docNo, dNo, docVersion, line, trialDate, devIntensity, result, importantNote, apprNo, state, createUser, createName, createDate)
+			VALUES
+			(#{docNo}, #{dNo}, #{docVersion}, #{line}, #{trialDate}, #{devIntensity}, #{result}, #{importantNote}, #{apprNo}, #{state}, #{createUser}, getUserName(#{createUser}), sysdate())
+			select SCOPE_IDENTITY() rNo
+		</selectKey>
+	</insert>
+	
+	<!-- 시생산 보고서 수정 -->
+	<update id="updateTrialProductionReport" parameterType="TrialProductionReportVO">
+		/* trialProductionReport.updateTrialProdReport */
+		UPDATE	trialProductionReport
+		SET
+				docNo        	= #{docNo},
+				dNo          	= #{dNo},
+				line         	= #{line},
+				trialDate    	= #{trialDate},
+				devIntensity	= #{devIntensity},
+				result			= #{result},
+				importantNote	= #{importantNote},
+				apprNo       	= #{apprNo},
+				state        	= #{state},
+				changeUser   	= #{changeUser},
+				changeName   	= getUserName(#{changeUser}),
+				changeDate   	= sysdate()
+		WHERE 	rNo				= #{rNo}
+	</update>
+	
+	<!-- 시생산 보고서 상태 변경 -->
+	<update id="updateTrialProductionReportState" parameterType="TrialProductionReportVO">
+		/* trialProductionReport.updateTrialProdReport */
+		UPDATE	trialProductionReport
+		SET
+				state        	= #{state},
+				apprNo			= #{apprNo},
+				changeUser   	= #{changeUser},
+				changeName   	= getUserName(#{changeUser}),
+				changeDate   	= sysdate()
+		WHERE 	rNo				= #{rNo}
+	</update>
+	
+	<!-- 시생산 보고서 삭제 -->
+	<delete id="deleteTrialProductionReport" parameterType="TrialProductionReportVO">
+		/* trialProductionReport.deleteTrialProductionReport */
+		DELETE FROM trialProductionReport WHERE rNo = #{rNo}
+	</delete>
+	
+	<!-- 시생산 보고서 카운트(특정 제조공정서) -->
+	<select id="getTrialDocumentCnt" parameterType="map" resultType="int">
+		/* trialProductionReport.getTrialDocumentCnt */
+		SELECT COUNT(1) FROM trialProductionReport WHERE docNo = #{docNo} AND docVersion = #{docVersion} AND dNo = #{dNo}
+	</select>
+	
+</mapper>

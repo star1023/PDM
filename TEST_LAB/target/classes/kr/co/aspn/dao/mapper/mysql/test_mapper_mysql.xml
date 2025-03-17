@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="test">
+	
+	<insert id="testUpdate">
+		UPDATE materialManagementItem SET dNoList = #{key} WHERE miNo = 7
+		<selectKey keyProperty="key" resultType="String" order="AFTER">
+			SELECT SUBSTRING(date_format(NOW(3), '%Y-%m-%d %H:%i:%s:%f'),1,23) "key"
+		</selectKey>
+	</insert>	
+</mapper>

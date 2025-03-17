@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="material">
+<!-- 공통 조건 -->
+	<sql id="whereMaterialList">
+		<choose>
+			<when test='isSample == "" or isSample == null '>
+				AND ( (plant = '8400' and sapCode like '%') or ( plant != '8400') and (sapCode not like '1' or sapCode not like '8') )
+			</when>
+			<when test='isSample == "N"'>
+				AND isSample = 'N'
+				AND ( (plant = '8400' and sapCode like '%') or ( plant != '8400') and (sapCode not like '1' or sapCode not like '8') )
+			</when>
+			<when test='isSample == "Y"'>
+				AND isSample = 'Y'
+			</when>
+		</choose>	
+		<if test="searchCompany != null and searchCompany != '' ">
+		AND company = #{searchCompany}
+		</if>
+		<if test="searchPlant != null and searchPlant != '' ">
+		AND plant = #{searchPlant}
+		</if>
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('sapCode')">
+			AND sapCode LIKE concat('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('name')">
+      		AND name LIKE concat('%',#{searchValue},'%')
+      		</when>
+      		<when test="searchType.equals('regUserName')">
+			AND regUserId IN (  SELECT userId FROM userTable WHERE userName LIKE concat('%',#{searchValue},'%') )
+			</when>
+      	</choose>
+		</if>
+		<!-- AND isDelete = 'N' -->
+	</sql>
+	<select id="materialTotalCount" parameterType="map" resultType="int">
+		/** material.materialTotalCount */
+		SELECT COUNT(imNo)
+	 		FROM material m
+	 		INNER JOIN plant p
+			ON		m.plant = p.plantCode
+	 		WHERE 1=1
+	 		<include refid="material.whereMaterialList" />
+	</select>
+	
+	<select id="materialList" parameterType="MaterialVO" resultType="MaterialVO">
+	/** material.materialList */
+	SELECT imNo
+	      ,sapCode
+	      ,name
+	      ,plant
+	      ,plantName
+	      ,ROUND(ifnull(price, 0),5) as price
+	      ,regUserId
+	      ,regUserName
+	      ,unit
+	      ,exitUnit
+	      ,isDelete
+	      ,isSample
+	      ,type
+	      ,regDate
+	      ,modUserId
+	      ,modUserName
+	      ,company
+	      ,companyName
+	      ,isHidden
+	      ,supplyDate
+		  ,supplyCompany
+		  ,statusCode
+	 FROM (
+		SELECT 
+			row_number() over (order by  supplyDate DESC, regDate DESC, imNo desc) as rnum
+			,imNo
+			,sapCode
+		    ,name
+		    ,plant
+		    ,getPlantName(company,plant) as plantName
+		    ,price
+		    ,regUserId
+		    ,getUserName(regUserId) as regUserName
+		    ,unit
+		    ,exitUnit
+		    ,isDelete
+		    ,isSample
+		    ,type
+		    ,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		    ,modUserId
+		    ,getUserName(modUserId) as modUserName
+		    ,company
+		    ,getCompanyName(company) as companyName
+		    ,isHidden
+		    ,supplyDate
+			,supplyCompany
+			,statusCode
+		FROM material m
+		INNER JOIN plant p
+			ON		m.plant = p.plantCode
+		WHERE 1=1
+		<include refid="material.whereMaterialList" />
+	) tmp WHERE rnum between #{startRow} and #{endRow}
+    </select>
+    
+    <select id="materialCount" parameterType="map" resultType="int">
+		/** material.materialCount */
+		SELECT COUNT(imNo)
+	 		FROM material
+	 		WHERE 1=1
+	 			AND plant not in('7300')
+	 		<if test="sapCode != null and sapCode != ''">
+			AND sapCode = #{sapCode}
+			</if>
+			<if test="company != null and company != ''">
+			AND company = #{company}
+			</if>
+			<if test="plant != null and plant != ''">
+			AND plant = #{plant}
+			</if>
+	</select>
+	
+	<insert id="insert" parameterType="MaterialVO">
+		/** material.insert */
+		INSERT
+			INTO material
+		(
+			sapCode
+			,name
+			,plant
+			,price
+			,regUserId
+			,unit
+			,isDelete
+			,isSample
+			,isHidden
+			,type
+			,regDate
+			,company
+		) VALUES (
+			#{sapCode}
+			,#{name}
+			,#{plant}
+			,#{price}
+			,#{regUserId}
+			,#{unit}
+			,'N'
+			,'Y'
+			,'N'
+			,#{type}
+			,sysdate()
+			,#{company}
+		)
+	</insert>
+	
+	<select id="countByKey" parameterType="String" resultType="int">
+	/** material.countByKey */
+	SELECT COUNT(imNo)
+	FROM material
+	WHERE 1=1
+	AND imNo = #{imNo}
+	AND isSample = 'Y'
+	</select>
+	
+	<update id="deleteAjax" parameterType="String">
+		DELETE FROM material
+		WHERE imNo = #{imNo}
+	</update>
+	
+	<select id="usedCount" parameterType="String" resultType="int">
+	/** material."usedCount" */
+	SELECT			
+		count(mi.dNo) + (select	count(d.ddNo)
+						from material i
+							inner join devDoc d
+							on i.sapCode = d.productCode
+						where i.imNo = #{imNo}) as cnt
+	FROM material i
+	INNER JOIN manufacturingProcessDocItem mi
+	ON	i.sapCode = mi.itemCode
+	INNER JOIN manufacturingProcessDoc m
+	ON mi.dNo = m.dNo
+	WHERE i.imNo = #{imNo}
+	</select>
+	
+	<update id="hiddenAjax" parameterType="map">
+	/** material.hiddenAjax  */
+		UPDATE material
+		SET
+			isHidden = #{isHidden}
+			,modUserId = #{modUserId}
+		WHERE imNo = #{imNo}
+	</update>
+	
+	<update id="insertErpData" parameterType="map">
+		MERGE material AS T   
+		USING (SELECT #{MATNR}, #{WERKS}, #{company}) AS S (sapCode, plant,company)  
+		ON	T.sapCode = S.sapCode 
+			AND T.plant = S.plant 
+			AND T.company = S.company
+		WHEN MATCHED THEN 
+			UPDATE SET	
+				name=#{MAKTX}, 
+				price=CONVERT(float,#{DANGA})*100, 
+				unit=#{MEINS},
+				exitUnit=#{AUSME},
+				type=#{type},
+				isDelete=#{isDelete},
+				isSample='N',	
+				regUserId=#{user},	
+				supplyDate=#{BEDAT},
+				supplyCompany=#{NAME1},
+				regDate=sysdate(),
+            	statusCode = #{status} 
+		WHEN NOT MATCHED BY TARGET THEN 
+			INSERT (
+			sapCode
+			,name
+			,plant
+			,price
+			,unit
+			,exitUnit
+			,type
+			,isDelete
+			,isSample
+			,isHidden
+			,regUserId
+			,regDate
+			,company
+			,supplyDate
+			,supplyCompany
+			,statusCode
+			) 
+			VALUES(
+			 #{MATNR}
+			, #{MAKTX}
+			, #{WERKS}
+			, CONVERT(float,#{DANGA})*100
+			, #{MEINS}
+			, #{AUSME}
+			, #{type}
+			, #{isDelete}
+			, 'N'
+			, 'N'
+			, #{user}
+			, sysdate()
+			, #{company}
+			, #{BEDAT}
+			, #{NAME1}
+			, #{status}
+			);
+	</update>
+	
+	<select id="materialData" parameterType="map" resultType="MaterialVO">
+	/** material.materialData */
+		SELECT 
+			imNo
+			,sapCode
+		    ,name
+		    ,plant
+		    ,getPlantName(company,plant) as plantName
+		    ,price
+		    ,regUserId
+		    ,getUserName(regUserId) as regUserName
+		    ,unit
+		    ,exitUnit
+		    ,isDelete
+		    ,isSample
+		    ,type
+		    , case when type = 'B' then '원료'
+					when type = 'R' then '재료' 
+					else '' end typeName 
+		    ,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		    ,modUserId
+		    ,getUserName(modUserId) as modUserName
+		    ,company
+		    ,getCompanyName(company) as companyName
+		    ,isHidden
+		    ,supplyDate
+			,supplyCompany
+		FROM material
+		WHERE 1=1 
+			AND plant not in('7300')
+		<if test="imNo != null and imNo != ''">
+		AND imNo = #{imNo}
+		</if>
+    </select>
+    
+    <update id="update" parameterType="MaterialVO">
+		/** material.update */
+		UPDATE material
+		SET
+			sapCode = #{imNo}
+      		,name= #{name}
+      		,plant = #{plant}
+      		,price = #{price}
+      		,unit = #{unit}
+	      	,type = #{type}
+	      	,modUserId = #{modUserId}
+	      	,company = #{company}
+		WHERE imNo = #{imNo}
+	</update>
+	
+	<select id="itemTotalCount" parameterType="map" resultType="int">
+		/** material.itemTotalCount */
+		SELECT	
+			count(*)
+		FROM 
+			manufacturingProcessDocItem item
+			JOIN devdoc dd 
+			ON item.docNo = dd.docNo 
+				AND item.docVersion = dd.docVersion 
+				AND dd.isClose = 0
+			JOIN manufacturingProcessDoc doc
+			ON item.dNo = doc.dNo 
+				AND item.docNo = doc.docNo 
+				AND item.docVersion = doc.docVersion
+	  	WHERE	1=1 
+	  		<if test="searchCompany != null and searchCompany != '' ">
+			AND companyCode = #{searchCompany}
+			</if>
+			<if test="searchPlant != null and searchPlant != '' ">
+			AND plantCode = #{searchPlant}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+			<choose>
+				<when test="searchType.equals('itemCode')">
+				AND itemCode LIKE concat('%',#{searchValue},'%')
+				</when>
+	      		<when test="searchType.equals('itemCodeName')">
+				AND itemName LIKE concat('%',#{searchValue},'%')
+				</when>
+	      	</choose>
+			</if>
+	</select>
+	<select id="itemList" parameterType="map" resultType="map">
+	/** material.itemList */
+		SELECT dNo
+			, docNo
+			, docVersion
+			, itemCode
+			, itemName
+			, (select excRate from manufacturingProcessDocDisp where dNo = t.dNo and matName = t.itemName limit 1) as 'excRate'
+			, getCompanyName(companyCode) AS companyName
+			, plantCode
+			, getPlantName(companyCode, plantCode) AS plantName
+			, lineCode
+			, lineName
+			, productName
+			, productCode
+		FROM (
+			SELECT  
+				row_number() over (order by i.dNo desc) as rnum
+				, i.dNo
+				, i.docNo
+				, i.docVersion
+				, itemCode
+				, itemName
+				, companyCode
+				, plantCode
+				, lineCode
+				, lineName
+				, productName
+				, productCode
+			FROM (
+				SELECT item.dNo
+					, item.docNo
+					, item.docVersion
+					, itemCode
+					, itemName
+					, companyCode
+					, plantCode
+					, lineCode
+					, lineName
+					, productName
+					, productCode
+			FROM manufacturingProcessDocItem item
+				JOIN devdoc dd
+				ON item.docNo = dd.docNo and item.docVersion = dd.docVersion
+				JOIN manufacturingProcessDoc doc
+				ON item.dNo = doc.dNo
+				WHERE 1=1 
+					<if test="searchCompany != null and searchCompany != '' ">
+					AND companyCode = #{searchCompany}
+					</if>
+					<if test="searchPlant != null and searchPlant != '' ">
+					AND plantCode = #{searchPlant}
+					</if>
+					<if test="searchType != null and searchType != '' ">
+					<choose>
+						<when test="searchType.equals('itemCode')">
+						AND itemCode LIKE concat('%',#{searchValue},'%')
+						</when>
+			      		<when test="searchType.equals('itemCodeName')">
+						AND itemName LIKE concat('%',#{searchValue},'%')
+						</when>
+			      	</choose>
+					</if>
+			) i
+		) t
+		WHERE rnum between #{startRow} and #{endRow}
+    </select>
+    
+    <select id="materialMenagementTotalCount"  parameterType="map" resultType="int">
+    	SELECT COUNT(1)
+    	FROM materialManagement
+    	WHERE 1=1
+		<if test="searchCompany != null and searchCompany != '' ">
+				AND companyCode = #{searchCompany}
+			</if>
+			<if test="searchPlant != null and searchPlant != '' ">
+				AND plant = #{searchPlant}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test="searchType.equals('mmNo')">
+						AND mmNo LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('preSapCode')">
+						AND preSapCode LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('postSapCode')">
+						AND postSapCode LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('preName')">
+						AND preSapCode in (SELECT sapCode FROM material WHERE name LIKE concat('%',#{searchValue},'%'))
+					</when>
+					<when test="searchType.equals('postName')">
+						AND postSapCode in (SELECT sapCode FROM material WHERE name LIKE concat('%',#{searchValue},'%'))
+					</when>
+					<when test="searchType.equals('state')">
+						AND state LIKE '%' || #{searchValue} || '%'
+					</when>
+		      		<when test="searchType.equals('regUserName')">
+						AND regUserId IN (  SELECT userId FROM userTable WHERE userName LIKE concat('%',#{searchValue},'%') )
+					</when>
+		      	</choose>
+			</if>
+    </select>
+    
+    <select id="materialMenagementList" parameterType="MaterialManagementVO" resultType="MaterialManagementVO">
+    	SELECT * FROM (
+	    	SELECT ROW_NUMBER() OVER(ORDER BY mmNo DESC) rn
+	    		,mmNo
+				, preSapCode
+				, ifnull(getMaterialName(preSapCode, plant, companyCode), '') preName
+				, postSapCode
+				, ifnull(getMaterialName(postSapCode, plant, companyCode), '') postName
+				, plant
+				, ifnull(getPlantName(companyCode, plant), '') plantName
+				, state
+				, CASE state 
+						WHEN '0' THEN '등록'
+						WHEN '1' THEN '승인'
+						WHEN '2' THEN '반려'
+						WHEN '3' THEN '결재중'
+						WHEN '4' THEN 'BOM 반영 완료'
+						WHEN '5' THEN 'BOM 반영 오류'
+						WHEN '6' THEN 'BOM 반영 미완결'
+						ELSE '미지정 상태값'
+					end stateText
+				, regUserId
+				, getUserName(regUserId) regUserName
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				, modUserId
+				, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+			FROM materialManagement
+			WHERE 1=1
+			<if test="searchCompany != null and searchCompany != '' ">
+				AND companyCode = #{searchCompany}
+			</if>
+			<if test="searchPlant != null and searchPlant != '' ">
+				AND plant = #{searchPlant}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test="searchType.equals('mmNo')">
+						AND mmNo LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('preSapCode')">
+						AND preSapCode LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('postSapCode')">
+						AND postSapCode LIKE concat('%',#{searchValue},'%')
+					</when>
+					<when test="searchType.equals('preName')">
+						AND preSapCode in (SELECT sapCode FROM material WHERE name LIKE concat('%',#{searchValue},'%'))
+					</when>
+					<when test="searchType.equals('postName')">
+						AND postSapCode in (SELECT sapCode FROM material WHERE name LIKE concat('%',#{searchValue},'%'))
+					</when>
+					<when test="searchType.equals('state')">
+						AND state LIKE '%'+#{searchValue}+'%'
+					</when>
+		      		<when test="searchType.equals('regUserName')">
+						AND regUserId IN (  SELECT userId FROM userTable WHERE userName LIKE concat('%',#{searchValue},'%') )
+					</when>
+		      	</choose>
+			</if>
+    	) tmp
+    	WHERE rn between #{startRow} and #{endRow} 
+    </select>
+    
+    <insert id="insertMaterialManagement" parameterType="map">
+    	INSERT INTO materialManagement (
+    		preSapCode
+			, postSapCode
+			, plant
+			, regUserId
+			, regDate
+			, companyCode
+			, state
+    	) VALUES (
+    		${preSapCode}
+			, #{postSapCode}
+			, #{plantCode}
+			, #{regUserId}
+			, sysdate()
+			, #{companyCode}
+			, '0'
+    	)
+    	<selectKey keyProperty="mmNo" resultType="int" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+    </insert>
+    
+    <insert id="insertMaterialManagementItem" parameterType="MaterialManagementItemVO">
+    	INSERT INTO materialManagementItem (
+    		mmNo
+			, productCode
+			, productName
+			, sapCode
+			, plant
+			, posnr
+			, regUserId
+			, regDate
+			, dNoList
+			, state
+			, isExcept
+    	) VALUES (
+    		#{mmNo}
+			, #{productCode}
+			, #{productName}
+			, #{sapCode}
+			, #{plant}
+			, #{posnr}
+			, #{regUserId}
+			, sysdate()
+			, #{dNoList}
+			, '0'
+			, 'N'
+    	)
+    </insert>
+    
+    <select id="getChangeRequestHeader" resultType="map">
+		SELECT mmNo
+			, companyCode
+			, getCompanyName(companyCode) companyName
+			, preSapCode
+			, ifnull(getMaterialName(preSapCode, plant, companyCode), '') preName
+			, postSapCode
+			, ifnull(getMaterialName(postSapCode, plant, companyCode), '') postName
+			, plant
+			, ifnull(getPlantName(companyCode, plant), '') plantName
+			, state
+			, CASE state 
+					WHEN '0' THEN '등록'
+					WHEN '1' THEN '승인'
+					WHEN '2' THEN '반려'
+					WHEN '3' THEN '결재중'
+					WHEN '4' THEN 'BOM 반영 완료'
+					WHEN '5' THEN 'BOM 반영 오류'
+					WHEN '6' THEN 'BOM 반영 미완결'
+					ELSE '미지정 상태값'
+				end stateText
+			, regUserId
+			, getUserName(regUserId) regUserName
+			, regDate
+			, modUserId
+			, modDate
+		FROM materialManagement
+    	WHERE mmNo = #{mmNo}
+    </select>
+    
+    <select id="getChangeRequestItem" resultType="map">
+		SELECT miNo
+			, mmNo
+			, productCode
+			, productName
+			, sapCode
+			, plant
+			, getPlantName((SELECT companyCode FROM materialManagement WHERE mmNo = mm.mmNo), plant) plantName
+			, posnr
+			, regUserId
+			, regDate
+			, modUserId
+			, modDate
+			, state
+			, CASE state 
+					WHEN '0' THEN '등록'
+					WHEN '1' THEN '승인'
+					WHEN '2' THEN '반려'
+					WHEN '3' THEN '결재중'
+					WHEN '4' THEN 'BOM 반영 완료'
+					WHEN '5' THEN 'BOM 반영 오류'
+					WHEN '6' THEN 'BOM 반영 미완결'
+					ELSE '미지정 상태값'
+				end stateText
+			, dNoList
+			, mfgState
+			, isExcept
+		FROM materialManagementItem mm
+		WHERE mmNo = #{mmNo}
+		<if test='forRFC == "Y"'>
+			AND state != '4'
+			AND isExcept = 'N'
+		</if>
+    </select>
+    
+    <select id="getDNoList" resultType="String">
+    	SELECT ifnull(SUBSTRING((
+			/**SELECT ',' + CONVERT(VARCHAR, mfg.dNo)
+			FROM manufacturingProcessDoc mfg
+			INNER JOIN devdoc dev ON mfg.docNo = dev.docNo AND mfg.docVersion = dev.docVersion
+			INNER JOIN manufacturingProcessDocItem item ON mfg.dNo = item.dNo
+			WHERE mfg.plantCode = #{WERKS}
+			  AND mfg.stlal = #{VWALT}
+			  AND dev.productCode = #{MATNR}
+			  AND item.itemCode = #{IDNRK}
+			GROUP BY mfg.dNo
+			For XML Path('')*/
+			SELECT group_concat(mfg.dNo,',')
+			FROM manufacturingProcessDoc mfg
+			INNER JOIN devdoc dev ON mfg.docNo = dev.docNo AND mfg.docVersion = dev.docVersion
+			INNER JOIN manufacturingProcessDocItem item ON mfg.dNo = item.dNo
+			WHERE mfg.plantCode = #{WERKS}
+			  AND mfg.stlal = #{VWALT}
+			  AND dev.productCode = #{MATNR}
+			  AND item.itemCode = #{IDNRK}
+			GROUP BY mfg.dNo
+		), 2, 8000), '') dNoList
+    </select>
+    
+    <update id="updateMMState">
+    	UPDATE materialManagement 
+    	SET state = #{state} 
+    		, modDate = sysdate()
+    		, modUserId = #{modUserId}
+    	WHERE mmNo = #{mmNo}
+    </update>
+    
+    <select id="getDNoListCnt" resultType="int">
+    	/**
+    	SELECT COUNT(1) 
+    	FROM FN_SPLIT((SELECT dNoList FROM materialManagementItem WHERE miNo = #{miNo}), ',')
+    	*/
+    	SELECT SUBSTRING_INDEX((SELECT dNoList FROM materialManagementItem WHERE miNo = #{miNo}), ',', 1)
+    </select>
+    
+    <update id="updateMfgItemBom">
+    	UPDATE manufacturingProcessDocItem
+		SET 
+		    itemCode = #{MATNR_A}
+		    , itemNAme = (SELECT DISTINCT name FROM material WHERE sapCode = #{MATNR_A} AND plant = #{WERKS} AND company = #{companyCode})
+		    , modDate = sysdate()
+		    , modUserId = #{modUserId}
+		WHERE dno IN (
+   			/**
+   			SELECT * FROM FN_SPLIT((SELECT dNoList FROM materialManagementItem WHERE miNo = #{miNo}), ',')
+   			*/
+   			SELECT temp.split_column
+			FROM materialManagementItem t
+			JOIN JSON_TABLE(
+			    REPLACE(JSON_ARRAY(dNoList), ',', '","'),
+			    '$[*]' COLUMNS (split_column VARCHAR(50) PATH '$')
+			) temp
+		) AND itemCode = #{MATNR_B}
+    </update>
+    
+    <insert id="updateMMItemState">
+    	UPDATE materialManagementItem
+    	SET state = #{state}
+    		, modDate = sysdate()
+    		, modUserId = #{modUserId} 
+    	WHERE mmNo = #{mmNo}
+    	  AND productCode = #{MATNR}
+    	  AND sapCode = #{IDNRK}
+    	  AND plant = #{WERKS}
+    	  AND posnr = #{STLAL}
+    	  
+		<selectKey keyProperty="miNo" resultType="String" order="BEFORE">
+			SELECT miNo 
+			FROM materialManagementItem
+			WHERE mmNo = #{mmNo}
+	    	  AND productCode = #{MATNR}
+	    	  AND sapCode = #{IDNRK}
+	    	  AND plant = #{WERKS}
+	    	  AND posnr = #{STLAL}
+		</selectKey>
+    </insert>
+    
+    <update id="updateMfgState">
+    	UPDATE materialManagementItem
+    	SET mfgState = #{state}
+    	WHERE miNo = #{miNo}
+    </update>
+    
+    <select id="getMmHeader" resultType="map">
+    	SELECT #{companyCode} companyCode
+			, getCompanyName(#{companyCode}) companyName
+			, #{preSapCode} preSapCode
+			, ifnull(getMaterialName(#{preSapCode}, #{plantCode}, #{companyCode}), '') preName
+			, #{postSapCode} postSapCode
+			, ifnull(getMaterialName(#{postSapCode}, #{plantCode}, #{companyCode}), '') postName
+			, #{plantCode} plant
+			, ifnull(getPlantName(#{companyCode}, #{plantCode}), '') plantName
+    </select>
+    
+    <update id="updateMMItemMfgState">
+    	UPDATE materialManagementItem
+    	SET mfgState = #{mfgState}
+    	WHERE miNo = #{miNo}
+    </update>
+    
+    <update id="updateMMItemExcept">
+    	UPDATE materialManagementItem
+    	SET isExcept = 'Y'
+    		, modDate = sysdate()
+    		, modUserId = #{modUserId}
+    	WHERE mmNo = #{mmNo}
+    	  AND state NOT IN ('4', '5')
+    </update>
+</mapper>
+
+<!-- Builder 개발서버 반영 원복 재실행을 위한 주석 추가 -->
+<!-- Builder 개발서버 반영 원복 재실행을 위한 주석 추가 2021.02.22 -->

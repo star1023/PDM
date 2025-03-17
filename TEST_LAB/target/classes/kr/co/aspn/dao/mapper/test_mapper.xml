@@ -1,0 +1,1447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="test">
+	
+	<insert id="testUpdate">
+		UPDATE materialManagementItem SET dNoList = #{key} WHERE miNo = 7
+		<selectKey keyProperty="key" resultType="String" order="AFTER">
+			SELECT SUBSTRING(date_format(NOW(3), '%Y-%m-%d %H:%i:%s:%f'),1,23) "key"
+		</selectKey>
+	</insert>
+	
+	<select id="selectTotalMenuCount" parameterType="map" resultType="int">
+		SELECT 
+			count(menuId) as cnt
+		FROM lab_system_menu
+		WHERE 1 = 1
+			AND useYn = 'Y'
+	</select>
+	
+	<select id="selectMenuList" parameterType="map" resultType="hashmap">
+		select 
+			tmp.menuId
+			, tmp.pMenuId
+			, tmp.menuName
+			, (select menuName from lab_system_menu where menuId = tmp.pMenuId) as pMenuName
+			, tmp.eMenuName
+			, (select eMenuName from lab_system_menu where menuId = tmp.pMenuId) as pEMenuName
+			, tmp.level
+			, tmp.displayOrder
+			, tmp.url
+			, tmp.useYn
+			, tmp.displayYn
+			, tmp.regUserId
+			, tmp.regDate 
+		from (  
+			select
+				 row_number() over (order by  menuId DESC) as rnum
+				, menuId
+				, pMenuId
+				, menuName
+				, eMenuName
+				, level
+				, displayOrder
+				, url
+				, useYn
+				, displayYn
+				, regUserId
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu
+			WHERE 1 = 1
+				AND useYn = 'Y'	
+			)tmp WHERE rnum between #{startRow} and #{endRow}
+			
+		<!-- 	
+		 WITH RECURSIVE tmp AS
+		(
+			SELECT 
+				t1.menuId
+				, t1.pMenuId
+				, t1.menuName
+				, t1.menuName as ko_path
+				, t1.eMenuName
+				, t1.eMenuName as en_path
+				, t1.level
+				, t1.displayOrder
+				, t1.url
+				, t1.useYn
+				, t1.regUserId
+				, DATE_FORMAT(t1.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t1
+			WHERE t1.pMenuId is null
+		
+			UNION ALL
+		
+			SELECT 
+				t2.menuId
+				, t2.pMenuId
+				, t2.menuName
+				, concat(tmp.ko_path, ' > ', t2.menuName) as ko_path
+				, t2.eMenuName
+				, concat(tmp.en_path, ' > ', t2.eMenuName) as en_path
+				, t2.level
+				, t2.displayOrder
+				, t2.url
+				, t2.useYn
+				, t2.regUserId
+				, DATE_FORMAT(t2.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t2
+			INNER JOIN tmp ON t2.pMenuId = tmp.menuId
+		)
+		
+		SELECT * FROM tmp
+		ORDER BY tmp.menuId, tmp.displayOrder;	
+		 -->
+	</select>
+	
+	<select id="selectAllMenuList2" parameterType="map" resultType="hashmap">
+		SELECT  
+			t.menuId as id
+			, ifnull(t.pMenuId,'#') as parent
+			, t.menuName as text
+		from (	
+			WITH RECURSIVE tmp AS
+			(
+				SELECT 
+					t1.menuId
+					, t1.pMenuId
+					, t1.menuName
+					, t1.menuName as ko_path
+					, t1.eMenuName
+					, t1.eMenuName as en_path
+					, t1.level
+					, t1.displayOrder
+					, t1.url
+					, t1.useYn
+					, t1.regUserId
+					, DATE_FORMAT(t1.regDate,'%Y-%m-%d') as regDate
+				FROM lab_system_menu t1
+				WHERE t1.pMenuId is null
+					AND t1.useYn = 'Y'
+					
+				UNION ALL
+			
+				SELECT 
+					t2.menuId
+					, t2.pMenuId
+					, t2.menuName
+					, concat(tmp.ko_path, ' > ', t2.menuName) as ko_path
+					, t2.eMenuName
+					, concat(tmp.en_path, ' > ', t2.eMenuName) as en_path
+					, t2.level
+					, t2.displayOrder
+					, t2.url
+					, t2.useYn
+					, t2.regUserId
+					, DATE_FORMAT(t2.regDate,'%Y-%m-%d') as regDate
+				FROM lab_system_menu t2
+				INNER JOIN tmp ON t2.pMenuId = tmp.menuId
+				AND t2.useYn = 'Y'
+			)
+			SELECT * FROM tmp
+			ORDER BY tmp.menuId, tmp.displayOrder
+		)t
+	</select>
+	
+	<select id="selectPMenuList" parameterType="map" resultType="hashmap">
+		SELECT 
+			menuId
+			, pMenuId
+			, menuName
+			, eMenuName
+			, level
+			, displayOrder
+			, url
+			, useYn
+			, displayYn
+		FROM lab_system_menu
+		WHERE 1 = 1
+			AND level = ${level}-1
+			AND useYn = 'Y'
+			AND displayYn = 'Y'
+	</select>
+	
+	<insert id="insertMenu" parameterType="map">
+		INSERT INTO lab_system_menu (
+			menuId
+			<if test="pMenuId != null and pMenuId !='' ">
+			, pMenuId
+			</if>
+			, menuName
+			, eMenuName
+			, level
+			, displayOrder
+			, url
+			, useYn
+			, displayYn
+			, regUserId
+			, regDate
+		) VALUES (
+			nextval('system_menu_seq')
+			<if test="pMenuId != null and pMenuId !='' ">
+			, #{pMenuId}
+			</if>
+			, #{menuName}
+			, #{eMenuName}
+			, #{level}
+			, #{displayOrder}
+			, #{url}
+			, #{useYn}
+			, #{displayYn}
+			, #{userId}
+			, sysdate() 	
+		)
+	</insert>
+	
+	<insert id="insertMenu2" parameterType="map">
+		INSERT INTO lab_system_menu(
+			menuId
+			, pMenuId
+			, menuName
+			, useYn
+			, displayOrder
+			, level
+			, displayYn
+			, regUserId
+			, regDate
+		)VALUES(
+			nextval('system_menu_seq')
+			, #{pId}
+			, #{menuName}
+			, 'Y'
+			, (SELECT ifnull(max(a.displayOrder)+1, 1) FROM lab_system_menu a WHERE 1 = 1 AND a.pMenuId = #{pId})
+			, #{level}
+			, 'Y'
+			, #{userId}
+			, sysdate()
+		)
+	</insert>
+	
+	<select id="selectMenuData" parameterType="map" resultType="hashmap">
+		SELECT 
+			menuId
+			, pMenuId
+			, menuName
+			, eMenuName
+			, level
+			, displayOrder
+			, url
+			, useYn
+			, displayYn
+		FROM lab_system_menu
+		WHERE 1 = 1
+			AND menuId = ${menuId}
+			AND useYn = 'Y'
+	</select>
+	
+	<update id="updateMenu" parameterType="map">
+		UPDATE lab_system_menu
+		SET
+			pMenuId = #{pMenuId}
+			, menuName = #{menuName}
+			, eMenuName = #{eMenuName}
+			, level = #{level}
+			, displayOrder = #{displayOrder}
+			, url = #{url}
+			, useYn = #{useYn}
+			, displayYn = #{displayYn}
+		WHERE 1 = 1
+			AND menuId = #{menuId}
+	</update>
+	
+	<update id="deleteMenu" parameterType="map">
+		UPDATE lab_system_menu
+		SET
+			useYn = 'N'
+		WHERE 1 = 1
+			AND menuId = #{menuId}
+	</update>
+	
+	
+	
+	<select id="selectTotalRoleCount" parameterType="map" resultType="int">
+		SELECT 
+			count(ROLE_IDX) as cnt
+		FROM lab_system_role
+		WHERE 1 = 1
+			AND USE_YN = 'Y'
+	</select>
+	
+	<select id="selectRoleList" parameterType="map" resultType="hashmap">
+		select 
+			tmp.ROLE_IDX
+			, tmp.ROLE_ID
+			, tmp.ROLE_NAME
+			, tmp.ROLE_DESC
+			, tmp.USE_YN
+			, tmp.REG_DATE
+		from (  
+			select
+				 row_number() over (order by ROLE_IDX DESC, REG_DATE DESC) as rnum
+				, ROLE_IDX
+				, ROLE_ID
+				, ROLE_NAME
+				, ROLE_DESC
+				, USE_YN
+				, DATE_FORMAT(REG_DATE,'%Y-%m-%d') as REG_DATE
+			FROM lab_system_role
+			WHERE 1 = 1
+				AND USE_YN = 'Y'	
+			)tmp WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	
+	<insert id="insertRole" parameterType="map">
+		INSERT INTO lab_system_role (
+			ROLE_IDX
+			,ROLE_ID
+			, ROLE_NAME
+			, ROLE_DESC
+			, USE_YN
+			, REG_USER_ID
+			, REG_DATE
+		) VALUES (
+			nextval('system_role_seq')
+			, #{roleId}
+			, #{roleName}
+			, #{roleDesc}
+			, #{useYn}
+			, #{userId}
+			, sysdate() 	
+		)
+	</insert>
+	
+	<select id="selectRoleData" parameterType="map" resultType="hashmap">
+		select
+			ROLE_IDX
+			, ROLE_ID
+			, ROLE_NAME
+			, ROLE_DESC
+			, USE_YN
+		FROM lab_system_role
+		WHERE 1 = 1
+			AND USE_YN = 'Y'
+			<if test="roleIdx != null and roleIdx !='' ">
+			AND ROLE_IDX = #{roleIdx}	
+			</if>
+			<if test="roleId != null and roleId !='' ">
+			AND ROLE_ID = #{roleId}	
+			</if>
+	</select>
+	
+	<update id="updateRole" parameterType="map">
+		UPDATE lab_system_role
+		SET
+			ROLE_ID = #{roleId}
+			, ROLE_NAME = #{roleName}
+			, ROLE_DESC = #{roleDesc}
+			, USE_YN = #{useYn}
+		WHERE 1 = 1
+			AND ROLE_IDX = #{roleIdx}
+	</update>
+	
+	<update id="deleteRole" parameterType="map">
+		UPDATE lab_system_role
+		SET
+			USE_YN = 'N'
+		WHERE 1 = 1
+			AND ROLE_IDX = #{roleIdx}
+	</update>
+	
+	<select id="selectAllMenu" parameterType="map" resultType="hashmap">
+		select 
+			t.menuId as id
+			, ifnull(t.pMenuId,'#') as parent
+			, t.menuName as text
+			, t.displayYn
+		from ( 
+		 WITH RECURSIVE tmp AS
+		(
+			SELECT 
+				t1.menuId
+				, t1.pMenuId
+				, t1.menuName
+				, t1.menuName as pathnm
+				, t1.eMenuName
+				, t1.level
+				, t1.displayOrder
+				, t1.url
+				, t1.useYn
+				, t1.displayYn
+				, t1.regUserId
+				, DATE_FORMAT(t1.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t1
+			WHERE t1.pMenuId is null
+			AND useYn = 'Y'	
+			UNION ALL
+		
+			SELECT 
+				t2.menuId
+				, t2.pMenuId
+				, t2.menuName
+				, concat(tmp.pathnm, ' > ', t2.menuName) as pathnm
+				, t2.eMenuName
+				, t2.level
+				, t2.displayOrder
+				, t2.url
+				, t2.useYn
+				, t2.displayYn
+				, t2.regUserId
+				, DATE_FORMAT(t2.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t2
+			INNER JOIN tmp ON t2.pMenuId = tmp.menuId
+			and t2.useYn = 'Y'
+		)
+		SELECT * FROM tmp
+		ORDER BY tmp.menuId, tmp.displayOrder
+		)t
+	</select>
+	
+	<select id="selectRoleMenuList" parameterType="map" resultType="hashmap">
+		SELECT 
+			ROLE_MENU_IDX
+			, ROLE_IDX
+			, MENU_IDX
+			, IS_ROOT
+			, REG_USER_ID
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') as REG_DATE
+		FROM
+			lab_system_role_menu
+		WHERE 1 = 1
+			AND ROLE_IDX = #{selectedRoleIdx}
+	</select>
+	
+	<delete id="deleteRoleMenu" parameterType="map">
+		DELETE
+		FROM lab_system_role_menu
+		WHERE 1 = 1
+			AND ROLE_IDX = #{selectedRoleIdx}
+	</delete>
+	
+	<insert id="insertRoleMenu" parameterType="map">
+		INSERT 
+    	INTO lab_system_role_menu(
+			ROLE_MENU_IDX
+			, ROLE_IDX
+			, MENU_IDX
+			, IS_ROOT
+			, REG_USER_ID
+			, REG_DATE
+		)values
+		<foreach collection="selectedMenu" item="item" index="index"  separator=",">
+		( nextval('system_role_menu_seq'), #{selectedRoleIdx}, ${item}, 'N', #{userId}, sysdate() )
+		</foreach>
+	
+	</insert>
+	
+	<select id="selectUserMenu" parameterType="map" resultType="hashmap">
+		SELECT 
+			t.menuId 
+			, t.menuName
+			, t.eMenuName
+			, t.pMenuId
+			, t.level
+			, t.displayOrder
+			, t.url
+		FROM ( 
+		WITH RECURSIVE tmp AS
+		(
+			SELECT 
+				t1.menuId
+				, t1.pMenuId
+				, t1.menuName
+				, t1.menuName as pathnm
+				, t1.eMenuName
+				, t1.level
+				, t1.displayOrder
+				, t1.url
+				, t1.useYn
+				, t1.regUserId
+				, DATE_FORMAT(t1.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t1 ,
+			(SELECT 
+				menu.pMenuId 
+			FROM
+				lab_system_role_menu role_menu 
+				, lab_system_menu menu
+			WHERE 1 = 1
+				AND role_menu.ROLE_IDX = '1'
+				AND role_menu.MENU_IDX = menu.menuId 
+			group by menu.pMenuId 
+			) role_menu 
+			WHERE 1 = 1
+				AND t1.pMenuId is null
+				AND role_menu.pMenuId = t1.menuId 
+				and t1.useYn = 'Y'
+			
+			UNION ALL
+	
+			SELECT 
+				t2.menuId
+				, t2.pMenuId
+				, t2.menuName
+				, concat(tmp.pathnm, ' > ', t2.menuName) as pathnm
+				, t2.eMenuName
+				, t2.level
+				, t2.displayOrder
+				, t2.url
+				, t2.useYn
+				, t2.regUserId
+				, DATE_FORMAT(t2.regDate,'%Y-%m-%d') as regDate
+			FROM lab_system_menu t2
+			INNER JOIN tmp ON t2.pMenuId = tmp.menuId
+			where t2.useYn = 'Y'
+		)
+		SELECT * FROM tmp
+		ORDER BY tmp.level, tmp.displayOrder
+		)t
+	</select>
+	
+	<select id="selectCategory" resultType="hashmap">
+		SELECT  
+			t.CATEGORY_IDX as id
+			, ifnull(t.P_CATEGORY_IDX,'#') as parent
+			, t.CATEGORY_NAME as text
+		FROM (
+			WITH RECURSIVE tmp AS
+			(
+				SELECT 
+					t1.CATEGORY_IDX
+					, t1.P_CATEGORY_IDX
+					, t1.CATEGORY_LEVEL
+					, t1.CATEGORY_NAME
+					, t1.CATEGORY_NAME as CATEGORY_NAME_PATH
+					, t1.USE_YN
+					, t1.DISPLAY_ORDER
+					, t1.REG_USER_ID
+					, DATE_FORMAT(t1.REG_DATE,'%Y-%m-%d') as REG_DATE
+				FROM lab_system_category t1
+				WHERE 1 = 1
+					AND t1.P_CATEGORY_IDX is null 
+					and t1.USE_YN = 'Y'
+				
+				UNION ALL
+			
+				SELECT 
+					t2.CATEGORY_IDX
+					, t2.P_CATEGORY_IDX
+					, t2.CATEGORY_LEVEL
+					, t2.CATEGORY_NAME
+					, concat(tmp.CATEGORY_NAME, ' > ', t2.CATEGORY_NAME) as CATEGORY_NAME_PATH
+					, t2.USE_YN
+					, t2.DISPLAY_ORDER
+					, t2.REG_USER_ID
+					, DATE_FORMAT(t2.REG_DATE,'%Y-%m-%d') as REG_DATE
+				FROM lab_system_category t2
+				INNER JOIN tmp ON t2.P_CATEGORY_IDX = tmp.CATEGORY_IDX
+				where t2.USE_YN = 'Y'
+			)
+			SELECT * FROM tmp
+			ORDER BY tmp.CATEGORY_LEVEL, tmp.DISPLAY_ORDER
+		)t
+	</select>
+	
+	<select id="selectCategoryData" parameterType="map" resultType="hashmap">
+		SELECT 
+			CATEGORY_IDX
+			, P_CATEGORY_IDX
+			, CATEGORY_NAME
+			, USE_YN
+			, DISPLAY_ORDER
+			, CATEGORY_LEVEL
+			, REG_USER_ID
+			, REG_DATE
+		FROM 
+			lab_system_category
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}
+	</select>
+	
+	<insert id="insertCategory" parameterType="map">
+		INSERT INTO lab_system_category(
+			CATEGORY_IDX
+			<if test="pId != null and pId != '' ">
+			, P_CATEGORY_IDX
+			</if>
+			, CATEGORY_NAME
+			, USE_YN
+			, DISPLAY_ORDER
+			, CATEGORY_LEVEL
+			, REG_USER_ID
+			, REG_DATE
+		)VALUES(
+			nextval('system_category_seq')
+			<if test="pId != null and pId != '' ">
+			, #{pId}
+			</if>
+			, #{categoryName}
+			, 'Y'
+			, (SELECT ifnull(max(a.DISPLAY_ORDER)+1, 1) 
+				FROM lab_system_category a 
+				WHERE 1 = 1 
+				<choose>
+					<when test='pId.equals("#")'>
+					AND a.P_CATEGORY_IDX IS NULL
+					</when>
+					<otherwise>
+					AND a.P_CATEGORY_IDX = #{pId}
+					</otherwise>
+				</choose>
+				)
+			, #{level}
+			, #{userId}
+			, sysdate()
+		)
+	</insert>
+	
+	<update id="updateCategoryName" parameterType="map">
+		UPDATE
+			lab_system_category
+		SET	
+			CATEGORY_NAME = #{categoryName}
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}  	
+	</update>
+	
+	<update id="deleteCategory" parameterType="map">
+		UPDATE
+			lab_system_category
+		SET	
+			USE_YN = 'N'
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}  	
+	</update>
+	
+	<update id="updateCategoryOrder" parameterType="map">
+		UPDATE
+				lab_system_category
+			SET
+				DISPLAY_ORDER = DISPLAY_ORDER-1
+			WHERE 1 = 1
+			<choose>
+				<when test='pId.equals("#")'>
+				AND P_CATEGORY_IDX IS NULL
+				</when>
+				<otherwise>
+				AND P_CATEGORY_IDX = #{pId}
+				</otherwise>
+			</choose>
+			AND DISPLAY_ORDER > ( SELECT tmp.DISPLAY_ORDER FROM (select a.DISPLAY_ORDER from lab_system_category a where 1 = 1 and a.CATEGORY_IDX = #{id}) as tmp )	
+		
+	</update>
+	
+	<update id="updateDisplayOrder" parameterType="map">
+		<choose>
+			<when test="displayOrder lt currentOrder">
+				UPDATE
+					lab_system_category
+				SET
+					DISPLAY_ORDER = 	DISPLAY_ORDER+1
+				WHERE 1 = 1
+				<choose>
+					<when test='pId.equals("#")'>
+					AND P_CATEGORY_IDX IS NULL
+					</when>
+					<otherwise>
+					AND P_CATEGORY_IDX = #{pId}
+					</otherwise>
+				</choose>
+				AND DISPLAY_ORDER > #{displayOrder}
+				AND DISPLAY_ORDER <![CDATA[<]]> #{currentOrder}				
+			</when>
+			<otherwise>
+				UPDATE
+					lab_system_category
+				SET
+					DISPLAY_ORDER = DISPLAY_ORDER-1
+				WHERE 1 = 1
+				<choose>
+					<when test='pId.equals("#")'>
+					AND P_CATEGORY_IDX IS NULL
+					</when>
+					<otherwise>
+					AND P_CATEGORY_IDX = #{pId}
+					</otherwise>
+				</choose>
+				AND DISPLAY_ORDER <![CDATA[<=]]> ${displayOrder}
+				AND DISPLAY_ORDER > #{currentOrder}	
+			</otherwise>
+		</choose>
+		
+	</update>
+	
+	<update id="updateCategory" parameterType="map">
+		UPDATE
+			lab_system_category
+		SET
+		<choose>
+			<when test='pId.equals("#")'>
+			P_CATEGORY_IDX is null
+			</when>
+			<otherwise>
+			P_CATEGORY_IDX = #{pId}
+			</otherwise>
+		</choose>
+			, DISPLAY_ORDER = ${displayOrder}+1
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}
+	</update>
+	
+	<select id="selectPCategory" parameterType="map">
+		WITH RECURSIVE TTR (CATEGORY_IDX, DISPLAY_ORDER, P_CATEGORY_IDX, CATEGORY_LEVEL) AS
+		(
+		    SELECT 
+		    	CATEGORY_IDX
+		    	, DISPLAY_ORDER
+		    	, P_CATEGORY_IDX
+		    	, CATEGORY_LEVEL
+		    FROM	lab_system_category
+		    WHERE 1 = 1 
+		    	AND CATEGORY_IDX = #{id}		    
+		    UNION ALL		    
+		    SELECT 
+		    	R.CATEGORY_IDX
+		    	, R.DISPLAY_ORDER
+		    	, R.P_CATEGORY_IDX
+		    	, R.CATEGORY_LEVEL
+		    FROM	lab_system_category R
+		    INNER JOIN TTR ON R.CATEGORY_IDX = TTR.P_CATEGORY_IDX
+		)
+		SELECT DISPLAY_ORDER, CATEGORY_IDX, P_CATEGORY_IDX, CATEGORY_LEVEL FROM TTR R ORDER BY CATEGORY_LEVEL ASC, CATEGORY_IDX ASC
+	</select>
+	
+	<select id="selectNPCategory" parameterType="map" resultType="hashmap">
+		SELECT 
+			* 
+		FROM 
+			lab_system_category lsc 
+		WHERE 1 = 1 
+			AND USE_YN = 'Y'
+		<choose>
+			<when test='pId.equals("#")'>
+			AND P_CATEGORY_IDX is null
+			</when>
+			<otherwise>
+			AND P_CATEGORY_IDX = #{pId}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test='div.equals("UP")'>
+			AND DISPLAY_ORDER <![CDATA[<]]> (SELECT a.DISPLAY_ORDER FROM lab_system_category a WHERE 1 = 1 AND a.USE_YN  = 'Y' AND a.CATEGORY_IDX = #{id} )
+			ORDER BY DISPLAY_ORDER DESC LIMIT 1
+			</when>
+			<otherwise>
+			AND DISPLAY_ORDER > (SELECT a.DISPLAY_ORDER FROM lab_system_category a WHERE 1 = 1 AND a.USE_YN  = 'Y' AND a.CATEGORY_IDX = #{id} )
+			ORDER BY DISPLAY_ORDER ASC LIMIT 1
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="updateNPCategoryOrder" parameterType="map">
+		UPDATE
+			lab_system_category
+		SET 
+			DISPLAY_ORDER = #{displayOrder}
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}
+	</update>
+	
+	<update id="updateMyCategoryOrder" parameterType="map">
+		UPDATE
+			lab_system_category
+		SET 
+			<choose>
+				<when test='div.equals("UP")'>
+				DISPLAY_ORDER = DISPLAY_ORDER-1
+				</when>
+				<otherwise>
+				DISPLAY_ORDER = DISPLAY_ORDER+1
+				</otherwise>
+			</choose>
+		WHERE 1 = 1
+			AND CATEGORY_IDX = #{id}
+	</update>
+	
+	<sql id="whereMaterialList">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchSapCode')">
+      		AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchCategory1 != null and searchCategory1 != '' ">
+			AND MATERIAL_TYPE1 = #{searchCategory1}
+		</if>
+		<if test="searchCategory2 != null and searchCategory2 != '' ">
+			AND MATERIAL_TYPE2 = #{searchCategory2}
+		</if>
+		<if test="searchCategory3 != null and searchCategory3 != '' ">
+			AND MATERIAL_TYPE3 = #{searchCategory3}
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND MATERIAL_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'MAT' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectMaterialCount" parameterType="map" resultType="int">
+		SELECT 
+			count(MATERIAL_IDX) as cnt
+		FROM lab_material
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			<include refid="test.whereMaterialList" />
+	</select>
+	
+	<select id="selectMaterialList" parameterType="map" resultType="hashmap">
+		<!-- 
+		SELECT 
+			tmp.*
+			, (SELECT unitName FROM unit WHERE 1 = 1 AND unitCode = UNIT) as UNIT_NAME
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = tmp.MATERIAL_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = tmp.MATERIAL_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = tmp.MATERIAL_TYPE3) as CATEGORY_NAME3
+			, IFNULL(lf.FILE_CNT10,0) as FILE_CNT10
+			, IFNULL(lf.FILE_CNT20,0) as FILE_CNT20
+			, IFNULL(lf.FILE_CNT30,0) as FILE_CNT30
+			, IFNULL(lf.FILE_CNT40,0) as FILE_CNT40
+			, IFNULL(lf.FILE_CNT50,0) as FILE_CNT50
+			, (SELECT COUNT(MATERIAL_IDX) from lab_material lm WHERE 1 = 1 AND lm.SAP_CODE = tmp.SAP_CODE AND lm.IS_LAST = 'N' AND lm.VERSION_NO <![CDATA[<]]> tmp.VERSION_NO and lm.IS_DELETE = 'N' ) as CHILD_CNT
+		FROM (
+			SELECT 
+				row_number() over (order by  MATERIAL_IDX DESC) as rnum
+				, MATERIAL_IDX
+				, SAP_CODE
+				, NAME
+				, COMPANY_CODE
+				, PLANT
+				, PRICE
+				, UNIT
+				, EXTRA_UNIT
+				, TYPE
+				, IS_SAMPLE
+				, IS_HIDDEN
+				, IS_DELETE
+				, MATERIAL_TYPE1
+				, MATERIAL_TYPE2
+				, MATERIAL_TYPE3				
+				, VERSION_NO
+				, IS_LAST
+			FROM lab_material
+			WHERE 1 = 1
+				AND IS_DELETE = 'N'
+				AND IS_LAST = 'Y'
+				<include refid="test.whereMaterialList" />
+		)tmp 
+			left outer join (
+				SELECT DOC_IDX
+					, DOC_TYPE
+					, MAX(IF(FILE_TYPE=10, 1, 0)) FILE_CNT10
+				    , MAX(IF(FILE_TYPE=20, 1, 0)) FILE_CNT20
+				    , MAX(IF(FILE_TYPE=30, 1, 0)) FILE_CNT30
+				    , MAX(IF(FILE_TYPE=40, 1, 0)) FILE_CNT40
+				    , MAX(IF(FILE_TYPE=50, 1, 0)) FILE_CNT50
+				FROM lab_file_type
+				where 1 = 1
+				GROUP BY DOC_IDX, DOC_TYPE
+			)lf
+			on tmp.MATERIAL_IDX = lf.DOC_IDX 
+			and lf.DOC_TYPE = "MAT" 
+		WHERE rnum between #{startRow} AND #{endRow}
+	 -->	
+	 
+	 select 
+		lm.*
+		, (SELECT unitName FROM unit WHERE 1 = 1 AND unitCode = lm.UNIT) as UNIT_NAME
+		, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MATERIAL_TYPE1) as CATEGORY_NAME1
+		, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MATERIAL_TYPE2) as CATEGORY_NAME2
+		, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MATERIAL_TYPE3) as CATEGORY_NAME3
+		, IFNULL(lf.FILE_CNT10,0) as FILE_CNT10
+		, IFNULL(lf.FILE_CNT20,0) as FILE_CNT20
+		, IFNULL(lf.FILE_CNT30,0) as FILE_CNT30
+		, IFNULL(lf.FILE_CNT40,0) as FILE_CNT40
+		, IFNULL(lf.FILE_CNT50,0) as FILE_CNT50
+		, (SELECT COUNT(*) FROM lab_material WHERE 1 = 1 AND SAP_CODE = lm.SAP_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> lm.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+	from 
+	lab_material lm
+	left outer join (
+			SELECT DOC_IDX
+				, DOC_TYPE
+				, MAX(IF(FILE_TYPE=10, 1, 0)) FILE_CNT10
+			    , MAX(IF(FILE_TYPE=20, 1, 0)) FILE_CNT20
+			    , MAX(IF(FILE_TYPE=30, 1, 0)) FILE_CNT30
+			    , MAX(IF(FILE_TYPE=40, 1, 0)) FILE_CNT40
+			    , MAX(IF(FILE_TYPE=50, 1, 0)) FILE_CNT50
+			FROM lab_file_type
+			where 1 = 1
+			GROUP BY DOC_IDX, DOC_TYPE
+		)lf
+		on lm.MATERIAL_IDX = lf.DOC_IDX 
+		and lf.DOC_TYPE = "MAT" 
+	where 1 = 1
+		and DOC_NO in (
+			SELECT 
+				tmp.DOC_NO
+			FROM (
+				SELECT 
+					row_number() over (order by  MATERIAL_IDX DESC) as rnum
+					, DOC_NO
+				FROM lab_material
+				WHERE 1 = 1
+					AND IS_DELETE = 'N'
+					AND IS_LAST = 'Y'
+					<include refid="test.whereMaterialList" />
+			)tmp 
+			WHERE rnum between #{startRow} AND #{endRow}
+	)
+	order by DOC_NO desc, MATERIAL_IDX desc
+	</select>
+	
+	<select id="selectMaterialCategory" resultType="hashmap">
+		WITH RECURSIVE TTR (CATEGORY_IDX, CATEGORY_NAME, DISPLAY_ORDER, P_CATEGORY_IDX, CATEGORY_LEVEL) AS
+		(
+		    SELECT 
+		    	CATEGORY_IDX
+		    	, CATEGORY_NAME 
+		    	, DISPLAY_ORDER
+		    	, P_CATEGORY_IDX
+		    	, CATEGORY_LEVEL
+		    FROM	lab_material_category
+		    WHERE 1 = 1 
+		    	AND P_CATEGORY_IDX is null
+		    	AND USE_YN = 'Y'
+		    UNION ALL    
+		    SELECT 
+		    	R.CATEGORY_IDX
+		    	, R.CATEGORY_NAME
+		    	, R.DISPLAY_ORDER
+		    	, R.P_CATEGORY_IDX
+		    	, R.CATEGORY_LEVEL
+		    FROM	lab_material_category R
+		    INNER JOIN TTR ON R.P_CATEGORY_IDX = TTR.CATEGORY_IDX
+		)
+		SELECT CATEGORY_IDX, P_CATEGORY_IDX, CATEGORY_NAME, CATEGORY_LEVEL, DISPLAY_ORDER FROM TTR R ORDER BY CATEGORY_LEVEL ASC, DISPLAY_ORDER ASC
+	</select>
+	
+	<select id="categoryList" parameterType="map" resultType="hashmap">
+		WITH RECURSIVE TTR (CATEGORY_IDX, DISPLAY_ORDER, P_CATEGORY_IDX, CATEGORY_LEVEL, CATEGORY_NAME ) AS
+		(
+		    SELECT 
+		    	CATEGORY_IDX
+		    	, DISPLAY_ORDER
+		    	, CASE WHEN P_CATEGORY_IDX = #{pId} then '#'
+    				ELSE P_CATEGORY_IDX
+    				END P_CATEGORY_IDX
+		    	, CATEGORY_LEVEL
+		    	, CATEGORY_NAME 
+		    FROM	lab_system_category
+		    WHERE 1 = 1 
+		    	AND P_CATEGORY_IDX = #{pId}
+		    	AND USE_YN = 'Y'
+		    UNION ALL    
+		    SELECT 
+		    	R.CATEGORY_IDX
+		    	, R.DISPLAY_ORDER
+		    	, R.P_CATEGORY_IDX
+		    	, R.CATEGORY_LEVEL
+		    	, R.CATEGORY_NAME 
+		    FROM	lab_system_category R
+		    INNER JOIN TTR ON R.P_CATEGORY_IDX = TTR.CATEGORY_IDX
+		)
+		SELECT DISPLAY_ORDER, CATEGORY_IDX as id, P_CATEGORY_IDX as parent, CATEGORY_LEVEL, CATEGORY_NAME as text  FROM TTR R ORDER BY CATEGORY_LEVEL ASC,  DISPLAY_ORDER ASC
+	</select>
+	
+	<select id="selectMaterialDataCount" parameterType="map" resultType="int">
+		SELECT 
+			count(MATERIAL_IDX) as cnt
+		FROM lab_material
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND SAP_CODE = #{sapCode}
+	</select>
+	
+	<select id="selectMaterialSeq" resultType="int">
+		SELECT nextval('material_seq') as seq
+	</select>
+	
+	<insert id="insertMaterial" parameterType="map">
+		INSERT INTO lab_material(
+			MATERIAL_IDX
+			, SAP_CODE
+			, NAME
+			, COMPANY_CODE
+			, PLANT
+			, PRICE
+			, UNIT
+			, EXTRA_UNIT
+			, TYPE
+			, IS_SAMPLE
+			, IS_HIDDEN
+			, IS_DELETE
+			<if test="materialType1 != null and materialType1 !='' ">
+			, MATERIAL_TYPE1
+			</if>
+			<if test="materialType2 != null and materialType2 !='' ">
+			, MATERIAL_TYPE2
+			</if>
+			<if test="materialType3 != null and materialType3 !='' ">
+			, MATERIAL_TYPE3
+			</if>
+			, VERSION_NO
+			, IS_LAST
+			, DOC_NO
+			, KEEP_CONDITION
+			, WIDTH
+			, LENGTH
+			, HEIGHT
+			, TOTAL_WEIGHT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+		)VALUES(
+			#{idx}
+			, #{sapCode}
+			, #{name}
+			, ''
+			, ''
+			, #{price}
+			, #{unit}
+			, ''
+			, ''
+			, #{isSample}
+			, 'N'
+			, 'N'
+			<if test="materialType1 != null and materialType1 !='' ">
+			, #{materialType1}
+			</if>
+			<if test="materialType2 != null and materialType2 !='' ">
+			, #{materialType2}
+			</if>
+			<if test="materialType3 != null and materialType3 !='' ">
+			, #{materialType3}
+			</if>
+			, #{versionNo}
+			, #{isLast}
+			, (SELECT ifnull(MAX(lm.DOC_NO),0)+1 FROM lab_material lm WHERE 1 = 1)
+			, #{keepCondition}
+			, #{width}
+			, #{length}
+			, #{height}
+			, #{weight}
+			, #{standard}
+			, #{origin}
+			, #{expireDate}
+		)
+	</insert>
+	
+	<insert id="insertNewVersionMaterial" parameterType="map">
+		INSERT INTO lab_material(
+			MATERIAL_IDX
+			, SAP_CODE
+			, NAME
+			, COMPANY_CODE
+			, PLANT
+			, PRICE
+			, UNIT
+			, EXTRA_UNIT
+			, TYPE
+			, IS_SAMPLE
+			, IS_HIDDEN
+			, IS_DELETE
+			<if test="materialType1 != null and materialType1 !='' ">
+			, MATERIAL_TYPE1
+			</if>
+			<if test="materialType2 != null and materialType2 !='' ">
+			, MATERIAL_TYPE2
+			</if>
+			<if test="materialType3 != null and materialType3 !='' ">
+			, MATERIAL_TYPE3
+			</if>
+			, VERSION_NO
+			, IS_LAST
+			, DOC_NO
+			, KEEP_CONDITION
+			, WIDTH
+			, LENGTH
+			, HEIGHT
+			, TOTAL_WEIGHT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+		)VALUES(
+			#{idx}
+			, #{sapCode}
+			, #{name}
+			, ''
+			, ''
+			, #{price}
+			, #{unit}
+			, ''
+			, ''
+			, #{isSample}
+			, 'N'
+			, 'N'
+			<if test="materialType1 != null and materialType1 !='' ">
+			, #{materialType1}
+			</if>
+			<if test="materialType2 != null and materialType2 !='' ">
+			, #{materialType2}
+			</if>
+			<if test="materialType3 != null and materialType3 !='' ">
+			, #{materialType3}
+			</if>
+			, #{versionNo}
+			, #{isLast}
+			, #{docNo}
+			, #{keepCondition}
+			, #{width}
+			, #{length}
+			, #{height}
+			, #{weight}
+			, #{standard}
+			, #{origin}
+			, #{expireDate}
+		)
+	</insert>
+	
+	<insert id="insertHistory" parameterType="map">
+		INSERT INTO lab_history(
+			HISTORY_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, HISTORY_TYPE
+			, HISTORY_DATA
+			, USER_ID
+			, REG_DATE
+		)VALUES(
+			nextval('history_seq')
+			, #{docIdx}
+			, #{docType}
+			, #{historyType}
+			, #{historyData}
+			, #{userId}
+			, sysdate()
+		)
+	</insert>
+	
+	<insert id="insertFileInfo" parameterType="map">
+		INSERT INTO lab_file(
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, FILE_CONTENT
+			, REG_DATE
+		)VALUES(
+			#{fileIdx}
+			, #{docIdx}
+			, #{docType}
+			, #{fileType}
+			, #{changeFileName}
+			, #{orgFileName}
+			, #{filePath}
+			, #{content}
+			, sysdate()
+		)
+	</insert>
+	
+	<select id="selectMaterialData" parameterType="map" resultType="hashmap">
+		SELECT 
+			MATERIAL_IDX
+			, SAP_CODE
+			, NAME
+			, COMPANY_CODE
+			, PLANT
+			, PRICE
+			, UNIT
+			, (select unitName from unit where unitCode = UNIT) as UNIT_NAME
+			, EXTRA_UNIT
+			, TYPE
+			, IS_SAMPLE
+			, IS_HIDDEN
+			, IS_DELETE
+			, MATERIAL_TYPE1
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MATERIAL_TYPE1) as  MATERIAL_TYPE_NAME1
+			, MATERIAL_TYPE2
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MATERIAL_TYPE2) as  MATERIAL_TYPE_NAME2
+			, MATERIAL_TYPE3 
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MATERIAL_TYPE3) as  MATERIAL_TYPE_NAME3
+			, VERSION_NO
+			, IS_LAST
+			, DOC_NO
+			, KEEP_CONDITION
+			, WIDTH
+			, LENGTH
+			, HEIGHT
+			, TOTAL_WEIGHT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+		FROM 
+			lab_material
+		WHERE 1 = 1
+			AND MATERIAL_IDX = #{idx}
+	</select>
+	
+	<select id="selectFileList" parameterType="map" resultType="hashmap">
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+		FROM 
+			lab_file
+		WHERE 1 = 1
+			AND DOC_IDX = #{idx}
+			AND DOC_TYPE = #{docType}
+	</select>
+	
+	<select id="selectFileData" parameterType="map" resultType="hashmap">
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+		FROM 
+			lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{idx}
+	</select>
+	
+	<select id="selectCategoryByPId" parameterType="map" resultType="hashmap">
+		SELECT
+			CATEGORY_IDX
+			, P_CATEGORY_IDX
+			, CATEGORY_NAME
+			, USE_YN
+			, DISPLAY_ORDER
+			, CATEGORY_LEVEL
+		FROM 
+			lab_system_category
+		WHERE 1 = 1
+			AND P_CATEGORY_IDX = #{pIdx}
+			AND USE_YN = 'Y'
+		ORDER BY DISPLAY_ORDER ASC
+	</select>
+	
+	<update id="deleteMaterial" parameterType="map">
+		UPDATE 
+			lab_material
+		SET 
+			IS_DELETE = 'Y'
+		WHERE 1 = 1
+			AND DOC_NO = #{docNo}
+	</update>
+	
+	<select id="selectErpMaterial" parameterType="map" resultType="hashmap">
+		SELECT 
+			* 
+		FROM
+			lab_erp_material
+		WHERE 1 = 1 
+			AND SAP_CODE like '%2%'
+			AND NAME like '%닭%'
+			AND KEEP_CONDITION = '냉장'
+			AND CATEGORY_DIV1 = '원재료'
+			AND CATEGORY_DIV2 = '치킨류'
+	</select>
+	
+	<sql id="whereErpMaterialList">
+		<choose>
+			<when test = "searchType != null and searchType != ''">
+				<if test="searchType == 'searchName' ">
+				AND NAME LIKE CONCAT('%',#{searchValue},'%')
+				</if>
+				<if test="searchType == 'searchSapCode' ">
+				AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
+				</if>
+			</when>
+			<otherwise>
+				<if test="searchValue != null and searchValue != '' ">
+				AND ( SAP_CODE LIKE CONCAT('%',#{searchValue},'%') OR NAME LIKE CONCAT('%',#{searchValue},'%') )
+				</if>
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="selectErpMaterialCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(SAP_CODE) 
+		FROM
+			lab_erp_material
+		WHERE 1 = 1 
+		<include refid="test.whereErpMaterialList" />
+	</select>
+	
+	<select id="selectErpMaterialList" parameterType="map" resultType="hashmap">
+		SELECT 
+			* 
+		FROM (
+			SELECT 
+				row_number() over (order by  SAP_CODE ASC) as rnum
+				, SAP_CODE
+				, NAME
+				, KEEP_CONDITION
+				, CATEGORY_DIV1
+				, CATEGORY_DIV2 
+				, WIDTH
+				, WIDTH_UNIT
+				, LENGTH
+				, LENGTH_UNIT
+				, HEIGHT
+				, HEIGHT_UNIT
+				, TOTAL_WEIGHT
+				, TOTAL_WEIGHT_UNIT
+				, ITEM_UNIT
+				, CHANGE_COUNT
+				, CHANGE_UNIT
+				, STANDARD
+				, ORIGIN
+				, EXPIRATION_DATE
+				, BILL_NAME
+				, STATUS
+				, PUBLIC_YN
+				, BOX_AMOUNT
+				, MIN_ORDER_AMOUNT
+				, LEAD_TIME
+				, FRESH_YN
+				, SAFETY_STOCK_DAY
+				, PALLET_WIDTH_COUNT
+				, PALLET_LENGTH_COUNT
+				, TAX_YN
+				, CD_ACCT
+				, PROCESSING_ACCOUNT
+				, NM_STATUS
+				, PALLET_AMOUNT
+				, ADVERTISING_DATE
+				, ADVERTISING_COST
+			FROM
+				lab_erp_material
+			WHERE 1 = 1 
+			<include refid="test.whereErpMaterialList" />
+		)tmp WHERE rnum between #{startRow} and #{endRow}	
+	</select>
+	
+	<select id="selectErpMaterialData" parameterType="map" resultType="hashmap">
+		SELECT
+			SAP_CODE
+			, NAME
+			, KEEP_CONDITION
+			, CATEGORY_DIV1
+			, CATEGORY_DIV2 
+			, WIDTH
+			, WIDTH_UNIT
+			, LENGTH
+			, LENGTH_UNIT
+			, HEIGHT
+			, HEIGHT_UNIT
+			, TOTAL_WEIGHT
+			, TOTAL_WEIGHT_UNIT
+			, ITEM_UNIT
+			, CHANGE_COUNT
+			, CHANGE_UNIT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+			, BILL_NAME
+			, STATUS
+			, PUBLIC_YN
+			, BOX_AMOUNT
+			, MIN_ORDER_AMOUNT
+			, LEAD_TIME
+			, FRESH_YN
+			, SAFETY_STOCK_DAY
+			, PALLET_WIDTH_COUNT
+			, PALLET_LENGTH_COUNT
+			, TAX_YN
+			, CD_ACCT
+			, PROCESSING_ACCOUNT
+			, NM_STATUS
+			, PALLET_AMOUNT
+			, ADVERTISING_DATE
+			, ADVERTISING_COST
+		FROM
+			lab_erp_material
+		WHERE 1 = 1
+			AND SAP_CODE = #{sapCode}
+	</select>
+	
+	<select id="selectmaterialCode" resultType="String">
+		SELECT 
+			LPAD(nextval('material_code_seq'), '3' , '0') as code
+	</select>
+	
+	<insert id="insertFileType" parameterType="java.util.List">
+		INSERT 
+    	INTO lab_file_type(
+			DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_TEXT
+		)values
+		<foreach collection="list" item="item" index="index" separator=",">
+		( #{item.docIdx}, #{item.docType}, #{item.fileType}, #{item.fileTypeText} )
+		</foreach>
+	
+	</insert>
+	
+	<select id="selectFileType" parameterType="map" resultType="hashmap">
+		SELECT 
+			DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_TEXT
+		FROM 
+			lab_file_type
+		WHERE 1 = 1
+			AND DOC_IDX = #{idx}
+			AND DOC_TYPE = #{docType}
+	</select>
+	
+	<update id="updateMaterial" parameterType="map">
+		UPDATE 
+			lab_material
+		SET
+			IS_LAST = 'N'
+		WHERE 1 = 1
+			AND MATERIAL_IDX = #{currentIdx}
+	</update>
+	
+	<select id="selectHistory" parameterType="map" resultType="hashmap">
+	SELECT 
+		lh.DOC_IDX
+		, lh.HISTORY_TYPE
+		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
+			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
+			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			END HISTORY_TYPE_TXT 
+		, lm.VERSION_NO
+		, lm.NAME 
+		, lm.SAP_CODE 
+		, lh.USER_ID 
+		, (SELECT userName FROM usertable2 u WHERE 1 = 1 AND u.userId = lh.USER_ID) as USER_NAME
+		, DATE_FORMAT(lh.REG_DATE, '%Y-%m-%d %H:%i:%s') as REG_DATE
+	FROM lab_history lh ,
+		lab_material lm 
+	WHERE 1 = 1
+		AND lh.DOC_IDX IN (SELECT MATERIAL_IDX FROM lab_material WHERE 1 = 1 AND DOC_NO = #{docNo})
+		AND lh.DOC_TYPE = #{docType}
+		AND lh.DOC_IDX = lm.MATERIAL_IDX 
+	ORDER BY lh.REG_DATE ASC
+	</select>
+	
+</mapper>

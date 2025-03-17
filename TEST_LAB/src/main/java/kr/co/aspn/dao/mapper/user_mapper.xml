@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user">
+	<select id="selectUser" parameterType="UserVo" resultType="UserVo">
+	/*	user.selectUser 사용자 정보 조회 */
+	SELECT 
+		userId
+      ,userName
+      ,userGrade
+      ,getCodeName('GRADE',userGrade) AS userGradeName
+      ,regDate
+      ,userCode
+      ,email
+      ,deptCode
+      ,getCodeName('DEPT',deptCode) AS deptCodeName
+      ,teamCode
+      ,getCodeName('TEAM',teamCode) AS teamCodeName	
+      ,titleCode
+      ,userType
+      ,isAdmin
+      ,isDelete
+      ,theme
+      ,contentMode
+      ,widthMode
+      ,mailCheck1
+      ,mailCheck2
+      ,mailCheck3
+      ,isLock
+      ,roleCode
+    FROM 
+    	userTable2
+	WHERE	1 = 1
+	    AND isDelete != 'Y'         
+		AND userId = #{userId, jdbcType=VARCHAR}
+    </select>
+    
+    <select id="loginCheck" parameterType="UserVo" resultType="UserVo">
+	/*	user.loginCheck 로그인 체크 */
+	SELECT 
+		userId
+      ,userName
+      ,userGrade
+      ,getCodeName('GRADE',userGrade) AS userGradeName
+      ,regDate
+      ,userCode
+      ,email
+      ,deptCode
+      ,getCodeName('DEPT',deptCode) AS deptCodeName
+      ,teamCode
+      ,getCodeName('TEAM',teamCode) AS teamCodeName	
+      ,titleCode
+      ,userType
+      ,isAdmin
+      ,isDelete
+      ,theme
+      ,contentMode
+      ,widthMode
+      ,mailCheck1
+      ,mailCheck2
+      ,mailCheck3
+    FROM 
+    	userTable2
+	WHERE	1 = 1
+		AND userId = #{userId}
+		AND userPw = #{userEncPwd}
+    </select>
+    
+    <select id="userCount" parameterType="UserManageVO" resultType="int">
+	/* user.userCount 리스트 카운트 */
+			SELECT	COUNT(*)
+			FROM	userTable2	
+			WHERE 1=1
+			<if test="searchValue != null and searchValue != '' ">
+				AND (userName like  concat('%',#{searchValue},'%') OR userId like  concat('%',#{searchValue},'%')  OR email like  concat('%',#{searchValue},'%') )
+			</if>
+			<if test="deptCode != null and deptCode != '' ">
+				AND deptCode = #{deptCode}
+			</if>
+			<if test="teamCode != null and teamCode != '' ">
+				AND teamCode = #{teamCode}
+			</if>
+			<if test="userGrade != null and userGrade != '' ">
+				AND userGrade = #{userGrade}
+			</if>
+	</select>
+	
+	<select id="userList" parameterType="UserManageVO" resultType="UserManageVO">
+		/* user.userList 리스트 */
+			SELECT		t.*
+			FROM	
+					(
+						SELECT	row_number() over (order by userId desc) as rnum
+						  ,userId
+					      ,userPwd
+					      ,userName
+					      ,userGrade
+					      ,getCodeName('GRADE',userGrade) AS userGradeName
+					      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+					      ,userCode
+					      ,email
+					      ,deptCode
+					      ,getCodeName('DEPT',deptCode) AS deptCodeName
+					      ,teamCode
+					      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
+					      ,titleCode
+					      ,userType
+					      ,isAdmin	
+					      ,isDelete
+					      ,isLock
+						FROM	userTable2	
+						WHERE 1=1
+						<if test="searchValue != null and searchValue != '' ">
+							AND (userName like  concat('%',#{searchValue},'%') OR userId like  concat('%',#{searchValue},'%')  OR email like  concat('%',#{searchValue},'%') )
+						</if>
+						<if test="deptCode != null and deptCode != '' ">
+							AND deptCode = #{deptCode}
+						</if>
+						<if test="teamCode != null and teamCode != '' ">
+							AND teamCode = #{teamCode}
+						</if>
+						<if test="userGrade != null and userGrade != '' ">
+							AND userGrade = #{userGrade}
+						</if>
+					) t WHERE rnum between #{startRow} and #{endRow}
+		<![CDATA[
+			ORDER BY userId desc
+		]]>
+	</select>
+	<insert id="insert" parameterType="UserManageVO">
+		/* user.insert 사용자 등록  */
+		INSERT INTO USERTABLE2(
+				userId
+			,	userName
+			,	userGrade
+			,	email
+			,	deptCode
+			,	teamCode
+			,	regDate
+			,	isDelete
+			,   isAdmin
+			,mailCheck1
+		    ,mailCheck2
+		    ,mailCheck3
+		)	VALUES (
+				#{userId}
+			,	#{userName}
+			,	#{userGrade}
+			,  	#{email} 
+			,	#{deptCode}
+			,	#{teamCode}
+			, 	sysdate()
+			, 	'N'
+			,	#{isAdmin}
+			, 	'Y'
+			, 	'Y'
+			, 	'Y'
+		)
+	</insert>
+	
+	<select id="checkId" parameterType="string" resultType="int">
+	   /*user.checkId 아이디체크  */
+    	SELECT COUNT(USERID) FROM USERTABLE2 WHERE USERID = #{value}
+    </select>
+    
+    <select id="getUserData" parameterType="UserManageVO" resultType="UserManageVO">
+	/*	user.getUserData 사용자 정보 조회 */
+	SELECT 
+		userId
+      ,userPwd
+      ,userName
+      ,userGrade
+      ,regDate
+      ,userCode
+      ,email
+      ,deptCode
+      ,teamCode
+      ,titleCode
+      ,userType
+      ,isAdmin
+      ,isDelete
+    FROM 
+    	userTable2
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </select>
+    
+    <update id="update" parameterType="UserManageVO">
+	/*	user.update 사용자 정보 조회 */
+	UPDATE userTable2 
+	SET 
+      userName =  #{userName}
+      ,userGrade =  #{userGrade}
+      ,email = #{email}
+      ,deptCode =  #{deptCode}
+      ,teamCode =  #{teamCode}
+      ,isAdmin	=  #{isAdmin}
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </update>
+    
+    <update id="delete" parameterType="UserManageVO">
+	/*	user.delete 사용자 정보 조회 */
+	UPDATE userTable2 
+	SET 
+     isDelete	=  'Y'
+     , userGrade = ''
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </update>
+    
+    <update id="restore" parameterType="UserManageVO">
+	/*	user.restore 사용자 정보 조회 */
+	UPDATE userTable2 
+	SET 
+     isDelete	=  'N'
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </update>
+    
+    <update id="unlock" parameterType="UserManageVO">
+	/*	user.unlock 사용자 잠금해제  */
+	UPDATE userTable2 
+	SET 
+     isLock	=  'N'
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </update>
+    
+    <insert id="insertLog" parameterType="map">
+		/* user.insertLog   */
+		INSERT INTO userTable_log(
+			type
+		    ,description
+		    ,userId
+		    ,regUserId
+		    ,regDate
+		)	VALUES (
+				#{type}
+			,	#{description}
+			,	#{userId}
+			,  	#{regUserId} 
+			, 	sysdate()
+		)
+	</insert>
+	<insert id="insertLoginLog" parameterType="map">
+		/* user.insertLoginLog   */
+		INSERT INTO userLogin_log(
+			userId
+		    ,userIp
+		    ,loginDate
+		)	VALUES (
+				#{userId}
+			,	#{userIp}
+			, 	sysdate()
+		)
+	</insert>
+	<select id="searchUserList" resultType="hashmap">
+		SELECT	userId, userName, getUserDeptName(userId) AS deptCodeName, getUserTeamName(userId) AS teamCodeName
+			FROM	userTable2
+			WHERE	userName like concat('%',#{keyword},'%')
+			<if test="userGrade != null and userGrade !='' ">
+				and userGrade = '${userGrade}'
+			</if>
+			and isDelete !='Y'
+	</select>
+	
+	
+	<update id="setPersonalization" parameterType="map">
+	/*	user.setPersonalization 사용자 개인화 데이터 업데이트 */
+	UPDATE userTable2 
+	SET 
+    	${type} = #{value}
+	WHERE	1 = 1
+		AND userId = #{userId}
+    </update>
+    <select id="userListBom" resultType="UserVo">
+    	SELECT * FROM userTable2 
+    	WHERE userGrade = '3' 
+    	  AND isDelete != 'Y'
+    </select>
+    <select id="marketingUserList" resultType="hashmap">
+    	<!-- select * from userTable2 where teamCode = 8 -->
+    	select * from userTable2 where deptCode = 'dept8'
+    </select>
+    
+    <select id="qualityPlanningUserList" resultType="hashmap">
+    	<!-- select * from userTable2 where teamCode = 8 -->
+    	select * from userTable2 where deptCode='dept7' and teamCode='6'
+    </select>
+    
+    <select id="researchUserList" resultType="hashmap">
+    	select * from userTable2 where userGrade='4'
+    </select>
+    
+    <select id="sendMailList" resultType="map" parameterType="map">
+		SELECT	userId
+			, userName
+			, getUserDeptName(userId) AS deptCodeName
+			, getUserTeamName(userId) AS teamCodeName
+			, getCodeName('GRADE',userGrade) AS userGradeName
+			, email
+			FROM	userTable2
+			WHERE	1 = 1 
+			<if test="deptCode != null and deptCode !='' ">
+				AND deptCode = #{deptCode}
+			</if> 
+			<if test="teamCode != null and teamCode !='' ">
+				AND teamCode = #{teamCode}
+			</if> 
+			<if test="userGrade != null and userGrade !='' ">
+				AND userGrade = #{userGrade}
+			</if>
+			<if test="isAdmin != null and isAdmin !='' ">
+				AND isAdmin = #{isAdmin}
+			</if>
+	</select>
+	
+	<insert id="insertAccessLog">
+		INSERT INTO userAccess_log (
+			userId
+			, url
+			, time
+			, regDate
+		) VALUES(
+			#{userId}
+			, #{url}
+			, #{time} 
+			, sysdate()
+		)
+		<selectKey keyProperty="seq" resultType="int" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertAccessLogParams">
+		INSERT INTO userAccess_log_params (
+			parent_seq
+			, docNo
+			, tbKey
+			, tbType
+			, pNo
+			, params
+		) VALUES (
+			#{seq}
+			, #{docNo}
+			, #{tbKey}
+			, #{tbType}
+			, #{pNo}
+			, #{requestParams}
+		)
+	</insert>
+	
+	<select id="selectDocumentOwner" parameterType="UserVo" resultType="UserVo">
+		/* user.selectDocumentOwner */
+		SELECT * FROM userTable2
+		WHERE 1=1
+		<choose>
+			<when test='tbType == "manufacturingProcessDoc"'>
+				AND userId = (SELECT regUserId FROM manufacturingProcessDoc WHERE dNo = #{tbKey})
+			</when>
+			<when test='tbType == "trialProductionReport"'>
+				AND userId = (SELECT createUser FROM trialProductionReport WHERE rNo = #{tbKey})
+			</when>
+			<otherwise>
+				1!=1
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

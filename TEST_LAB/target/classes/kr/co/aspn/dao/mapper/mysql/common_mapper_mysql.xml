@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="common">
+	 <select id="company" resultType="CompanyVO">
+	 /*common.company*/
+		SELECT 
+			COMPANY_CODE
+      		,COMPANY_NAME
+      		,COMPANY_ORDER
+			,COMPANY_CODE AS companyCode
+      		,COMPANY_NAME AS companyName
+      		,COMPANY_ORDER AS companyOrder
+	  	FROM company
+	  	ORDER BY COMPANY_ORDER ASC
+    </select>
+    
+	 <select id="plant" resultType="PlantVO" parameterType="map">
+	 /*common.plant*/
+		SELECT 
+			plantCode
+			,plantName
+			,companyCode
+			,companyNo			
+	  	FROM plant
+	  	WHERE 1 =1
+	  	<if test="companyCode != null and companyCode != '' ">
+		AND companyCode = #{companyCode}
+		</if>	
+		<if test="plantCode != null and plantCode != '' ">
+		AND plantCode = #{plantCode}
+		</if>
+	  	ORDER BY companyCode DESC , plantCode ASC
+    </select>
+    
+    <select id="plantLine" resultType="kr.co.aspn.vo.PlantLineVO">
+    	/*common.plantLine*/
+		SELECT 
+			companyCode
+			,plantCode
+			,lineCode
+			,lineName
+			,isDel			
+	  	FROM plantLine
+	  	WHERE 1 =1
+	  	<if test="companyCode != null and companyCode != '' ">
+		AND companyCode = #{companyCode}
+		</if>	
+		<if test="plantCode != null and plantCode != '' ">
+		AND plantCode = #{plantCode}
+		</if>
+	  	ORDER BY lineName ASC
+    </select>
+    
+    <select id="unit" resultType="UnitVO">
+	 /*common.unit*/
+		SELECT 
+			unitCode
+			,unitName
+	  	FROM unit
+    </select>
+    
+    <select id="codeList" parameterType="CodeItemVO" resultType="CodeItemVO">
+	/*common.codeList*/
+	SELECT 
+      	itemCode
+      	,itemName
+	FROM codeItem
+	WHERE groupCode = #{groupCode}
+	<if test="itemCode != null and itemCode != '' ">
+		AND itemCode like #{itemCode} || '%'
+	</if>
+	AND isDelete = 'N'
+	ORDER BY orderNo ASC
+    </select>
+    
+    <select id="codeListAjax" parameterType="CodeItemVO" resultType="map">
+	/*common.codeList*/
+	SELECT 
+      	itemCode
+      	,itemName
+	FROM codeItem
+	WHERE groupCode = #{groupCode}
+	AND isDelete = 'N'
+	ORDER BY orderNo ASC
+    </select>
+    
+    <select id="searchUserId" parameterType="map" resultType="UserVO">
+	/*common.searchUserId*/
+	SELECT 
+		userId
+      ,userName
+      ,userGrade
+      ,getCodeName('GRADE',userGrade) AS userGradeName
+      ,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+      ,userCode
+      ,email
+      ,deptCode
+      ,getCodeName('DEPT',deptCode) AS deptCodeName
+      ,teamCode
+      ,getCodeName('TEAM',teamCode) AS teamCodeName	
+      ,titleCode
+      ,userType
+      ,isAdmin
+      ,isDelete
+    FROM 
+    	userTable2
+	WHERE	1 = 1
+	<if test="userId != null and userId != '' ">
+		AND userId = #{userId}
+	</if>
+	<if test="deptCode != null and deptCode != '' ">
+		AND deptCode = #{deptCode}
+	</if>
+	<if test="teamCode != null and teamCode != '' ">
+		AND teamCode = #{teamCode}
+	</if>	
+    </select>
+    
+    <select id="searchUserCount" parameterType="map" resultType="int">
+	 	/*common.searchUserCount*/
+		SELECT 
+			count(userId) 
+		FROM 
+			userTable2 
+		WHERE 1 = 1	
+		<if test="keyword != null and keyword != '' ">
+			AND (userId like '%' || #{keyword} || '%' OR userName like '%' || #{keyword} || '%')
+		</if>
+    </select>
+    
+    <select id="searchUserList" parameterType="map" resultType="UserVO">
+	 	/*common.searchUserList*/
+		SELECT		t.*
+			FROM	
+					(
+						SELECT	row_number() over (order by userId desc) as rnum
+						  ,userId
+					      ,userPwd
+					      ,userName
+					      ,userGrade
+					      ,getCodeName('GRADE',userGrade) AS userGradeName
+					      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+					      ,userCode
+					      ,email
+					      ,deptCode
+					      ,getCodeName('DEPT',deptCode) AS deptCodeName
+					      ,teamCode
+					      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
+					      ,titleCode
+					      ,userType
+					      ,isAdmin	
+					      ,isDelete		
+						FROM	userTable2	
+						WHERE 1=1
+						<if test="keyword != null and keyword != '' ">
+							AND (userId like '%' || #{keyword} || '%' OR userName like '%' || #{keyword} || '%')
+						</if>
+					) t WHERE rnum between #{startRow} and #{endRow}
+			ORDER BY userId desc
+    </select>
+    
+    <select id="searchUserList2" parameterType="map" resultType="map">
+	 	/*common.searchUserList2*/
+		SELECT	userId
+	      ,userPwd
+	      ,userName
+	      ,userGrade
+	      ,getCodeName('GRADE',userGrade) AS userGradeName
+	      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+	      ,userCode
+	      ,email
+	      ,deptCode
+	      ,getCodeName('DEPT',deptCode) AS deptCodeName
+	      ,teamCode
+	      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
+	      ,titleCode
+	      ,userType
+	      ,isAdmin	
+	      ,isDelete		
+		FROM	userTable2	
+		WHERE 1=1
+		<if test="searchUser != null and searchUser != '' ">
+			AND (userId like '%' || #{searchUser} || '%' OR userName like '%' || #{searchUser} || '%')
+		</if>
+			AND isDelete = 'N'
+		ORDER BY userId desc
+    </select>
+    
+    <select id="notificationCount" parameterType="map" resultType="int">
+	   /*common.notiCount 알림건수  */
+    	SELECT 
+    		COUNT(nId) 
+    	FROM notification 
+    	WHERE 1 = 1 
+    		AND targetUserId = #{userId}
+    		AND isRead = 'N'
+    		AND CONVERT(regDate, DATE) between CONVERT(DATE_ADD(sysdate(), INTERVAL -2 DAY),DATE) and CONVERT(sysdate(), DATE)
+    </select>
+    
+    <select id="notificationList" parameterType="map" resultType="map">
+	   /*common.notiList 알림리스트  */
+    	SELECT 
+    		 nId
+      		,targetUserId
+      		,message
+      		,regUserId
+      		,getUserName(regUserId) AS regUserName
+      		,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+      		,isRead
+      		,typeText
+      		,type
+    	FROM notification 
+    	WHERE 1 = 1 
+    		AND targetUserId = #{userId}
+    		AND CONVERT(regDate, DATE) between CONVERT(DATE_ADD(sysdate(), INTERVAL -2 DAY),DATE) and CONVERT(sysdate(), DATE)
+    	ORDER BY regDate DESC
+    </select>
+    <update id="updateNotification" parameterType="map">
+	/*	common.updateNotification 알림정보 업데이트 */
+	UPDATE  notification
+	SET 
+    	isRead	=  'Y'
+	WHERE	1 = 1
+		AND nId IN
+        <foreach collection="nIds" item="nId" index="index"  open="(" close=")" separator=",">
+            #{nId}
+        </foreach>
+    </update>
+    
+    <insert id="insertNotification" parameterType="map">
+    /*	common.insertNotification 알림정보 등록 */
+    INSERT INTO notification(
+    	targetUserId
+		,message
+		,regUserId
+		,regDate
+		,isRead
+		,typeText
+		,type ) 
+	VALUES(
+		#{targetUserId}
+		, #{message}
+		, #{regUserId}
+		, sysdate()
+		, #{isRead}
+		, #{typeText}
+		, #{type}
+	)
+    </insert>
+    
+    <select id="userInfo" parameterType="map" resultType="UserVO">
+	 	/*common.userInfo*/
+		SELECT	userId
+	      ,userName
+	      ,email	      		
+		FROM	userTable2	
+		WHERE 1=1
+			AND userId IN
+        <foreach collection="mailing" item="userId" index="index"  open="(" close=")" separator=",">
+            #{userId}
+        </foreach>
+			AND isDelete = 'N'
+		ORDER BY userId desc
+    </select>
+    
+    <insert id="insertPrintLog" parameterType="map">
+    /*	common.insertPrintLog 프린트/다운로드 로그 */
+    INSERT INTO print_log(
+    	apprNo
+      	,tbType
+      	,tbKey
+      	,userId
+      	,printDate
+      	,type ) 
+	VALUES(
+		#{apprNo}
+		, #{tbType}
+		, #{tbKey}
+		, #{userId}
+		, sysdate()
+		, #{type}
+	)
+    </insert>
+    
+    <select id="docCount" parameterType="map" resultType="map">
+	 	/*common.docCount 사용자 문서 갯수*/
+		SELECT 
+			type, 
+			sum(docCount) as docCount 
+		FROM docCountView 
+		WHERE 1 = 1
+			<choose>
+			<when test='grade != null and grade == "2" '>
+			AND userId in (SELECT userId FROM userTable2 WHERE deptCode = #{deptCode} AND isDelete = 'N')
+			</when>
+			<when test='deptCode != null and deptCode == "dept10" '>
+			</when>
+			<otherwise>
+			AND userId = #{userId}
+			</otherwise>
+			</choose> 
+		GROUP BY type
+    </select>
+    
+    <select id="docStateCount" parameterType="map" resultType="map">
+	 	/*common.docCount 사용자 문서 상태 갯수*/
+	 	SELECT 
+	 		type, 
+	 		state, 
+	 		sum(docCount) as docCount 
+	 	FROM docStateView 
+	 	WHERE 1 = 1
+	 		<choose>
+			<when test='grade != null and grade == "2" '>
+			AND userId in (SELECT userId FROM userTable2 WHERE deptCode = #{deptCode} AND isDelete = 'N')
+			</when>
+			<when test='deptCode != null and deptCode == "dept10" '>
+			</when>
+			<otherwise>
+			AND userId = #{userId}
+			</otherwise>
+			</choose> 
+		GROUP BY type, state
+    </select>
+    
+    <select id="getStorageList" resultType="kr.co.aspn.vo.StorageVO">
+		SELECT companyCode
+			, plantCode
+			, storageCode
+			, storageName 
+		FROM storageLocation 
+		WHERE 1=1
+		<if test="companyCode != null and companyCode != '' ">
+		AND companyCode = #{companyCode}
+		</if>	
+		<if test="plantCode != null and plantCode != '' ">
+		AND plantCode = #{plantCode}
+		</if>
+	  	ORDER BY storageCode
+	</select>
+</mapper>

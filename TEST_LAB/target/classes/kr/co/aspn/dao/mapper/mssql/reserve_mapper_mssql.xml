@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="reserve">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+		</if>
+	</sql>
+	
+	
+	<select id="getPagenatedReserveList" resultType="hashmap">
+	
+		SELECT * FROM
+			(
+			SELECT 	row_number() over (order by 
+														  CASE WHEN orderNo &lt; 0 THEN ABS(orderNo) END ASC
+														, CASE WHEN orderNo > -1 THEN orderNo END ASC) as rn
+							, rmrNo
+							, title
+							, reserveDate
+							, reserveTime
+							, memo
+							, regUserId
+							, regUserName
+							, regDate
+							, modUserId
+							, modUserName
+							, modDate
+							, reserveCode	
+							, dw
+							, orderNo
+			FROM		(
+								SELECT		rmrNo
+												, title
+												, reserveDate
+												, reserveTime
+												, memo
+												, regUserId
+												, dbo.getUserName(regUserId) as regUserName
+												, convert(varchar(16), regDate, 120) as regDate
+												, modUserId
+												, dbo.getUserName(modUserId) as modUserName
+												, convert(varchar(16), modDate, 120) as modDate
+												, reserveCode
+												, (SELECT CASE
+																WHEN	DATEPART(dw, reserveDate) = 1 THEN '일'
+																WHEN	DATEPART(dw, reserveDate) = 2 THEN '월'
+																WHEN	DATEPART(dw, reserveDate) = 3 THEN '화'
+																WHEN	DATEPART(dw, reserveDate) = 4 THEN '수'
+																WHEN	DATEPART(dw, reserveDate) = 5 THEN '목'
+																WHEN	DATEPART(dw, reserveDate) = 6 THEN '금'
+																WHEN	DATEPART(dw, reserveDate) = 7 THEN '토'
+												END) as 	dw
+												, DATEDIFF( DD, getdate(), reserveDate ) as orderNo
+								FROM 		reserveMeetingRoom
+								WHERE		deleteYN = 'N'
+								AND			notiYN = 'N'
+							) a
+			) b
+			 where rn between #{startRow} and #{endRow}
+			ORDER 	BY 	
+								CASE WHEN orderNo &lt; 0 THEN ABS(orderNo) END ASC
+								, CASE WHEN orderNo > -1 THEN orderNo END ASC
+			
+	</select>
+	
+	<select id="getPagenatedReserveListCount" resultType="int">
+		 SELECT		count(rmrNo)											
+			FROM 		reserveMeetingRoom			
+			WHERE		deleteYN = 'N'
+			AND		notiYN = 'N'
+	</select>
+	
+	<select id="getPagenatedReserveNotiList" resultType="hashmap">
+		SELECT
+					rmrNo
+					, title
+					, memo
+					, reserveDate
+					, reserveTime
+					, dbo.getUserName(regUserId) as regUserName
+					, convert(varchar(16), regDate, 120) as regDate
+					, dbo.getUserName(modUserId) as modUserName
+					, convert(varchar(16), modDate, 120) as modDate
+					, reserveCode
+					, (SELECT CASE
+									WHEN	DATEPART(dw, reserveDate) = 1 THEN '일'
+									WHEN	DATEPART(dw, reserveDate) = 2 THEN '월'
+									WHEN	DATEPART(dw, reserveDate) = 3 THEN '화'
+									WHEN	DATEPART(dw, reserveDate) = 4 THEN '수'
+									WHEN	DATEPART(dw, reserveDate) = 5 THEN '목'
+									WHEN	DATEPART(dw, reserveDate) = 6 THEN '금'
+									WHEN	DATEPART(dw, reserveDate) = 7 THEN '토'
+					END) as 	dw
+		FROM 		
+					reserveMeetingRoom
+		WHERE
+					deleteYN = 'N'
+		AND		notiYN = 'Y'
+		ORDER 	BY 	rmrNo desc
+	</select>
+	
+	<select id="reserveMeetingRoomView" resultType="hashmap">
+		SELECT		rmrNo
+							, title
+							, memo
+							, reserveDate
+							, reserveTime
+							, notiYN
+							, regUserId
+							, convert(varchar(16), regDate, 120) as regDate
+							, modUserId
+							, convert(varchar(16), modDate, 120) as modDate
+							, reserveCode
+							, (SELECT CASE
+									WHEN	DATEPART(dw, reserveDate) = 1 THEN '일'
+									WHEN	DATEPART(dw, reserveDate) = 2 THEN '월'
+									WHEN	DATEPART(dw, reserveDate) = 3 THEN '화'
+									WHEN	DATEPART(dw, reserveDate) = 4 THEN '수'
+									WHEN	DATEPART(dw, reserveDate) = 5 THEN '목'
+									WHEN	DATEPART(dw, reserveDate) = 6 THEN '금'
+									WHEN	DATEPART(dw, reserveDate) = 7 THEN '토'
+							END) as 	dw
+			FROM 		reserveMeetingRoom			
+			WHERE		rmrNo = ${rmrNo}
+	</select>
+	
+	<update id="reserveMeetingRoomDelete">
+		UPDATE
+				reserveMeetingRoom
+			SET
+				deleteYN = 'Y'
+				, modUserId = '${userId}'
+				, modDate = getdate()
+			WHERE	rmrNo = ${nNo}
+	</update>
+	
+	<update id="reserveMeetingRoomUpdate">
+		UPDATE
+				reserveMeetingRoom
+			SET
+				title = '${title}'
+				, modUserId = '${modUserId}'
+				, notiYN = '${notiYN}'
+				, reserveDate = '${reserveDate}'
+				, reserveCode = 'V'
+				, pn = '${pn}'
+				, startTime =  '${startTime}'
+				, endTime = '${endTime}'
+				, reserveDayCode = '${reserveDayCode}'
+				, diffTime = '${diffTime}'
+				, modDate = GETDATE()
+				, meetingCategory = '${meetingCategory}'
+			WHERE
+				rmrNo = ${rmrNo}
+	</update>
+	
+	<select id="reserveMeetingRoomSave" resultType="hashmap">
+		INSERT INTO 
+				reserveMeetingRoom
+			(
+					title
+					,reserveDate
+					,reserveCode
+					,startTime
+					,endTime
+					,deleteYN
+					,notiYN
+					,regUserId
+					,regDate
+					,pn
+					,new
+					,reserveDayCode
+					,diffTime
+					,meetingCategory
+			) VALUES (
+					'${title}'
+		           ,'${reserveDate}'
+		           ,'V'
+		           ,'${startTime}'
+		           ,'${endTime}'
+		           ,'N'
+		           ,'${notiYNval}'
+		           ,'${regUserId}'
+		           ,GETDATE()
+		           ,'${pn}'
+		           ,'Y'
+		           ,'${reserveDayCode}'
+		           ,'${diffTime}'
+		           ,'${meetingCategory}'
+			)
+			
+			select @@IDENTITY AS rNo	
+	</select>
+	
+	<select id="selectDuplicateTime" resultType="int">
+		select count(*)
+		from reserveMeetingRoom
+		where 
+		reserveDate = '${reserveDate}'
+		and reserveCode = 'V'
+		and deleteYN='N'
+		and (('${reserveTimeSt}' between LEFT(reserveTime,CHARINDEX('~',reserveTime)-1) and RIGHT(reserveTime,LEN(reserveTime)-CHARINDEX('~',reserveTime))) OR  ('${reserveTimeEt}' between LEFT(reserveTime,CHARINDEX('~',reserveTime)-1) and RIGHT(reserveTime,LEN(reserveTime)-CHARINDEX('~',reserveTime))))
+		<if test="rmrNo !='' and rmrNo !=null">
+			and rmrNo !=${rmrNo}
+		</if>
+	</select>
+	
+	<select id="reserveRoomPagenatedList" resultType="hashmap">
+	<!-- select * from (
+		select *,
+		row_number() over (order by rmrNo desc) as rn,
+		dbo.getUserName(regUserId) as regUserName,
+		(case when endTime = '09:00' then '1' 
+			  when endTime = '09:30' then '2'
+			  when endTime = '10:00' then '3'
+			  when endTime = '10:30' then '4'
+			  when endTime = '11:00' then '5'
+		      when endTime = '11:30' then '6'
+			  when endTime = '12:00' then '7'
+			  when endTime = '12:30' then '8'
+			  when endTime = '13:00' then '9'
+			  when endTime = '13:30' then '10'
+			  when endTime = '14:00' then '11'
+			  when endTime = '14:30' then '12'
+		      when endTime = '15:00' then '13'
+		      when endTime = '15:30' then '14'
+		      when endTime = '16:00' then '15'
+			  when endTime = '16:30' then '16'
+			  when endTime = '17:00' then '17'
+			  when endTime = '17:30' then '18'
+			  when endTime = '18:00' then '19'
+				end)as endTimeCode
+		from 
+		reserveMeetingRoom 
+		where new='Y'
+		and deleteYN='N'
+		and reserveCode='V'
+		) a
+		where rn between ${startRow} and ${endRow} -->
+		SELECT * FROM (select * ,
+		row_number() over (order by reserveDate desc,convert(INT,endTimeCode) desc) as rn
+		from (
+		select *,
+		dbo.getUserName(regUserId) as regUserName,
+		(case when endTime = '09:00' then '1' 
+			  when endTime = '09:30' then '2'
+			  when endTime = '10:00' then '3'
+			  when endTime = '10:30' then '4'
+			  when endTime = '11:00' then '5'
+		      when endTime = '11:30' then '6'
+			  when endTime = '12:00' then '7'
+			  when endTime = '12:30' then '8'
+			  when endTime = '13:00' then '9'
+			  when endTime = '13:30' then '10'
+			  when endTime = '14:00' then '11'
+			  when endTime = '14:30' then '12'
+		      when endTime = '15:00' then '13'
+		      when endTime = '15:30' then '14'
+		      when endTime = '16:00' then '15'
+			  when endTime = '16:30' then '16'
+			  when endTime = '17:00' then '17'
+			  when endTime = '17:30' then '18'
+			  when endTime = '18:00' then '19'
+				end)as endTimeCode
+		from 
+		reserveMeetingRoom 
+		where new='Y'
+		and deleteYN='N'
+		and reserveCode='V'
+		<if test="searchType !=null and searchType !=''">
+			<if test="searchType == 'regUserName'">
+				and dbo.getUserName(regUserId) LIKE '%'+#{searchValue}+'%'
+			</if>
+			<if test="searchType == 'title' ">
+				and title LIKE '%'+#{searchValue}+'%'
+			</if>
+		</if>
+		
+		) a 
+		) b
+		where rn between #{startRow} and #{endRow}
+		order by reserveDate desc, convert(INT,endTimeCode) desc
+	</select>
+	
+<!-- 	<select id="reserveRoomList" resultType="hashmap">
+		select *,
+		(select COUNT(*) from fileManager where tbType='reserve' and tbKey = rmrNo) as fileCnt,
+		row_number() over (order by rmrNo desc) as rn,
+		dbo.getUserName(regUserId) as regUserName,
+		(case when startTime = '09:00' then '1' 
+			  when startTime = '09:30' then '2'
+			  when startTime = '10:00' then '3'
+			  when startTime = '10:30' then '4'
+			  when startTime = '11:00' then '5'
+		      when startTime = '11:30' then '6'
+			  when startTime = '12:00' then '7'
+			  when startTime = '12:30' then '8'
+			  when startTime = '13:00' then '9'
+			  when startTime = '13:30' then '10'
+			  when startTime = '14:00' then '11'
+			  when startTime = '14:30' then '12'
+		      when startTime = '15:00' then '13'
+		      when startTime = '15:30' then '14'
+		      when startTime = '16:00' then '15'
+			  when startTime = '16:30' then '16'
+			  when startTime = '17:00' then '17'
+			  when startTime = '17:30' then '18'
+			  when startTime = '18:00' then '19'
+				end)as startTimeCode,
+		(case when endTime = '09:00' then '1' 
+			  when endTime = '09:30' then '2'
+			  when endTime = '10:00' then '3'
+			  when endTime = '10:30' then '4'
+			  when endTime = '11:00' then '5'
+		      when endTime = '11:30' then '6'
+			  when endTime = '12:00' then '7'
+			  when endTime = '12:30' then '8'
+			  when endTime = '13:00' then '9'
+			  when endTime = '13:30' then '10'
+			  when endTime = '14:00' then '11'
+			  when endTime = '14:30' then '12'
+		      when endTime = '15:00' then '13'
+		      when endTime = '15:30' then '14'
+		      when endTime = '16:00' then '15'
+			  when endTime = '16:30' then '16'
+			  when endTime = '17:00' then '17'
+			  when endTime = '17:30' then '18'
+			  when endTime = '18:00' then '19'
+				end)as endTimeCode
+		from 
+		reserveMeetingRoom 
+		where new='Y'
+		and deleteYN='N'
+		<choose>
+		 	<when test="reserveCode != null and reserveCode != ''">
+		 		and reserveCode = '${reserveCode}'
+		 	</when>
+		 	<otherwise>
+		 		and reserveCode = 'V'
+		 	</otherwise>
+		</choose>
+		and reserveDate between '${monday}' and '${friday}'
+	</select> -->
+	
+		<select id="reserveRoomList" resultType="hashmap">
+		select *,
+		(select COUNT(*) from fileManager where tbType='reserve' and tbKey = rmrNo) as fileCnt,
+		row_number() over (order by rmrNo desc) as rn,
+		dbo.getUserName(regUserId) as regUserName,
+		(case when startTime = '09:00' then '1' 
+			  when startTime = '09:30' then '2'
+			  when startTime = '10:00' then '3'
+			  when startTime = '10:30' then '4'
+			  when startTime = '11:00' then '5'
+		      when startTime = '11:30' then '6'
+			  when startTime = '12:00' then '7'
+			  when startTime = '12:30' then '8'
+			  when startTime = '13:00' then '9'
+			  when startTime = '13:30' then '10'
+			  when startTime = '14:00' then '11'
+			  when startTime = '14:30' then '12'
+		      when startTime = '15:00' then '13'
+		      when startTime = '15:30' then '14'
+		      when startTime = '16:00' then '15'
+			  when startTime = '16:30' then '16'
+			  when startTime = '17:00' then '17'
+			  when startTime = '17:30' then '18'
+			  when startTime = '18:00' then '19'
+				end)as startTimeCode,
+		(case when endTime = '09:00' then '1' 
+			  when endTime = '09:30' then '2'
+			  when endTime = '10:00' then '3'
+			  when endTime = '10:30' then '4'
+			  when endTime = '11:00' then '5'
+		      when endTime = '11:30' then '6'
+			  when endTime = '12:00' then '7'
+			  when endTime = '12:30' then '8'
+			  when endTime = '13:00' then '9'
+			  when endTime = '13:30' then '10'
+			  when endTime = '14:00' then '11'
+			  when endTime = '14:30' then '12'
+		      when endTime = '15:00' then '13'
+		      when endTime = '15:30' then '14'
+		      when endTime = '16:00' then '15'
+			  when endTime = '16:30' then '16'
+			  when endTime = '17:00' then '17'
+			  when endTime = '17:30' then '18'
+			  when endTime = '18:00' then '19'
+				end)as endTimeCode
+		from 
+		reserveMeetingRoom 
+		where new='Y'
+		and deleteYN='N'
+		and reserveCode = 'V'
+		and reserveDate between '${monday}' and '${friday}'
+	</select>
+	
+	<select id="reserveRoomCount" resultType="int">
+		select count(*) from
+		reserveMeetingRoom
+		where new='Y'
+		and deleteYN='N'
+		and reserveCode='V'
+		<if test="searchType!=null and searchType != ''">
+			<if test="searchType == 'regUserName'">
+				and dbo.getUserName(regUserId) LIKE '%'+#{searchValue}+'%'
+			</if>
+			<if test="searchType == 'title'">
+				and title LIKE '%'+#{searchValue}+'%'
+			</if>
+		</if>
+	</select>
+	
+	<select id="reserveDetail" resultType="hashmap" parameterType="string">
+		select 
+		 *,CONVERT(varchar,reserveDate,102)as reserveDateFormat
+		 ,SUBSTRING(CONVERT(varchar,reserveDate,120),1,10) as reserveDateFormat1
+		 , dbo.getCodeName('DEPT',b.deptCode) as deptCodeName
+		 ,dbo.getUserName(a.regUserId) as regUserName
+		from reserveMeetingRoom a inner join userTable2 b
+		on a.regUserId=b.userId
+		 where rmrNo = #{rmrNo}
+	</select>
+	
+	<select id="selectTimeCode" resultType="int">
+		SELECT 
+		case 
+			when time between '09:00:00' AND '09:30:00' then 1
+			when time between '09:30:00' AND '10:00:00' then 2
+			when time between '10:00:00' AND '10:30:00' then 3
+			when time between '10:30:00' AND '11:00:00' then 4
+			when time between '11:00:00' AND '11:30:00' then 5
+			when time between '11:30:00' AND '12:00:00' then 6
+			when time between '12:00:00' AND '12:30:00' then 7
+			when time between '12:30:00' AND '13:00:00' then 8
+			when time between '13:00:00' AND '13:30:00' then 9
+			when time between '13:30:00' AND '14:00:00' then 10
+			when time between '14:00:00' AND '14:30:00' then 11
+			when time between '14:30:00' AND '15:00:00' then 12
+			when time between '15:00:00' AND '15:30:00' then 13
+			when time between '15:30:00' AND '16:00:00' then 14
+			when time between '16:00:00' AND '16:30:00' then 15
+			when time between '16:30:00' AND '17:00:00' then 16
+			when time between '17:00:00' AND '17:30:00' then 17
+			when time between '17:30:00' AND '18:00:00' then 18
+			else 19
+			end as time_code
+		from
+			(select SUBSTRING(CONVERT(NVARCHAR, GETDATE(), 121), 12, 8) time) a
+	</select>
+	
+	<select id ="reserveCountDuple" resultType="int">
+		
+		select count(*) from (select *,	(case when startTime = '09:00' then '1' 
+			  when startTime = '09:30' then '2'
+			  when startTime = '10:00' then '3'
+			  when startTime = '10:30' then '4'
+			  when startTime = '11:00' then '5'
+		      when startTime = '11:30' then '6'
+			  when startTime = '12:00' then '7'
+			  when startTime = '12:30' then '8'
+			  when startTime = '13:00' then '9'
+			  when startTime = '13:30' then '10'
+			  when startTime = '14:00' then '11'
+			  when startTime = '14:30' then '12'
+		      when startTime = '15:00' then '13'
+		      when startTime = '15:30' then '14'
+		      when startTime = '16:00' then '15'
+			  when startTime = '16:30' then '16'
+			  when startTime = '17:00' then '17'
+			  when startTime = '17:30' then '18'
+			  when startTime = '18:00' then '19'
+				end)as startTimeCode, 
+			(case when endTime = '09:00' then '1' 
+			  when endTime = '09:30' then '2'
+			  when endTime = '10:00' then '3'
+			  when endTime = '10:30' then '4'
+			  when endTime = '11:00' then '5'
+		      when endTime = '11:30' then '6'
+			  when endTime = '12:00' then '7'
+			  when endTime = '12:30' then '8'
+			  when endTime = '13:00' then '9'
+			  when endTime = '13:30' then '10'
+			  when endTime = '14:00' then '11'
+			  when endTime = '14:30' then '12'
+		      when endTime = '15:00' then '13'
+		      when endTime = '15:30' then '14'
+		      when endTime = '16:00' then '15'
+			  when endTime = '16:30' then '16'
+			  when endTime = '17:00' then '17'
+			  when endTime = '17:30' then '18'
+			  when endTime = '18:00' then '19'
+				end)as endTimeCode from reserveMeetingRoom) a where reserveDate = '${reserveDate}'
+				and new = 'Y' 
+				and deleteYN= 'N'
+				and reserveCode =  'V'
+				<if test="rmrNo !='' and rmrNo !=null">
+				and rmrNo != '${rmrNo}'
+				</if>
+				<![CDATA[
+				and ((${startTimeCode} < startTimeCode and ${endTimeCode} > startTimeCode and ${endTimeCode} <= endTimeCode ) or ( startTimeCode <= ${startTimeCode} and  ${endTimeCode} <= endTimeCode) 
+				or (startTimeCode <= ${startTimeCode} and ${startTimeCode} < endTimeCode and ${endTimeCode} > endTimeCode ) or (${startTimeCode} <= startTimeCode and endTimeCode <= ${endTimeCode})) ]]>
+	</select>
+</mapper>

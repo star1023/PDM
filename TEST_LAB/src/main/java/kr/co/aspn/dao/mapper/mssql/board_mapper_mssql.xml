@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+
+	<sql id="pagenation">
+		WHERE rn between #{startRow} and #{endRow}
+	</sql>
+	
+	<select id="getBoardListCount" resultType="int">
+		SELECT count(1) 
+		FROM board 
+		WHERE 1=1
+			  AND isDelete != 'Y'
+			  AND type = #{type}
+			<if test='searchField != "" and searchField != null'>
+				<if test='searchField == "both"'>
+					AND ( regUserId like '%${searchValue}%' or title like '%${searchValue}%')
+				</if>
+				<if test='searchField != "both"'>
+					<if test='searchValue != "" and searchValue != null'>
+						AND ${searchField} like '%${searchValue}%'
+					</if>
+				</if>
+			</if>
+			<if test='startDate != "" and startDate != null and endDate != "" and endDate != null'>
+			  AND CONVERT(VARCHAR, regDate, 23) BETWEEN #{startDate} AND #{endDate} 
+			</if>
+	</select>
+	
+	<select id="getBoardList" parameterType="map" resultType="map">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER (ORDER by nNo DESC) as rn 
+				, nNo
+				, title
+				, content
+				, regUserId
+				, dbo.getUserName(regUserId) as regUserName
+				, regDate
+				, convert(varchar, regDate, 20) as regDateText
+				, modUserId
+				, modDate
+				, type
+				, hits
+				,(select count(*) from  fileManager where tbType='board_${type}' AND tbKey = nNo) as fileCount
+			FROM board
+			WHERE 1=1
+			  AND isDelete != 'Y'
+			  AND type = #{type}
+			<if test='searchField != "" and searchField != null'>
+				<if test='searchField == "both"'>
+					AND ( regUserId like '%${searchValue}%' or title like '%${searchValue}%')
+				</if>
+				<if test='searchField != "both"'>
+					<if test='searchValue != "" and searchValue != null'>
+						AND ${searchField} like '%${searchValue}%'
+					</if>
+				</if>
+			</if>
+			<if test='startDate != "" and startDate != null and endDate != "" and endDate != null'>
+			  AND CONVERT(VARCHAR, regDate, 23) BETWEEN #{startDate} AND #{endDate} 
+			</if>
+		) a
+		<include refid="board.pagenation" />
+	</select>
+	
+	<select id="getPostDetail" parameterType="map" resultType="map">
+		SELECT ROW_NUMBER() OVER (ORDER by nNo DESC) as rn 
+			, nNo
+			, title
+			, content
+			, regUserId
+			, regDate
+			, modUserId
+			, modDate
+			, type
+			, hits
+			,(select count(*) from  fileManager where tbType='board_${type}' AND tbKey = nNo) as fileCount
+		FROM board
+		WHERE nNo = #{nNo}
+		  AND isDelete != 'Y'
+	</select>
+	
+	<insert id="registPost" parameterType="map">
+		INSERT INTO board (
+			title
+			, regUserId
+			, content
+			, regDate
+			, type
+			, hits
+			, isDelete
+		) VALUES (
+			#{title}
+			, #{regUserId}
+			, #{content}
+			, GETDATE()
+			, #{type}
+			, 0
+			, 'N'
+		)
+	</insert>
+	
+	<update id="deletePost" parameterType="map">
+		UPDATE board SET isDelete = 'Y' WHERE nNo = #{nNo}
+	</update>
+	
+	<update id="modifyPost" parameterType="map">
+		UPDATE BOARD 
+		SET 
+			TITLE=#{title}
+			, CONTENT=#{content}
+			, MODUSERID=#{modUserId}
+		WHERE nNo=#{nNo}
+	</update>
+	
+	<update id="updateHits" parameterType="map">
+		UPDATE BOARD SET hits = hits+1 WHERE nNo=#{nNo} 
+	</update>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="adminreport">
+	
+	<select id="userListReport" resultType="hashmap">
+		/* adminreport.userListReport 계정 리스트 검색 */
+		SELECT
+				USERID
+				,USERPWD
+				,USERNAME
+				,USERGRADE
+				,dbo.getCodeName('GRADE',USERGRADE) AS USERGRADENAME
+				,CONVERT(VARCHAR(10), REGDATE, 120) AS REGDATE
+				,USERCODE
+				,EMAIL
+				,DEPTCODE
+				,dbo.getCodeName('DEPT',DEPTCODE) AS DEPTCODENAME
+				,TEAMCODE
+				,dbo.getCodeName('TEAM',TEAMCODE) AS TEAMCODENAME
+				,TITLECODE
+				,USERTYPE
+				,ISADMIN
+				,ISDELETE
+				,ISLOCK
+		FROM	userTable2
+		ORDER BY userId desc
+	</select>
+
+	<select id="userLoginLogReport" resultType="hashmap">
+		/* adminreport.userLoginLogReport 로그인 로그 검색 */
+		SELECT  
+			CASE
+				WHEN DBO.GETUSERTEAMNAME(USERID) IS NULL
+				THEN DBO.GETUSERDEPTNAME(USERID)
+				ELSE DBO.GETUSERDEPTNAME(USERID) + ' ' + DBO.GETUSERTEAMNAME(USERID)
+			END AS DEPTNAME
+			 , DBO.GETUSERNAME(USERID) AS USERNAME
+			 , USERID
+			 , USERIP
+			 , LOGINDATE
+		FROM USERLOGIN_LOG
+		WHERE LOGINDATE BETWEEN CONVERT(DATE, #{startDt}) AND CONVERT(DATE, #{endDt})
+		ORDER BY LOGINDATE DESC;
+	</select>
+	
+	<select id="manufacturingProcessDocReport" resultType="hashmap">
+		/* adminreport.facturingProcessDocReport 제조공정서 전체 리스트  */
+SELECT
+			A.DOCNO
+			 , A.DNO
+			 , C.PRODUCTCODE
+			 , C.PRODUCTNAME
+			 , DBO.GETPLANTNAME(A.COMPANYCODE, A.PLANTCODE) AS PLANTNAME
+			 , A.lineCode
+			 , (SELECT lineName FROM plantLine
+			 	WHERE 1=1
+			 	AND lineCode = A.lineCode
+			 	AND companyCode = A.companyCode
+			 	AND plantCode = A.plantCode
+			 	) as lineName 
+			 , A.STATE
+			 , c.isClose 
+			 , CASE 
+			 	WHEN c.isClose IS NULL OR c.isClose = '0' THEN '0'
+			 	WHEN c.isClose = '1' THEN '1'
+			 	WHEN c.isClose = '2' THEN '2'
+			 END AS isCloseName
+			 , C.DOCVERSION
+			 , DBO.GETUSERNAME(C.REGUSERID) AS DOC_REGUSER
+			 , DBO.GETUSERNAME(A.REGUSERID) AS PROCESS_REGUSER
+			 , MNM.mNoSeq
+			 , MNO.licensingNo
+			 , MNO.manufacturingNo
+			 , CONVERT(VARCHAR,MNO.licensingNo) + '-' + CONVERT(VARCHAR,MNO.manufacturingNo) AS LMNO
+			 , MNO.MANUFACTURINGNAME
+			 , MNO.status
+		FROM DEVDOC C INNER JOIN MANUFACTURINGPROCESSDOC A
+			ON A.DOCNO = C.DOCNO AND A.DOCVERSION = C.DOCVERSION
+			LEFT JOIN MANUFACTURINGNOMAPPING MNM ON A.DNO = MNM.dNo
+			LEFT JOIN manufacturingNo MNO ON MNM.mNoSeq = MNO.seq AND MNO.isDelete = 'N'
+	</select>
+</mapper>

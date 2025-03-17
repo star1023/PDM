@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="proxy">
+<!-- 공통 조건 -->
+	<sql id="whereProxyList">
+		<if test='isAdmin != "Y"'>
+		AND sourceUserId = #{userId}
+		</if>
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test='searchType.equals("C")'>
+			AND sourceUserId IN (  SELECT userId FROM userTable2 WHERE userName LIKE '%'+#{keyword}+'%' )
+			</when>
+      		<when test='searchType.equals("P")'>
+      		AND targetUserId IN (  SELECT userId FROM userTable2 WHERE userName LIKE '%'+#{keyword}+'%' )
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchStartDate != null and searchStartDate != '' ">
+			AND  CONVERT(startDate, DATE) <![CDATA[<=]]> CONVERT(#{searchStartDate},DATE)
+		</if>
+		<if test="searchEndDate != null and searchEndDate != '' ">
+			AND  CONVERT(endDate,DATE) <![CDATA[>=]]> CONVERT(#{searchEndDate}, DATE)
+		</if>
+		AND isDelete = 'N'
+	</sql>
+	<select id="proxyTotalCount" parameterType="map" resultType="int">
+		/** proxy.proxyTotalCount */
+		SELECT COUNT(paNo)
+	 	FROM proxyApproval
+	 	WHERE 1=1
+	 		<include refid="proxy.whereProxyList" />
+	</select>
+	
+	<select id="proxyList" parameterType="map" resultType="ProxyVO">
+	/** proxy.proxyList */
+	SELECT paNo
+		,sourceUserId
+		,getUserName(sourceUserId) as sourceUserName
+		,getUserDeptName(sourceUserId) as sourceUserDeptName
+		,targetUserId
+		,getUserName(targetUserId) as targetUserName
+		,getUserDeptName(targetUserId) as targetUserDeptName
+		,DATE_FORMAT(startDate,'%Y-%m-%d') as startDate
+		,DATE_FORMAT(endDate,'%Y-%m-%d') as endDate
+		,isDelete
+		,regUserId
+		,regDate
+		,deleteUserId
+		,deleteDate
+		,CASE WHEN CONVERT(sysdate(), DATE) <![CDATA[<]]> CONVERT(endDate, DATE) THEN 'Y' ELSE 'N' END AS isDeleteData
+	 FROM (
+		SELECT 
+			row_number() over (order by paNo desc) as rnum
+			,paNo
+			,sourceUserId
+			,targetUserId
+			,startDate
+			,endDate
+			,isDelete
+			,regUserId
+			,regDate
+			,deleteUserId
+			,deleteDate
+		FROM proxyApproval
+		WHERE 1=1 
+		<include refid="proxy.whereProxyList" />
+	) tmp WHERE rnum between #{startRow} and #{endRow}
+    </select>
+    <select id="proxyDataCount" parameterType="map" resultType="int">
+		/** proxy.proxyTotalCount */
+		SELECT COUNT(paNo)
+	 	FROM proxyApproval
+	 	WHERE 1=1
+	 		AND sourceUserId = #{sourceUserId}
+			AND ( CONVERT(#{startDate}, DATE) BETWEEN CONVERT(startDate, DATE) AND CONVERT(endDate, DATE) OR CONVERT(#{endDate}, DATE) BETWEEN CONVERT(startDate, DATE) AND CONVERT(endDate, DATE)  )
+			AND isDelete = 'N'
+	</select>
+	<insert id="insert" parameterType="map">
+		/** proxy.insert */
+		INSERT
+			INTO proxyApproval
+		(
+			sourceUserId
+			,targetUserId
+			,startDate
+			,endDate
+			,isDelete
+			,regUserId
+			,regDate
+		) VALUES (
+			#{sourceUserId}
+			,#{targetUserId}
+			,#{startDate}
+			,#{endDate}
+			,'N'
+			,#{regUserId}
+			,sysdate()
+		)
+	</insert>
+	
+	<update id="delete" parameterType="map">
+		UPDATE proxyApproval
+		SET isDelete = 'Y',
+			deleteUserId = #{regUserId},
+			deleteDate = sysdate()
+		WHERE 1 = 1
+			AND	paNo = #{paNo}
+	</update>
+</mapper>

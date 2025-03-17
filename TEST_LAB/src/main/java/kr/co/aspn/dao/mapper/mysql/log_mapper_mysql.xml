@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="log">
+	<sql id="loginWhere">
+		<if test="searchType != null and searchType != ''">
+			<choose>
+				<when test="searchType.equals('userName')">
+					AND userName LIKE '%' || #{searchValue} || '%'
+				</when>
+				<otherwise>
+					AND ${searchType} LIKE '%' || #{searchValue} || '%'
+				</otherwise>
+			</choose>			
+		</if>
+	</sql>
+	
+	<sql id="bomWhere">
+		<if test="searchType != null and searchType != ''">
+			<choose>
+				<when test="searchType.equals('userName')">
+					AND userName LIKE '%' || #{searchValue} || '%'
+				</when>
+				<otherwise>
+					AND ${searchType} LIKE '%' || #{searchValue} || '%'
+				</otherwise>
+			</choose>			
+		</if>
+	</sql>
+	
+	<sql id="printWhere">
+		<if test="printType != null and printType != ''">
+			AND tbType = #{printType}
+		</if>
+		<if test="searchType != null and searchType != ''">
+			<choose>
+				<when test="searchType.equals('userName')">
+					AND userName LIKE '%' || #{searchValue} || '%'
+				</when>
+				<otherwise>
+					AND ${searchType} LIKE '%' || #{searchValue} || '%'
+				</otherwise>
+			</choose>			
+		</if>
+	</sql>
+
+	<select id="getLoginLogListTotal" resultType="int">
+		SELECT COUNT(1) FROM (
+			SELECT seq
+				, userId
+				, userIp
+			FROM userLogin_log a
+		) tmp
+    	WHERE 1=1
+    	<include refid="log.loginWhere"/>
+	</select>
+	
+	<select id="getLoginLogList" resultType="map">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY seq DESC) rn
+				 , a.* 
+			FROM (
+				SELECT seq
+					, userId
+					, getUserName(userId) userName
+					, userIp
+					, DATE_FORMAT(loginDate,'%Y-%m-%d') as loginDate
+				FROM userLogin_log a
+			) a
+	    	WHERE 1=1
+	    	<include refid="log.loginWhere"/>
+	    ) tmp
+	    WHERE 1=1
+    	AND rn between #{startRow} and #{endRow} 
+	</select>
+	
+	<select id="getBomLogListTotal" resultType="int">
+		SELECT COUNT(1)
+		FROM (
+			SELECT bhNo
+				, seq
+					, companyCode
+					, getCompanyName(companyCode) companyName
+					, MATNR
+					, getPlantName2(companyCode, WERKS) plant
+					, STLAN
+					, STLAL
+					, ZTEXT
+					, STKTX
+					, BMENG
+					, MAKTX2
+					, regUserId
+					, getUserName(regUserId) userName
+					, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+			FROM devDocBomHeader a
+		) a
+    	WHERE 1=1
+    	<include refid="log.bomWhere"/>
+	</select>
+	
+	<select id="getBomLogList" resultType="map">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY bhNo DESC) rn
+				 , a.* 
+			FROM (
+				SELECT bhNo
+					, seq
+					, companyCode
+					, getCompanyName(companyCode) companyName
+					, MATNR
+					, getPlantName2(companyCode, WERKS) plant
+					, STLAN
+					, STLAL
+					, ZTEXT
+					, STKTX
+					, BMENG
+					, MAKTX2
+					, regUserId
+					, getUserName(regUserId) userName
+					, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				FROM devDocBomHeader a
+			) a
+	    	WHERE 1=1
+	    	<include refid="log.bomWhere"/>
+	    ) tmp
+	    WHERE 1=1
+    	AND rn between #{startRow} and #{endRow} 
+	</select>
+	
+	<select id="getCommonLogListTotal" resultType="int">
+		SELECT COUNT(1)
+		FROM (
+			SELECT a.seq
+				, a.userId
+					, getUserName(a.userId) userName
+					, a.url
+					, a.time
+					, a.regDate
+					, b.typeName
+					, c.docNo
+					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.docNo) productName
+					, c.pNo
+					, (SELECT productName FROM productDesignDoc WHERE pno = c.pNo) productDesignName
+					, c.params
+			FROM userAccess_log a
+			INNER JOIN logTypeTable b ON a.url = b.typeUrl
+			LEFT OUTER JOIN userAccess_log_params c ON a.seq = c.parent_seq
+			WHERE a.url LIKE ${logType} || '%'
+		) a
+		WHERE 1=1
+		<include refid="log.bomWhere"/>
+	</select>
+	
+	<select id="getCommonLogList" resultType="map">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY seq DESC) rn
+				, a.*
+			FROM (
+				SELECT a.seq
+					, a.userId
+					, getUserName(a.userId) userName
+					, a.url
+					, a.time
+					, a.regDate
+					, b.typeName
+					, c.docNo
+					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.docNo) productName
+					, c.pNo
+					, (SELECT productName FROM productDesignDoc WHERE pno = c.pNo) productDesignName
+					, c.params
+				FROM userAccess_log a
+				INNER JOIN logTypeTable b ON a.url = b.typeUrl
+				LEFT OUTER JOIN userAccess_log_params c ON a.seq = c.parent_seq
+				WHERE a.url LIKE ${logType} || '%'
+			) a
+			WHERE 1=1
+			<include refid="log.bomWhere"/>
+		) tmp
+	    WHERE 1=1
+    	AND rn between #{startRow} and #{endRow} 
+	</select>
+	
+	<select id="getPrintLogListTotal" resultType="int">
+		SELECT COUNT(1)
+		FROM (
+			SELECT seq
+				, apprNo
+					, tbKey
+					, tbType
+					, CASE tbType WHEN 'designRequestDoc' THEN '디자인의뢰서'
+					            WHEN 'manufacturingProcessDoc' THEN '제조공정서'
+								WHEN 'productDesign' THEN '제품설계서'
+								ELSE '-' 
+						END AS tbTypeText
+					, userId
+					, getUserName(userId) userName
+					, type
+					, CASE type WHEN 'P' THEN '프린트'
+					            WHEN 'D' THEN '다운로드'
+								ELSE '-' 
+						END AS typeText
+					, CASE tbType WHEN 'designRequestDoc' THEN (SELECT MAX(productName) FROM devDoc WHERE docNo = (SELECT docNo FROM designRequestDoc WHERE drNo = tbKey))
+				        WHEN 'manufacturingProcessDoc' THEN (SELECT MAX(productName) FROM devDoc WHERE docNo = (SELECT docNo FROM manufacturingProcessDoc WHERE dNo = tbKey))
+						WHEN 'productDesign' THEN (SELECT productName FROM productDesignDoc WHERE pNo = tbKey)
+						ELSE '-' 
+						END AS productName
+					, DATE_FORMAT(printDate,'%Y-%m-%d') as printDate
+			FROM print_log a
+		) a
+		WHERE 1=1
+		<include refid="log.printWhere"/>
+	</select>
+	
+	<select id="getPrintLogList" resultType="map">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY seq DESC) rn
+				, a.*
+			FROM (
+				SELECT seq
+					, apprNo
+					, tbKey
+					, tbType
+					, CASE tbType WHEN 'designRequestDoc' THEN '디자인의뢰서'
+					            WHEN 'manufacturingProcessDoc' THEN '제조공정서'
+								WHEN 'productDesign' THEN '제품설계서'
+								ELSE '-' 
+						END AS tbTypeText
+					, userId
+					, getUserName(userId) userName
+					, type
+					, CASE type WHEN 'P' THEN '프린트'
+					            WHEN 'D' THEN '다운로드'
+								ELSE '-' 
+						END AS typeText
+					, CASE tbType WHEN 'designRequestDoc' THEN (SELECT MAX(productName) FROM devDoc WHERE docNo = (SELECT docNo FROM designRequestDoc WHERE drNo = tbKey))
+				        WHEN 'manufacturingProcessDoc' THEN (SELECT MAX(productName) FROM devDoc WHERE docNo = (SELECT docNo FROM manufacturingProcessDoc WHERE dNo = tbKey))
+						WHEN 'productDesign' THEN (SELECT productName FROM productDesignDoc WHERE pNo = tbKey)
+						ELSE '-' 
+						END AS productName
+					, DATE_FORMAT(printDate,'%Y-%m-%d') as printDate
+				FROM print_log a
+			) a
+			WHERE 1=1
+			<include refid="log.printWhere"/>
+		) tmp
+	    WHERE 1=1
+    	AND rn between #{startRow} and #{endRow} 
+	</select>
+</mapper>

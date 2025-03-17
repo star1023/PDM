@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="menu">
+	
+	<select id="selectProductCode" resultType="String">
+		SELECT 
+			LPAD(nextval('product_code_seq'), '3' , '0') as code
+	</select>
+	
+	<select id="checkMaterial" parameterType="map" resultType="hashmap">
+		SELECT 
+			MATERIAL_IDX,
+			SAP_CODE,
+			NAME,
+			COMPANY_CODE,
+			PLANT,
+			PRICE,
+			UNIT,
+			EXTRA_UNIT,
+			TYPE,
+			IS_SAMPLE,
+			IS_HIDDEN,
+			IS_DELETE,
+			MATERIAL_TYPE1,
+			MATERIAL_TYPE2,
+			MATERIAL_TYPE3,
+			VERSION_NO,
+			IS_LAST,
+			DOC_NO,
+			KEEP_CONDITION,
+			WIDTH,
+			LENGTH,
+			HEIGHT,
+			TOTAL_WEIGHT,
+			STANDARD,
+			ORIGIN,
+			EXPIRATION_DATE
+		FROM lab_material
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			AND IS_SAMPLE = 'Y'
+			AND SAP_CODE LIKE CONCAT('%',#{sapCode},'%')
+	</select>
+	
+	<sql id="whereMaterialList">
+		<if test="searchValue != null and searchValue != '' ">
+			AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
+		</if>
+	</sql>
+	
+	<select id="selectMaterialCount" parameterType="map" resultType="int">
+		SELECT 
+			count(MATERIAL_IDX) as cnt
+		FROM lab_material
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			AND IS_SAMPLE = 'Y'
+			<include refid="menu.whereMaterialList" />
+	</select>
+	
+	<select id="selectMaterialList" parameterType="map" resultType="hashmap">
+		SELECT 
+			tmp.*
+			, (SELECT unitName FROM unit WHERE 1 = 1 AND unitCode = UNIT) as UNIT_NAME			
+		FROM (
+			SELECT 
+				row_number() over (order by  MATERIAL_IDX DESC) as rnum
+				, MATERIAL_IDX,
+				SAP_CODE,
+				NAME,
+				COMPANY_CODE,
+				PLANT,
+				PRICE,
+				UNIT,
+				EXTRA_UNIT,
+				TYPE,
+				IS_SAMPLE,
+				IS_HIDDEN,
+				IS_DELETE,
+				MATERIAL_TYPE1,
+				MATERIAL_TYPE2,
+				MATERIAL_TYPE3,
+				VERSION_NO,
+				IS_LAST,
+				DOC_NO,
+				KEEP_CONDITION,
+				WIDTH,
+				LENGTH,
+				HEIGHT,
+				TOTAL_WEIGHT,
+				STANDARD,
+				ORIGIN,
+				EXPIRATION_DATE
+			FROM lab_material
+			WHERE 1 = 1
+				AND IS_DELETE = 'N'
+				AND IS_LAST = 'Y'
+				AND IS_SAMPLE = 'Y'
+				<include refid="menu.whereMaterialList" />
+		)tmp 
+		WHERE rnum between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectProductDataCount" parameterType="map" resultType="int">
+		SELECT 
+			count(PRODUCT_IDX)
+		FROM lab_product
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			AND PRODUCT_CODE = #{productCode}
+	</select>
+	
+	<select id="selectProductSeq" resultType="int">
+		SELECT nextval('product_seq') as seq
+	</select>
+	
+	<insert id="insertProduct" parameterType="map">
+		INSERT INTO lab_product(
+			PRODUCT_IDX
+			, DOC_NO
+			, PRODUCT_CODE
+			, SAP_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, TOTAL_WEIGHT
+			, STANDARD
+			, KEEP_CONDITION
+			, EXPIRATION_DATE
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			<if test="productType1 != null and productType1 !='' ">
+			, PRODUCT_TYPE1
+			</if>
+			<if test="productType2 != null and productType2 !='' ">
+			, PRODUCT_TYPE2
+			</if>
+			<if test="productType3 != null and productType3 !='' ">
+			, PRODUCT_TYPE3
+			</if>
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+		)VALUES(
+			#{idx}
+			, (SELECT ifnull(MAX(lp.DOC_NO),0)+1 FROM lab_product lp WHERE 1 = 1)
+			, #{productCode}
+			, #{productSapCode}
+			, #{productName}
+			, #{title}
+			, #{contents}
+			, #{weight}
+			, #{standard}
+			, #{keepCondition}
+			, #{expireDate}
+			, #{newMat}
+			, (SELECT ifnull(MAX(lp.VERSION_NO),0)+1 FROM lab_product lp WHERE 1 = 1 AND PRODUCT_CODE = #{productCode})
+			<if test="productType1 != null and productType1 !='' ">
+			, #{productType1}
+			</if>
+			<if test="productType2 != null and productType2 !='' ">
+			, #{productType2}
+			</if>
+			<if test="productType3 != null and productType3 !='' ">
+			, #{productType3}
+			</if>
+			, 'N'
+			, 'Y'
+			, #{userId}
+			, #{userId}
+			, #{status}
+		)
+	</insert>
+	
+	<insert id="insertProductMaterial" parameterType="map">
+		INSERT 
+    	INTO lab_product_materal(
+			P_MATERIAL_IDX
+			, PRODUCT_IDX
+			, MATERIAL_IDX
+			, SAP_CODE
+			, NAME
+			, UNIT_PRICE
+			, STANDARD
+			, KEEP_EXP
+			, DESCRIPTION
+			, MATERIAL_TYPE
+		)values
+		<foreach collection="matList" item="item" index="index"  separator=",">
+		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		</foreach>
+	</insert>
+	
+	<sql id="whereProductList">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchProductCode')">
+      		AND PRODUCT_CODE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchCategory1 != null and searchCategory1 != '' ">
+			AND PRODUCT_TYPE1 = #{searchCategory1}
+		</if>
+		<if test="searchCategory2 != null and searchCategory2 != '' ">
+			AND PRODUCT_TYPE2 = #{searchCategory2}
+		</if>
+		<if test="searchCategory3 != null and searchCategory3 != '' ">
+			AND PRODUCT_TYPE3 = #{searchCategory3}
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND PRODUCT_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'PROD' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectProductCount" parameterType="map" resultType="int">
+		SELECT 
+			count(PRODUCT_IDX) as cnt
+		FROM lab_product
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			<include refid="menu.whereProductList" />
+	</select>
+	<select id="selectProductList" parameterType="map" resultType="hashmap">
+		SELECT 
+			lp.*
+			, CASE 
+				WHEN lp.STATUS = 'REG' THEN '등록'
+				WHEN lp.STATUS = 'APPR' THEN '결재중'
+				WHEN lp.STATUS = 'COMP' THEN '완료'
+				END	AS STATUS_TXT
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE3) as CATEGORY_NAME3
+			, IFNULL(lf.FILE_CNT10,0) as FILE_CNT10
+			, IFNULL(lf.FILE_CNT20,0) as FILE_CNT20
+			, IFNULL(lf.FILE_CNT30,0) as FILE_CNT30
+			, IFNULL(lf.FILE_CNT40,0) as FILE_CNT40
+			, IFNULL(lf.FILE_CNT50,0) as FILE_CNT50
+			, IFNULL(lf.FILE_CNT60,0) as FILE_CNT60
+			, (SELECT COUNT(*) FROM lab_product WHERE 1 = 1 AND PRODUCT_CODE = lp.PRODUCT_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> lp.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+			, (SELECT userName FROM usertable2 u WHERE 1 = 1 AND u.userId = lp.DOC_OWNER) as USER_NAME 
+		FROM 
+			lab_product lp
+			left outer join (
+					SELECT DOC_IDX
+						, DOC_TYPE
+						, MAX(IF(FILE_TYPE=10, 1, 0)) FILE_CNT10
+					    , MAX(IF(FILE_TYPE=20, 1, 0)) FILE_CNT20
+					    , MAX(IF(FILE_TYPE=30, 1, 0)) FILE_CNT30
+					    , MAX(IF(FILE_TYPE=40, 1, 0)) FILE_CNT40
+					    , MAX(IF(FILE_TYPE=50, 1, 0)) FILE_CNT50
+					    , MAX(IF(FILE_TYPE=60, 1, 0)) FILE_CNT60
+					FROM lab_file_type
+					WHERE 1 = 1
+					GROUP BY DOC_IDX, DOC_TYPE
+				)lf
+				ON lp.PRODUCT_IDX = lf.DOC_IDX 
+				AND lf.DOC_TYPE = "PROD" 
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT 
+					tmp.DOC_NO
+				FROM (
+					SELECT
+						row_number() over (order by  PRODUCT_IDX DESC) as rnum
+						, DOC_NO
+					FROM lab_product
+					WHERE 1 = 1
+						AND IS_DELETE = 'N'
+						AND IS_LAST = 'Y'
+						<include refid="menu.whereProductList" />
+				) tmp
+				WHERE rnum between #{startRow} AND #{endRow}
+			)
+		ORDER BY DOC_NO DESC, VERSION_NO DESC, PRODUCT_IDX DESC		
+	</select>
+	
+	<select id="selectProductData" parameterType="map" resultType="hashmap">
+		SELECT 
+			PRODUCT_IDX
+			, DOC_NO
+			, PRODUCT_CODE
+			, SAP_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, TOTAL_WEIGHT
+			, STANDARD
+			, KEEP_CONDITION
+			, EXPIRATION_DATE
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			, PRODUCT_TYPE1
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = PRODUCT_TYPE1) as  PRODUCT_TYPE_NAME1
+			, PRODUCT_TYPE2
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = PRODUCT_TYPE2) as  PRODUCT_TYPE_NAME2
+			, PRODUCT_TYPE3
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = PRODUCT_TYPE3) as  PRODUCT_TYPE_NAME3
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+		FROM 
+			lab_product
+		WHERE 1 = 1 
+			AND PRODUCT_IDX = #{idx}
+	</select>
+	
+	<select id="selectProductMaterial" parameterType="map" resultType="hashmap">
+		SELECT
+			P_MATERIAL_IDX
+			, PRODUCT_IDX
+			, MATERIAL_IDX			
+			, SAP_CODE
+			, NAME
+			, SAP_PRICE
+			, VOLUMN
+			, UNIT_PRICE
+			, STANDARD
+			, KEEP_EXP
+			, DESCRIPTION
+			, MATERIAL_TYPE
+		FROM 
+			lab_product_materal
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{idx}
+		ORDER BY P_MATERIAL_IDX ASC
+	</select>
+	
+	<select id="selectHistory" parameterType="map" resultType="hashmap">
+	SELECT 
+		lh.DOC_IDX
+		, lh.HISTORY_TYPE
+		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
+			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
+			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			END HISTORY_TYPE_TXT 
+		, lp.VERSION_NO
+		, lp.NAME 
+		, lp.PRODUCT_CODE 
+		, lh.USER_ID 
+		, (SELECT userName FROM usertable2 u WHERE 1 = 1 AND u.userId = lh.USER_ID) as USER_NAME
+		, DATE_FORMAT(lh.REG_DATE, '%Y-%m-%d %H:%i:%s') as REG_DATE
+	FROM lab_history lh ,
+		lab_product lp 
+	WHERE 1 = 1
+		AND lh.DOC_IDX IN (SELECT PRODUCT_IDX FROM lab_product WHERE 1 = 1 AND DOC_NO = #{docNo})
+		AND lh.DOC_TYPE = #{docType}
+		AND lh.DOC_IDX = lp.PRODUCT_IDX 
+	ORDER BY lh.REG_DATE ASC
+	</select>
+	
+	<update id="updateProduct" parameterType="map">
+		UPDATE 
+			lab_product
+		SET
+			IS_LAST = 'N'
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{currentIdx}
+	</update>
+	
+	<insert id="insertNewVersionProduct" parameterType="map">
+		INSERT INTO lab_product(
+			PRODUCT_IDX
+			, DOC_NO
+			, PRODUCT_CODE
+			, SAP_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, TOTAL_WEIGHT
+			, STANDARD
+			, KEEP_CONDITION
+			, EXPIRATION_DATE
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			<if test="productType1 != null and productType1 !='' ">
+			, PRODUCT_TYPE1
+			</if>
+			<if test="productType2 != null and productType2 !='' ">
+			, PRODUCT_TYPE2
+			</if>
+			<if test="productType3 != null and productType3 !='' ">
+			, PRODUCT_TYPE3
+			</if>
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+		)VALUES(
+			#{idx}
+			, #{docNo}
+			, #{productCode}
+			, #{productSapCode}
+			, #{productName}
+			, #{title}
+			, #{contents}
+			, #{weight}
+			, #{standard}
+			, #{keepCondition}
+			, #{expireDate}
+			, #{newMat}
+			, #{versionNo}
+			<if test="productType1 != null and productType1 !='' ">
+			, #{productType1}
+			</if>
+			<if test="productType2 != null and productType2 !='' ">
+			, #{productType2}
+			</if>
+			<if test="productType3 != null and productType3 !='' ">
+			, #{productType3}
+			</if>
+			, 'N'
+			, #{isLast}
+			, #{userId}
+			, #{userId}
+			, #{status}
+		)
+	</insert>
+	
+	<sql id="whereMenuList">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchProductCode')">
+      		AND MENU_CODE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchCategory1 != null and searchCategory1 != '' ">
+			AND MENU_TYPE1 = #{searchCategory1}
+		</if>
+		<if test="searchCategory2 != null and searchCategory2 != '' ">
+			AND MENU_TYPE2 = #{searchCategory2}
+		</if>
+		<if test="searchCategory3 != null and searchCategory3 != '' ">
+			AND MENU_TYPE3 = #{searchCategory3}
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND MENU_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'PROD' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectMenuCount" parameterType="map" resultType="int">
+		SELECT 
+			count(MENU_IDX) as cnt
+		FROM lab_menu
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			<include refid="menu.whereMenuList" />
+	</select>
+	<select id="selectMenuList" parameterType="map" resultType="hashmap">
+		SELECT 
+			lm.*
+			, CASE 
+				WHEN lm.STATUS = 'REG' THEN '등록'
+				WHEN lm.STATUS = 'APPR' THEN '결재중'
+				WHEN lm.STATUS = 'COMP' THEN '완료'
+				END	AS STATUS_TXT
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE3) as CATEGORY_NAME3
+			, IFNULL(lf.FILE_CNT10,0) as FILE_CNT10
+			, IFNULL(lf.FILE_CNT20,0) as FILE_CNT20
+			, IFNULL(lf.FILE_CNT30,0) as FILE_CNT30
+			, IFNULL(lf.FILE_CNT40,0) as FILE_CNT40
+			, IFNULL(lf.FILE_CNT50,0) as FILE_CNT50
+			, IFNULL(lf.FILE_CNT60,0) as FILE_CNT60
+			, (SELECT COUNT(*) FROM lab_menu WHERE 1 = 1 AND MENU_CODE = lm.MENU_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> lm.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+			, (SELECT userName FROM usertable2 u WHERE 1 = 1 AND u.userId = lm.DOC_OWNER) as USER_NAME 
+		FROM 
+			lab_menu lm
+			left outer join (
+					SELECT DOC_IDX
+						, DOC_TYPE
+						, MAX(IF(FILE_TYPE=10, 1, 0)) FILE_CNT10
+					    , MAX(IF(FILE_TYPE=20, 1, 0)) FILE_CNT20
+					    , MAX(IF(FILE_TYPE=30, 1, 0)) FILE_CNT30
+					    , MAX(IF(FILE_TYPE=40, 1, 0)) FILE_CNT40
+					    , MAX(IF(FILE_TYPE=50, 1, 0)) FILE_CNT50
+					    , MAX(IF(FILE_TYPE=60, 1, 0)) FILE_CNT60
+					FROM lab_file_type
+					WHERE 1 = 1
+					GROUP BY DOC_IDX, DOC_TYPE
+				)lf
+				ON lm.MENU_IDX = lf.DOC_IDX 
+				AND lf.DOC_TYPE = "MENU" 
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT 
+					tmp.DOC_NO
+				FROM (
+					SELECT
+						row_number() over (order by  MENU_IDX DESC) as rnum
+						, DOC_NO
+					FROM lab_menu
+					WHERE 1 = 1
+						AND IS_DELETE = 'N'
+						AND IS_LAST = 'Y'
+						<include refid="menu.whereMenuList" />
+				) tmp
+				WHERE rnum between #{startRow} AND #{endRow}
+			)
+		ORDER BY DOC_NO DESC, MENU_IDX DESC		
+	</select>
+	
+	<select id="selectMenuDataCount" parameterType="map" resultType="int">
+		SELECT 
+			count(MENU_IDX)
+		FROM lab_menu
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			AND MENU_CODE = #{menuCode}
+	</select>
+	
+	<select id="selectMenuSeq" resultType="int">
+		SELECT nextval('menu_seq') as seq
+	</select>
+	
+	<insert id="insertMenu" parameterType="map">
+		INSERT INTO lab_menu(
+			MENU_IDX
+			, DOC_NO
+			, MENU_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			<if test="menuType1 != null and menuType1 !='' ">
+			, MENU_TYPE1
+			</if>
+			<if test="menuType2 != null and menuType2 !='' ">
+			, MENU_TYPE2
+			</if>
+			<if test="menuType3 != null and menuType3 !='' ">
+			, MENU_TYPE3
+			</if>
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+		)VALUES(
+			#{idx}
+			, (SELECT ifnull(MAX(lm.DOC_NO),0)+1 FROM lab_menu lm WHERE 1 = 1)
+			, #{menuCode}
+			, #{menuName}
+			, #{title}
+			, #{contents}
+			, #{newMat}
+			, (SELECT ifnull(MAX(lm.VERSION_NO),0)+1 FROM lab_menu lm WHERE 1 = 1 AND MENU_CODE = #{menuCode})
+			<if test="menuType1 != null and menuType1 !='' ">
+			, #{menuType1}
+			</if>
+			<if test="menuType2 != null and menuType2 !='' ">
+			, #{menuType2}
+			</if>
+			<if test="menuType3 != null and menuType3 !='' ">
+			, #{menuType3}
+			</if>
+			, 'N'
+			, 'Y'
+			, #{userId}
+			, #{userId}
+			, #{status}
+		)
+	</insert>
+	
+	<insert id="insertMenuMaterial" parameterType="map">
+		INSERT 
+    	INTO lab_menu_materisl(
+			M_MATERIAL_IDX
+			, MENU_IDX
+			, MATERIAL_IDX
+			, SAP_CODE
+			, NAME
+			, UNIT_PRICE
+			, STANDARD
+			, KEEP_EXP
+			, DESCRIPTION
+			, MATERIAL_TYPE
+		)values
+		<foreach collection="matList" item="item" index="index"  separator=",">
+		( nextval('menu_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		</foreach>
+	</insert>
+	
+	<select id="selectMenuHistory" parameterType="map" resultType="hashmap">
+	SELECT 
+		lh.DOC_IDX
+		, lh.HISTORY_TYPE
+		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
+			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
+			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			END HISTORY_TYPE_TXT 
+		, lm.VERSION_NO
+		, lm.NAME 
+		, lm.MENU_CODE 
+		, lh.USER_ID 
+		, (SELECT userName FROM usertable2 u WHERE 1 = 1 AND u.userId = lh.USER_ID) as USER_NAME
+		, DATE_FORMAT(lh.REG_DATE, '%Y-%m-%d %H:%i:%s') as REG_DATE
+	FROM lab_history lh ,
+		lab_menu lm 
+	WHERE 1 = 1
+		AND lh.DOC_IDX IN (SELECT MENU_IDX FROM lab_menu WHERE 1 = 1 AND DOC_NO = #{docNo})
+		AND lh.DOC_TYPE = #{docType}
+		AND lh.DOC_IDX = lm.MENU_IDX 
+	ORDER BY lh.REG_DATE ASC
+	</select>
+	
+	<select id="selectMenuData" parameterType="map" resultType="hashmap">
+		SELECT 
+			MENU_IDX
+			, DOC_NO
+			, MENU_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			, MENU_TYPE1
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MENU_TYPE1) as  MENU_TYPE_NAME1
+			, MENU_TYPE2
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MENU_TYPE2) as  MENU_TYPE_NAME2
+			, MENU_TYPE3
+			, (select CATEGORY_NAME from lab_system_category where CATEGORY_IDX = MENU_TYPE3) as  MENU_TYPE_NAME3
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+		FROM 
+			lab_menu
+		WHERE 1 = 1 
+			AND MENU_IDX = #{idx}
+	</select>
+	
+	<select id="selectMenuMaterial" parameterType="map" resultType="hashmap">
+		SELECT
+			M_MATERIAL_IDX
+			, MENU_IDX
+			, MATERIAL_IDX			
+			, SAP_CODE
+			, NAME
+			, UNIT_PRICE
+			, STANDARD
+			, KEEP_EXP
+			, DESCRIPTION
+			, MATERIAL_TYPE
+		FROM 
+			lab_menu_materisl
+		WHERE 1 = 1
+			AND MENU_IDX = #{idx}
+		ORDER BY M_MATERIAL_IDX ASC
+	</select>
+	
+	<update id="updateMenuVersion" parameterType="map">
+		UPDATE 
+			lab_menu
+		SET
+			IS_LAST = 'N'
+		WHERE 1 = 1
+			AND MENU_IDX = #{currentIdx}
+	</update>
+	
+	<insert id="insertNewVersionMenu" parameterType="map">
+		INSERT INTO lab_menu(
+			MENU_IDX
+			, DOC_NO
+			, MENU_CODE
+			, NAME
+			, TITLE
+			, CONTENTS
+			, IS_NEW_MATERIAL
+			, VERSION_NO
+			<if test="menuType1 != null and menuType1 !='' ">
+			, MENU_TYPE1
+			</if>
+			<if test="menuType2 != null and menuType2 !='' ">
+			, MENU_TYPE2
+			</if>
+			<if test="menuType3 != null and menuType3 !='' ">
+			, MENU_TYPE3
+			</if>
+			, IS_DELETE
+			, IS_LAST
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+		)VALUES(
+			#{idx}
+			, #{docNo}
+			, #{menuCode}
+			, #{menuName}
+			, #{title}
+			, #{contents}
+			, #{newMat}
+			, #{versionNo}
+			<if test="menuType1 != null and menuType1 !='' ">
+			, #{menuType1}
+			</if>
+			<if test="menuType2 != null and menuType2 !='' ">
+			, #{menuType2}
+			</if>
+			<if test="menuType3 != null and menuType3 !='' ">
+			, #{menuType3}
+			</if>
+			, 'N'
+			, 'Y'
+			, #{userId}
+			, #{userId}
+			, #{status}
+		)
+	</insert>
+	
+	<insert id="insertCookManual" parameterType="map">
+		INSERT INTO lab_cook_manual(
+			MANUAL_IDX
+			, MENU_IDX
+			, REG_YN	
+		)VALUES(
+			nextval('cook_manual_seq')
+			, #{idx}
+			, 'N'
+		)
+	</insert>
+	
+	<select id="selectManualCount" parameterType="map" resultType="int">
+		WITH MANUAL AS 
+		(
+		    SELECT
+		    	lcm.MANUAL_IDX
+		    	, lcm.REG_YN
+		    	, lm.* 
+		    FROM 
+		    	lab_cook_manual lcm
+		    	, lab_menu lm 
+		    WHERE 1 = 1
+		    	AND lcm.MENU_IDX = lm.MENU_IDX 
+		)
+		SELECT 
+			count(man.MANUAL_IDX) AS cnt
+		FROM 
+			MANUAL man
+		WHERE 1 = 1
+			AND man.IS_DELETE = 'N'
+			AND man.IS_LAST = 'Y'
+	</select>
+	
+	<select id="selectManualList" parameterType="map" resultType="hashmap">
+		WITH MANUAL AS 
+		(
+		    SELECT
+		    	lcm.MANUAL_IDX
+		    	, lcm.REG_YN
+		    	, lm.* 
+		    FROM 
+		    	lab_cook_manual lcm
+		    	, lab_menu lm 
+		    WHERE 1 = 1
+		    	AND lcm.MENU_IDX = lm.MENU_IDX 
+		)
+		SELECT 
+			*,
+			(SELECT COUNT(*) FROM lab_menu WHERE 1 = 1 AND MENU_CODE = man.MENU_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> man.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+		FROM 
+			MANUAL man
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT tmp.DOC_NO FROM (
+					SELECT 
+						row_number() over (order by  manaual.MENU_IDX DESC) as rnum
+						, manaual.* 
+					FROM 
+						MANUAL manaual
+					WHERE 1 = 1
+						AND manaual.IS_DELETE = 'N'
+						AND manaual.IS_LAST = 'Y'
+					)tmp
+				WHERE rnum between #{startRow} AND #{endRow}
+			)
+	</select>
+	
+	<select id="checkErpMaterial" parameterType="map" resultType="hashmap">
+		SELECT 
+			SAP_CODE
+			, NAME
+			, KEEP_CONDITION
+			, CATEGORY_DIV1
+			, CATEGORY_DIV2 
+			, WIDTH
+			, WIDTH_UNIT
+			, LENGTH
+			, LENGTH_UNIT
+			, HEIGHT
+			, HEIGHT_UNIT
+			, TOTAL_WEIGHT
+			, TOTAL_WEIGHT_UNIT
+			, ITEM_UNIT
+			, CHANGE_COUNT
+			, CHANGE_UNIT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+			, BILL_NAME
+			, STATUS
+			, PUBLIC_YN
+			, BOX_AMOUNT
+			, MIN_ORDER_AMOUNT
+			, LEAD_TIME
+			, FRESH_YN
+			, SAFETY_STOCK_DAY
+			, PALLET_WIDTH_COUNT
+			, PALLET_LENGTH_COUNT
+			, TAX_YN
+			, CD_ACCT
+			, PROCESSING_ACCOUNT
+			, NM_STATUS
+			, PALLET_AMOUNT
+			, ADVERTISING_DATE
+			, ADVERTISING_COST
+		FROM lab_erp_material
+		WHERE 1 = 1
+			AND SAP_CODE LIKE CONCAT('%',#{sapCode},'%')
+	</select>
+	
+	<select id="selectErpMaterialData" parameterType="map" resultType="hashmap">
+		SELECT 
+			SAP_CODE
+			, NAME
+			, KEEP_CONDITION
+			, CATEGORY_DIV1
+			, CATEGORY_DIV2 
+			, WIDTH
+			, WIDTH_UNIT
+			, LENGTH
+			, LENGTH_UNIT
+			, HEIGHT
+			, HEIGHT_UNIT
+			, TOTAL_WEIGHT
+			, TOTAL_WEIGHT_UNIT
+			, ITEM_UNIT
+			, CHANGE_COUNT
+			, CHANGE_UNIT
+			, STANDARD
+			, ORIGIN
+			, EXPIRATION_DATE
+			, BILL_NAME
+			, STATUS
+			, PUBLIC_YN
+			, BOX_AMOUNT
+			, MIN_ORDER_AMOUNT
+			, LEAD_TIME
+			, FRESH_YN
+			, SAFETY_STOCK_DAY
+			, PALLET_WIDTH_COUNT
+			, PALLET_LENGTH_COUNT
+			, TAX_YN
+			, CD_ACCT
+			, PROCESSING_ACCOUNT
+			, NM_STATUS
+			, PALLET_AMOUNT
+			, ADVERTISING_DATE
+			, ADVERTISING_COST
+		FROM 
+			lab_erp_material
+		WHERE 1 = 1
+			AND SAP_CODE = 	#{sapCode}
+	</select>
+	
+	<select id="insertNewVersionCheck" parameterType="map" resultType="int">
+		SELECT
+			count(PRODUCT_IDX) as cnt
+		FROM 
+			lab_product
+		WHERE 1 = 1
+			AND PRODUCT_CODE = #{productCode}
+			AND DOC_NO = #{docNo}
+			AND VERSION_NO = #{versionNo}
+	</select>
+	
+	<sql id="whereSearchProductList">
+		<if test="searchValue != null and searchValue != '' ">
+			AND (NAME LIKE CONCAT('%',#{searchValue},'%') OR PRODUCT_CODE LIKE CONCAT('%',#{searchValue},'%'))
+		</if>
+		<if test="searchCategory1 != null and searchCategory1 != '' ">
+			AND PRODUCT_TYPE1 = #{searchCategory1}
+		</if>
+		<if test="searchCategory2 != null and searchCategory2 != '' ">
+			AND PRODUCT_TYPE2 = #{searchCategory2}
+		</if>
+		<if test="searchCategory3 != null and searchCategory3 != '' ">
+			AND PRODUCT_TYPE3 = #{searchCategory3}
+		</if>
+	</sql>
+	
+	<select id="selectSearchProduct" parameterType="map" resultType="hashmap">
+		SELECT 
+			lp.*
+			, CASE 
+				WHEN lp.STATUS = 'REG' THEN '등록'
+				WHEN lp.STATUS = 'APPR' THEN '결재중'
+				WHEN lp.STATUS = 'COMP' THEN '완료'
+				END	AS STATUS_TXT
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE3) as CATEGORY_NAME3
+
+		FROM 
+			lab_product lp
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT 
+					tmp.DOC_NO
+				FROM (
+					SELECT
+						row_number() over (order by  PRODUCT_IDX DESC) as rnum
+						, DOC_NO
+					FROM lab_product
+					WHERE 1 = 1
+						AND IS_DELETE = 'N'
+						AND IS_LAST = 'Y'
+						AND DOC_OWNER = #{userId}
+						<include refid="menu.whereSearchProductList" />
+				) tmp
+			)
+		ORDER BY DOC_NO DESC, VERSION_NO DESC, PRODUCT_IDX DESC		
+	</select>
+	
+	<insert id="insertFileCopy" parameterType="map">
+		INSERT 
+    	INTO lab_file(
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+			, FILE_CONTENT
+		)
+		SELECT 
+			#{fileIdx}
+			, #{docIdx}
+			, #{docType}
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, sysdate()
+			, FILE_CONTENT
+		FROM lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{tempFileIdx}		
+	</insert>
+	
+	<select id="searchUser" parameterType="map" resultType="hashmap">
+		SELECT 
+			USER_ID
+			, USER_PWD
+			, USER_NAME
+			, USER_GRAD
+			, REG_DATE
+			, USER_CODE
+			, EMAIL
+			, DEPT_CODE
+			, TEAM_CODE
+			, TITLE_CODE
+			, USER_TYPE
+			, IS_ADMIN
+			, IS_DELETE
+			, THEME
+			, CONTENT_MODE
+			, WIDTH_MODE
+			, MAIL_CHECK1
+			, MAIL_CHECK2
+			, MAIL_CHECK3
+			, IS_LOCK
+			, IS_OLD
+			, ROLE_CODE
+		FROM 
+			lab_user
+		WHERE 1 = 1
+			AND (USER_ID LIKE CONCAT('%',#{keyword},'%') OR USER_NAME LIKE CONCAT('%',#{keyword},'%'))
+	</select>
+	
+	<select id="selectLineSeq" resultType="int">
+		SELECT nextval('approval_line_header_seq') as seq
+	</select>
+	
+	<insert id="insertApprLine" parameterType="map">
+		INSERT 
+		INTO lab_approval_line_header(
+			LINE_IDX
+			, NAME
+			, DOC_TYPE
+			, REG_USER
+			, REG_DATE
+			, IS_DELETE
+		) VALUES (
+			#{lineIdx}
+			, #{apprLineName}
+			, #{docType}
+			, #{userId}
+			, sysdate()
+			, 'N'
+		)	
+	</insert>
+	<insert id="insertApprLineItem" parameterType="map">
+		INSERT 
+    	INTO lab_approval_line_item(
+			ITEM_IDX
+			, LINE_IDX
+			, APPR_ORDER
+			, USER_ID
+		)values
+		<foreach collection="apprLine" item="item" index="index"  separator=",">
+		( nextval('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
+		</foreach>
+	</insert>
+	
+	<select id="selectApprovalLine" parameterType="map" resultType="hashmap">
+		SELECT 
+			LINE_IDX
+			, NAME
+			, DOC_TYPE
+			, REG_USER
+			, REG_DATE
+			, IS_DELETE
+		FROM 
+			lab_approval_line_header
+		WHERE 1 = 1
+			AND DOC_TYPE = #{docType}
+			AND REG_USER = #{userId}
+			AND IS_DELETE = 'N'
+	</select>
+	
+	<select id="selectApprovalLineItem" parameterType="map" resultType="hashmap">
+		SELECT
+			la.ITEM_IDX
+			, la.LINE_IDX
+			, la.APPR_ORDER
+			, la.USER_ID
+			, lu.USER_NAME
+			, '부서명' AS DEPT_NAME
+			, '팀명' AS TEAM_NAME
+		FROM 
+			lab_approval_line_item la
+			, lab_user lu
+		WHERE 1 = 1
+			AND la.USER_ID = lu.USER_ID
+			AND la.LINE_IDX = #{lineIdx}
+		ORDER BY APPR_ORDER ASC
+	</select>
+	
+	<update id="deleteApprLine" parameterType="map">
+		UPDATE 
+			lab_approval_line_header
+		SET
+			IS_DELETE = 'Y'
+		WHERE 1 = 1
+			AND LINE_IDX = #{lineIdx}
+	</update>
+	
+	<select id="selectApprSeq" resultType="int">
+		SELECT nextval('approval_line_reference_seq') as seq
+	</select>
+</mapper>

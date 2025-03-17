@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="report">
+	<select id="reportCount"  parameterType="map" resultType="int">
+	/** report.reportCount */
+		SELECT
+			count(rNo) 
+		FROM (
+			SELECT
+				report.*
+				, (SELECT deptCode FROM usertable2 WHERE userid = report.regUserId) userDept
+			FROM report
+		) a
+		WHERE 1 = 1
+		<if test='category1 != null and category1 != "" and category1 != "NULL"'>
+			AND category1 = #{category1}
+		</if>
+		<if test='keyword != null and keyword != "" and keyword != "NULL"'>
+			AND (title LIKE concat('%',#{keyword},'%') OR prdTitle LIKE concat('%',#{keyword},'%') OR DATE_FORMAT(reportDate,'%Y-%m-%d') LIKE concat('%',#{keyword},'%'))
+		</if>
+		<if test='deptCode != null and deptCode != "" and deptCode != "NULL"'>
+			AND userDept = #{deptCode}
+		</if>
+		<if test='subCategory != null and subCategory != "" and subCategory != "NULL"'>
+			AND subCategory = #{subCategory}
+		</if>
+	</select>
+	
+	<select id="reportList" parameterType="map" resultType="ReportVO">
+	/** report.reportList */
+		SELECT		rNo
+					,rNo as reportKey
+					,category1
+					,getCodeName('REPORTCATEGORY1', category1) as category1Name
+					, title
+					, prdTitle
+					, userName
+					, regDate
+					, regUserId
+					, fileCount
+					, reportDate
+					, testTitle
+					, seminarTitle
+					, subCategory
+					, ifnull(getCodeName(category1, subCategory), '') as subCategoryName
+					, regularTitle
+		FROM
+				(
+						SELECT		row_number() over (order by rNo desc) as rn
+										, rNo
+										, category1
+										, title
+										, prdTitle
+										, getUserName(regUserId) as userName
+										, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+										, regUserId
+										, (select count(*) from  fileManager where tbType='report' AND tbKey = rNo) as fileCount
+										, DATE_FORMAT(reportDate,'%Y-%m-%d')  as reportDate
+										, testTitle
+										, seminarTitle
+										, subCategory
+										, regularTitle
+				FROM	(
+					SELECT report.*
+						, (SELECT deptCode FROM usertable2 WHERE userid = report.regUserId) userDept
+					FROM report
+				) a 
+				WHERE 1 = 1
+				<if test='category1 != null and category1 != "" and category1 != "NULL"'>
+					AND category1 = #{category1}
+				</if>
+				<if test='keyword != null and keyword != "" and keyword != "NULL"'>
+					AND (title LIKE concat('%',#{keyword},'%') OR prdTitle LIKE concat('%',#{keyword},'%') OR DATE_FORMAT(reportDate,'%Y-%m-%d') LIKE concat('%',#{keyword},'%'))
+				</if>
+				<if test='deptCode != null and deptCode != "" and deptCode != "NULL"'>
+					AND userDept = #{deptCode}
+				</if>
+				<if test='subCategory != null and subCategory != "" and subCategory != "NULL"'>
+					AND subCategory = #{subCategory}
+				</if>
+			) t
+		WHERE rn between #{startRow} and #{endRow}
+		ORDER BY regDate DESC;
+	</select>
+	
+	<select id="reportData" parameterType="map" resultType="ReportVO">
+	/** report.reportData */
+	SELECT b.rNo
+		,b.rNo as reportKey
+		, (SELECT apprNo from approvalBoxHeader a where a.tbKey = b.rNo and a.tbType = 'report') as apprNo
+		, b.title
+		, b.prdTitle
+		, b.regUserId
+		, getUserName(b.regUserId) as userName
+		, getUserDeptName(b.regUserId) as deptName
+		, b.prdFeature
+		, b.content
+		, b.adviserPrd
+		, b.category1
+		, getCodeName('REPORTCATEGORY1', b.category1) as category1Name
+		, b.subCategory
+		, getCodeName(b.category1, b.subCategory) as subCategoryName
+		, DATE_FORMAT(b.regDate,'%Y-%m-%d') as regDate
+		, b.state
+		, b.modUserId  
+		,DATE_FORMAT(b.reportDate,'%Y-%m-%d') as reportDate
+		,b.isConfirm
+		,CASE WHEN b.isConfirm ='Y' THEN '승인'
+			WHEN b.isConfirm = 'D' THEN '보류'
+			WHEN b.isConfirm = 'N' THEN '미승인'
+			END AS isConfirmText
+	    ,b.isRelease
+	    ,CASE WHEN b.isRelease ='Y' THEN '출시'
+			ELSE '미출시'
+			END AS isReleaseText
+	    ,b.result
+	    ,b.visitPurpose
+	    ,b.visitPlace
+	    ,b.visitUser
+	    ,b.visitTime
+	    ,b.testPurpose
+		,b.testDate
+		,b.testObject
+		,b.seminarDate
+		,b.seminarHost
+		,b.seminarContent
+	    ,b.isOld
+	    ,b.oldCategory
+	    ,case when b.oldCategory = 1 then '실험보고서'
+			when b.oldCategory = 2 then '출장보고서'
+			when b.oldCategory = 3 then '시장조사'
+			when b.oldCategory = 4 then '보고제품'
+			when b.oldCategory = 5 then '기술고문 제품'
+			when b.oldCategory = 6 then '기술고문보고서'
+			end oldCategoryName
+		,b.regularTitle
+	FROM report b
+	WHERE rNo = #{rNo} 
+	</select>
+	
+	<insert id="insert" parameterType="ReportVO">
+  	/*report.insert*/
+  	<selectKey keyProperty="rNo" resultType="int" order="AFTER">
+		INSERT 
+		INTO report(
+			title
+			,regUserId
+  		    ,category1
+		    ,regDate
+		    ,prdTitle
+		    ,adviserPrd
+		    ,prdFeature
+		    ,reportDate
+		    ,isConfirm
+		    ,isRelease
+		    ,result
+		    ,visitPurpose
+		    ,visitPlace
+		    ,visitUser
+		    ,visitTime
+		    ,testPurpose
+		    ,testDate
+		    ,testObject
+		    ,seminarDate
+		    ,seminarHost
+		    ,seminarContent
+		    ,subCategory
+		    ,regularTitle 
+			) 
+		VALUES (
+			#{title}
+			,#{regUserId}
+			,#{category1}
+		    ,sysdate()
+		    ,#{prdTitle}
+		    ,#{adviserPrd}
+		    ,#{prdFeature}
+		    ,#{reportDate}
+		    ,#{isConfirm}
+		    ,#{isRelease}
+		    ,#{result}
+		    ,#{visitPurpose}
+		    ,#{visitPlace}
+		    ,#{visitUser}
+		    ,#{visitTime}
+		    ,#{testPurpose}
+		    ,#{testDate}
+		    ,#{testObject}
+		    ,#{seminarDate}
+		    ,#{seminarHost}
+		    ,#{seminarContent}
+		    ,#{subCategory}
+		    ,#{regularTitle}
+		)
+			select SCOPE_IDENTITY()
+	</selectKey>	
+    </insert>
+    
+    <insert id="insertReportBom" parameterType="map">
+  	/*report.insertReportBom*/
+  		INSERT 
+		INTO reportBom(
+			rNo
+			,name
+			,bom		    
+			) 
+		VALUES (
+			#{rNo}
+			,#{itemName}
+		    ,#{itemBom}
+		)
+    </insert>
+	
+	<select id="reportBom" parameterType="map" resultType="map">
+  	/*report.reportBom*/
+		With CTE
+		As
+		(
+		SELECT  1 as Level, mixId, name, '' as bom
+		FROM reportMix
+		WHERE  1 = 1
+			AND rNo = #{rNo}
+		
+		UNION ALL
+		
+		SELECT 2 as Level, mixItemId as mixId, name, bom 
+		FROM reportMixItem
+		WHERE  1 = 1
+			AND rNo = #{rNo}
+		)
+		SELECT *
+		FROM CTE
+		Order by mixId, Level  ASC	
+    </select>
+
+	<delete id="deleteReportBom" parameterType="map">
+  	/*report.deleteReportBom*/
+  		DELETE 
+		FROM reportBom
+		WHERE 1 = 1
+			AND rNo = #{rNo}
+    </delete>
+    
+    <insert id="inserApprHeader" parameterType="ApprovalHeaderVO">
+  	/*report.inserApprHeader*/
+  	<selectKey keyProperty="apprNo" resultType="int" order="AFTER">
+		INSERT 
+		INTO approvalBoxHeader(
+			tbKey,
+			tbType,
+			type,
+			currentStep,
+			currentUserId,
+			totalStep,
+			lastState,
+			title,
+			comment,
+			regUserId,
+			regDate
+		) VALUES(
+			#{tbKey},
+			#{tbType},
+			#{type},
+			#{currentStep},
+			#{currentUserId},
+			#{totalStep},
+			#{lastState},
+			#{title},
+			#{comment},
+			#{regUserId},
+			sysdate())
+		select SCOPE_IDENTITY()
+	</selectKey>	
+    </insert>
+    
+    <insert id="inserApprLine" parameterType="ApprovalItemVO">
+  	/*report.inserApprLine*/
+  		INSERT 
+  		INTO approvalBoxInfo(
+  			apprNo,
+  			seq,
+  			targetUserId,
+  			state,
+  			regDate
+  		) VALUES(
+  			#{apprNo},
+  			#{seq},
+  			#{targetUserId},
+  			#{state},
+  			sysdate()
+  		)
+    </insert>
+    
+    <update id="updateState" parameterType="map">
+    	UPDATE 
+    		report
+    	SET state = #{state}
+    	WHERE rNo = #{rNo}
+    </update>
+    
+    <insert id="insertRefCirc" parameterType="ApprovalItemVO">
+  	/*report.insertRefCirc*/
+  		INSERT 
+  		INTO approvalReference(
+  			apprNo, 
+  			tbKey, 
+  			tbType, 
+  			title, 
+  			regDate, 
+  			regUserId, 
+  			targetUserId, 
+  			type
+  		) VALUES(
+  			#{apprNo},
+  			#{rNo},
+  			#{tbType},
+  			#{title},
+  			sysdate(),
+  			#{regUserId},
+  			#{targetUserId},
+  			#{type}
+  			)
+    </insert>
+    
+    <select id="getAppr" parameterType="String" resultType="ApprovalItemVO">
+    /*report.getAppr*/
+    	SELECT 
+    		b.apbNo
+			,b.apprNo
+			,b.seq
+			,b.targetUserId
+			,b.state
+			,b.regDate
+			,b.modDate
+			,b.note
+			,b.proxyId
+			,b.proxyYN
+  		FROM approvalBoxHeader a
+  			inner join	approvalBoxInfo b
+  			on a.apprNo = b.apprNo
+  		WHERE 1 = 1 
+  			AND a.apprNo = #{apprNo}
+  			AND b.seq != 1	
+    </select>
+    
+    <select id="getRef" parameterType="String" resultType="map">
+    /*report.getRef*/
+   	 SELECT 
+    		b.arNo
+			,b.apprNo
+			,b.tbKey
+			,b.tbType
+			,b.title
+			,b.regDate
+			,b.regUserId
+			,b.targetUserId
+			,b.type
+  		FROM approvalBoxHeader a
+  			inner join	approvalReference b
+  			on a.apprNo = b.apprNo
+  		WHERE 1 = 1 
+  			AND a.apprNo = #{apprNo}
+    </select>
+    
+    <update id="update" parameterType="String">
+    	UPDATE		
+    		report 
+		SET	
+			title = #{title} 
+			,modUserId = #{modUserId}
+  		    ,category1 = #{category1}
+		    ,regDate = sysdate()
+		    ,prdTitle = #{prdTitle}
+		    ,adviserPrd = #{adviserPrd}
+		    ,prdFeature = #{prdFeature}
+		    ,reportDate = #{reportDate}
+		    ,isConfirm = #{isConfirm}
+		    ,isRelease = #{isRelease}
+		    ,result = #{result}
+		    ,visitPurpose = #{visitPurpose}
+		    ,visitPlace = #{visitPlace}
+		    ,visitUser = #{visitUser}
+		    ,visitTime = #{visitTime}
+		    ,testTitle = #{testTitle}
+		    ,testPurpose = #{testPurpose}
+		    ,testDate = #{testDate}
+		    ,testObject = #{testObject}
+		    ,seminarTitle = #{seminarTitle}
+		    ,seminarDate = #{seminarDate}
+		    ,seminarHost = #{seminarHost}
+		    ,seminarContent = #{seminarContent}
+		    ,subCategory = #{subCategory}
+		    ,regularTitle = #{regularTitle}
+		WHERE 		
+			rNo = #{rNo}
+    </update>
+    
+     <delete id="delete" parameterType="String">
+    /*report.delete*/
+    DELETE FROM report WHERE rNo = #{rNo} 
+    </delete>
+    
+    <insert id="insertReportMix" parameterType="map">
+  	/*report.insertReportMix*/
+  		INSERT 
+		INTO reportMix(
+			rNo
+			,name
+			,mixId		    
+			) 
+		VALUES (
+			#{rNo}
+			,#{mixName}
+		    ,#{mixId}
+		)
+    </insert>
+    <insert id="insertReportMixItem" parameterType="map">
+  	/*report.insertReportMixItem*/
+  		INSERT 
+		INTO reportMixItem(
+			rNo
+			,mixItemId
+			,name
+			,bom	    
+			) 
+		VALUES (
+			#{rNo}
+			,#{mixItemId}
+		    ,#{itemName}
+		    ,#{itemBom}
+		)
+    </insert>
+    <select id="reportMix" parameterType="map" resultType="map">
+  	/*report.reportMix*/
+  		SELECT 
+  			seq
+	      	,rNo
+	      	,name
+	      	,mixId
+		FROM reportMix
+		WHERE 1 = 1
+			AND rNo = #{rNo}
+    </select>
+    <select id="reportMixItem" parameterType="map" resultType="map">
+  	/*report.reportMixItem*/
+  		SELECT 
+			seq
+		    ,rNo
+		    ,mixItemId
+		    ,name
+		    ,bom
+		FROM reportMixItem
+		WHERE 1 = 1
+			AND rNo = #{rNo}
+    </select>
+    <delete id="deleteReportMix" parameterType="map">
+  	/*report.deleteReportBom*/
+  		DELETE 
+		FROM reportMix
+		WHERE 1 = 1
+			AND rNo = #{rNo}
+    </delete>
+    <delete id="deleteReportMixItem" parameterType="map">
+  	/*report.deleteReportBom*/
+  		DELETE 
+		FROM reportMixItem
+		WHERE 1 = 1
+			AND rNo = #{rNo}
+    </delete>
+    
+    <select id="getSubCategory" resultType="map">
+   	/*report.getSubCategory*/
+    	SELECT a.* 
+			, ifnull((SELECT COUNT(1) FROM report WHERE category1 = a.groupCode AND subCategory = a.itemCode GROUP BY subCategory), 0) subCategoryCnt 
+		FROM codeItem a 
+		WHERE groupCode = #{category1}
+    </select>
+ </mapper>

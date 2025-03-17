@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qareport">
+	
+	<!-- 품질 보고서 목록 조회 -->
+	<select id="selectQAReportList" resultType="QAReportVO" parameterType="map">
+		/* qareport.selectQAReportList */
+		SELECT R.*
+		  FROM (
+			SELECT ROW_NUMBER() OVER (ORDER BY RNO DESC) AS RN
+				 , A.RNO
+				 , A.TITLE
+				 , A.CONTENT
+				 , A.CATEGORY
+				 , A.CATEGORYNAME
+				 , A.INSPECTOR
+				 , A.ATTENDEES
+				 , A.CREATEUSER
+				 , A.CREATENAME
+				 , DATE_FORMAT(A.CREATEDATE,'%Y-%m-%d') AS CREATEDATE
+				 , A.CHANGEUSER
+				 , A.CHANGENAME
+				 , DATE_FORMAT(A.CHANGEDATE,'%Y-%m-%d') AS CHANGEDATE
+			  FROM QAREPORT A
+			 WHERE rNo IS NOT NULL
+			<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(category)'>
+				AND category = #{category}
+			</if>
+			<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(skey)'>
+				AND (title LIKE '%' || #{skey} || '%' OR content LIKE '%' || #{skey} || '%')
+			</if>
+		  ) R
+		 WHERE RN BETWEEN #{startRow} and #{endRow}
+	</select>
+	
+	<!-- 품질 보고서 목록 카운트 -->
+	<select id="selectQAReportCount" resultType="int" parameterType="map">
+		/* qareport.selectQAReportCount */
+		SELECT COUNT(*) CNT
+		  FROM QAREPORT A
+		 WHERE rNo IS NOT NULL
+		<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(category)'>
+			AND category = #{category}
+		</if>
+		<if test='@kr.co.aspn.util.StringUtil@isNotEmpty(skey)'>
+			AND (title LIKE '%' || #{skey} || '%' OR content LIKE '%' || #{skey} || '%')
+		</if>
+	</select>
+	
+	<!-- 품질 보고서 상세 -->
+	<select id="selectQAReportDetail" resultType="QAReportVO" parameterType="int">
+		SELECT A.*
+		  FROM QAREPORT A
+		 WHERE RNO = #{rNo}
+	</select>
+	
+	<!-- 품질 보고서 등록 -->
+	<insert id="insert" parameterType="QAReportVO">
+		/* qareport.insert */
+		<selectKey keyProperty="rNo" resultType="int" order="AFTER">
+			INSERT INTO QAREPORT(title, content, category, categoryName, inspector, attendees, createUser, createName, createDate)
+			VALUES
+			(#{title}, #{content}, #{category}, dbo.getCodeName('QAREPORTCATEGORY', #{category}), #{inspector}, #{attendees}, #{createUser}, dbo.getUserName(#{createUser}), getDate())
+			select LAST_INSERT_ID('QAREPORT') rNo
+		</selectKey>
+	</insert>
+	
+	<!-- 품질 보고서 수정 -->
+	<update id="update" parameterType="QAReportVO">
+		UPDATE	QAREPORT
+		SET
+				title			= #{title},
+				content			= #{content},
+				category		= #{category},
+				categoryName	= dbo.getCodeName('QAREPORTCATEGORY', #{category}),
+				inspector		= #{inspector},
+				attendees		= #{attendees},
+				changeUser		= #{changeUser},
+				changeName		= dbo.getUserName(#{createUser}),
+				changeDate		= getDate()
+		WHERE 	rNo				= #{rNo}
+	</update>
+	
+	<!-- 품질 보고서 삭제 -->
+	<delete id="delete" parameterType="QAReportVO">
+		DELETE FROM QAREPORT WHERE rNo = #{rNo}
+	</delete>
+	
+</mapper>

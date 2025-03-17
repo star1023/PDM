@@ -1,0 +1,1808 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="manufacturingNo">
+	<select id="checkName" parameterType="String" resultType="int">
+	/*manufacturingNo.checkName*/
+	SELECT 
+		count(manufacturingName)
+  	FROM manufacturingNo
+	WHERE 1 = 1
+		AND REPLACE(manufacturingName,' ','') = REPLACE(#{manufacturingName},' ','')
+		AND companyCode = #{companyCode}
+		AND plantCode = #{plantCode}
+		AND licensingNo = #{licensingNo}
+		AND status != 'S'
+    </select>
+    
+	<select id="licensingNoList" resultType="map" parameterType="map">
+	/*manufacturingNo.licensingNoList*/
+		SELECT * FROM licensingNo 
+		WHERE 1 = 1
+			<if test="companyCode != null and companyCode != '' ">
+			AND company = #{companyCode}
+			</if>
+			<if test="plantCode != null and plantCode != '' ">
+			AND plant = #{plantCode}
+			</if>
+		ORDER BY licensingNo
+	</select>
+	
+	<select id="selectManufacturingNoMappingCount" parameterType="map" resultType="int">
+	/*manufacturingNo.selectManufacturingNoMappingCount*/
+	SELECT 
+		count(mNoSeq)
+  	FROM manufacturingNoMapping
+	WHERE 1 = 1
+		AND dNo = #{dNo}
+    </select>
+    
+    <select id="selectManufacturingMaxNo" parameterType="map" resultType="int">
+	/*manufacturingNo.selectManufacturingMaxNo*/
+	SELECT (isnull( max(manufacturingNo),0))+1 as maxNo
+	FROM manufacturingNo
+	WHERE 1 = 1 
+		AND plantCode = #{plantCode}
+		AND licensingNo = #{licensingNo}
+    </select>
+    
+    <insert id="insert" parameterType="map" useGeneratedKeys="true"  keyProperty="seq">
+    	/*manufacturingNo.insert*/
+    	INSERT 
+    		INTO manufacturingNo(
+    			companyCode
+      			,plantCode
+      			,manufacturingNo
+      			,manufacturingName
+      			,isDelete
+      			,licensingNo
+      			,status
+      			<if test="prevStatus != '' and prevStatus != null">
+      			,prevStatus
+      			</if>
+      			,regDate
+      			,versionNo
+      			<if test='versionUpReqDate != null and versionUpReqDate == "Y"'>
+      			,versionUpReqDate
+      			</if>)
+		values(
+			#{companyCode}
+			,#{plantCode}
+			,#{manufacturingNo}
+			<![CDATA[
+			,#{manufacturingName}
+			]]>
+			,'N'
+			,#{licensingNo}
+			,#{status}
+    		<if test="prevStatus != '' and prevStatus != null">
+    		,#{prevStatus }
+    		</if>
+			,GETDATE()
+			,#{versionNo}
+			<if test='versionUpReqDate != null and versionUpReqDate == "Y"'>
+			,GETDATE()
+			</if>)
+		<!--selectKey keyProperty="seq" resultType="int" order="AFTER">
+			SELECT IDENT_CURRENT('seq')
+		</selectKey-->
+    </insert>
+    <insert id="insertData" parameterType="map" useGeneratedKeys="true"  keyProperty="seq">
+    	/*manufacturingNo.insertData*/
+    	INSERT 
+    		INTO manufacturingNoData(
+				no_seq
+		      	,productType1
+		      	,productType2
+		      	,productType3
+		      	,sterilization
+		      	,keepCondition
+		      	,keepConditionText
+		      	,sellDate1
+		      	,sellDate2
+		      	,sellDate3
+		      	,sellDate4
+		      	,sellDate5
+		      	,sellDate6
+		      	,referral
+		      	,oem
+		      	,oemText
+		      	,createPlant
+		      	,comment
+		      	,regUserId
+		      	,regDate
+		      	,regType
+		      	,manufacturingName
+		      	,versionNo
+		      	,packageEtc
+		)values(
+			#{no_seq}
+	      	,#{productType1}
+	      	,#{productType2}
+	      	,#{productType3}
+	      	,#{sterilization}
+	      	,#{keepCondition}
+	      	,#{keepConditionText}
+	      	,#{sellDate1}
+	      	,#{sellDate2}
+	      	,#{sellDate3}
+	      	,#{sellDate4}
+	      	,#{sellDate5}
+	      	,#{sellDate6}
+	      	,#{referral}
+	      	,#{oem}
+	      	,#{oemText}
+	      	,
+	      	<choose>
+    			<when test="createPlant != null">
+	      			<foreach collection="createPlant" item="plant" index="index"  open="'" close="'" separator=",">${plant}</foreach>
+	      		</when>
+	      		<otherwise>
+      			''
+    			</otherwise>
+	      	</choose>
+	      	,#{comment}
+	      	,#{userId}
+	      	,GETDATE()
+	      	,#{regType}
+	      	,#{manufacturingName}
+	      	, #{versionNo}
+	      	, #{packageEtc}
+			)
+    </insert>
+    <insert id="insertPackageUnit" parameterType="map">
+    	/*manufacturingNo.insertPackageUnit*/
+    	INSERT 
+    		INTO manufacturingNoPackageUnit(
+				dNoSeq
+		      	,packageUnit
+		)values
+		<foreach collection="packageUnit" item="package" index="index"  separator=",">
+		( #{dNo_seq}, ${package})
+		</foreach>		
+    </insert>
+    <insert id="insertMapping" parameterType="map">
+    	/*manufacturingNo."insertMapping"*/
+    	INSERT 
+    		INTO manufacturingNoMapping(
+				mNoSeq
+		      	,dNo
+		      	,regUserId
+		      	,regDate
+		) 
+			SELECT seq 
+				,#{dNo}
+		      	,#{userId}
+		      	,GETDATE()
+			FROM
+		manufacturingNo WHERE licensingNo = #{licensingNo } AND manufacturingNo = #{manufacturingNo }
+    </insert>
+    
+    <select id="searchManufacturingNoList" resultType="map" parameterType="map">
+	/*manufacturingNo.searchManufacturingNoList*/
+		SELECT * FROM(
+			SELECT 
+				seq
+				, companyCode
+				, dbo.getCompanyName(companyCode) as companyName
+				, plantCode
+				, dbo.getPlantName(companyCode,plantCode) as plantName
+				, manufacturingNo
+				, manufacturingName
+				, licensingNo
+				, versionNo
+				, MAX(versionNo) OVER (PARTITION BY manufacturingNo, licensingNo) as maxVersionNo
+			FROM manufacturingNo
+			WHERE 1 = 1
+				<if test="searchCompany != null and searchCompany != '' ">
+				AND companyCode = #{searchCompany}
+				</if>
+				<if test="searchPlant != null and searchPlant != '' ">
+				AND plantCode = #{searchPlant}
+				</if>
+				<if test="searchLicensingNo != null and searchLicensingNo != '' ">
+				AND licensingNo = #{searchLicensingNo}
+				</if>
+				<if test="searchManufacturingName != null and searchManufacturingName != '' ">
+				AND REPLACE(manufacturingName,' ','') like '%'+REPLACE(#{searchManufacturingName},' ','')+'%'
+				</if>
+				<if test="searchManufacturingNo != null and searchManufacturingNo != '' ">
+				AND manufacturingNo = #{searchManufacturingNo}
+				</if>
+			) AS A
+		WHERE A.versionNo = A.maxVersionNo
+	</select>
+	
+	<select id="selectManufacturingNoList" resultType="map" parameterType="map">
+	/*manufacturingNo.selectManufacturingNoList*/
+		SELECT
+			B.seq
+			,B.manufacturingNo
+			,A.dNo			
+			,B.companyCode
+			,dbo.getCompanyName(B.companyCode) AS companyName
+			,B.plantCode
+			,dbo.getPlantName2(B.companyCode,B.plantCode) AS plantName
+			,B.manufacturingName
+			,B.licensingNo
+			,B.status
+			, MAX(B.versionNo) OVER (PARTITION BY B.manufacturingNo, A.dNo) AS manufacturingMaxVersionNo
+			, ROW_NUMBER() OVER (PARTITION BY B.manufacturingNo, A.dNo ORDER BY B.versionNo DESC) AS rowNumber
+			,B.versionNo
+			, A.state
+			, CASE 
+				WHEN B.status = 'N' THEN '번호생성'
+				WHEN B.status = 'P' THEN '진행중'
+				WHEN B.status = 'C' THEN '완료'
+				WHEN B.status = 'D' THEN '삭제'
+				WHEN B.status = 'AS' THEN '중단요청'
+				WHEN B.status = 'RS' THEN '중단요청승인'
+				WHEN B.status = 'S' THEN '중단'
+				WHEN B.status = 'RC' THEN '변경요청'
+				WHEN B.status = 'RE' THEN '신고중'
+			 END AS statusName
+			,CONVERT(CHAR(10), B.reportEDate, 23) as reportEDate
+			,A.regUserId
+			,dbo.getUserName(A.regUserId) as userName
+			,CONVERT(CHAR(10), A.regDate, 23) as regDate
+			, ( select fmNo FROM fileManager WHERE tbKey = C.seq AND tbType = 'manufacturingReport') AS manufacturingReport
+			, ( select orgFileName FROM fileManager WHERE tbKey = C.seq AND tbType = 'manufacturingReport') AS manufacturingReportFileName
+			, ( select fmNo FROM fileManager WHERE tbKey = C.seq AND tbType = 'sellDateReport') AS sellDateReport	
+			, ( select orgFileName FROM fileManager WHERE tbKey = C.seq AND tbType = 'sellDateReport') AS sellDateReportFileName
+		FROM (
+			SELECT 
+				map.mNoSeq
+				,map.dNo
+				,map.regUserId
+				,map.regDate
+				, doc.state
+			FROM 
+				manufacturingProcessDoc doc, 
+				manufacturingNoMapping map
+			WHERE 1 = 1
+				AND doc.docNo = #{docNo} 
+				AND doc.docVersion = #{docVersion}
+				AND doc.dNo = map.dNo)A,
+			manufacturingNo B, 
+			(SELECT * FROM (
+				SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+				)AA WHERE AA.Row = 1
+			)C
+		WHERE 
+			1 = 1
+			AND A.mNoseq = B.seq
+			AND A.mNoseq = C.no_seq
+		ORDER BY
+			A.dNo DESC, B.versionNo DESC
+	</select>
+	
+	<!-- 공통 조건 -->
+	<sql id="whereString">
+		<if test="searchCompany != null and searchCompany != '' ">
+		AND mNo.companyCode = #{searchCompany}
+		</if>
+		<if test="searchPlant != null and searchPlant != '' ">
+		AND mNo.plantCode = #{searchPlant}
+		</if>
+		<if test="searchManufacturingNo != null and searchManufacturingNo != '' ">
+		AND mNo.manufacturingNo = #{searchManufacturingNo}
+		</if>
+		<if test="searchManufacturingName != null and searchManufacturingName != '' ">
+		AND REPLACE(mNo.manufacturingName,' ','') like '%'+REPLACE(#{searchManufacturingName},' ','')+'%'
+		</if>
+		<if test="searchSterilization != null and searchSterilization != '' ">
+		AND mNoD.sterilization = #{searchSterilization}
+		</if>
+		<if test="searchKeepCondition != null and searchKeepCondition != '' ">
+		AND mNoD.keepCondition = #{searchKeepCondition}
+		</if>
+		<if test="searchKeepConditionText != null and searchKeepConditionText != '' ">
+		AND mNoD.keepConditionText = #{searchKeepConditionText}
+		</if>
+		<if test="searchSellDate1 != null and searchSellDate1 != '' ">
+		AND mNoD.sellDate1 = #{searchSellDate1}
+		</if>
+		<if test="searchSellDate2 != null and searchSellDate2 != '' ">
+		AND mNoD.sellDate2 = #{searchSellDate2}
+		</if>
+		<if test="searchSellDate3 != null and searchSellDate3 != '' ">
+		AND mNoD.sellDate3 = #{searchSellDate3}
+		</if>
+		<if test="searchProductType1 != null and searchProductType1 != '' ">
+		AND mNoD.productType1 = #{searchProductType1}
+		</if>
+		<if test="searchProductType2 != null and searchProductType2 != '' ">
+		AND mNoD.productType2 = #{searchProductType2}
+		</if>
+		<if test="searchProductType3 != null and searchProductType3 != '' ">
+		AND mNoD.productType3 = #{searchProductType3}
+		</if>
+		<choose>
+			<when test="searchStatus != null and !searchStatus.isEmpty()">
+				AND mNo.status IN
+				<foreach collection="searchStatus" item="status" open="(" close=")" separator=",">
+	            	#{status}
+	        	</foreach>
+        	</when>
+     	</choose>		
+	</sql>
+	<select id="manufacturingNoCount" parameterType="map" resultType="int">
+		/** manufacturingNo.manufacturingNoCount */
+		SELECT 
+			count(mNo.seq)			
+		FROM manufacturingNo mNo, 
+			(
+				(SELECT * FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+					)AA WHERE AA.Row = 1
+				)
+			) mNoD
+		WHERE 1 = 1 
+			AND mNo.seq = mNoD.no_seq
+			<include refid="manufacturingNo.whereString" />
+	</select>
+	<select id="manufacturingNoList" parameterType="map" resultType="map">
+	/** manufacturingNo.manufacturingNoList */
+	SELECT *
+	 FROM (
+		SELECT 
+			row_number() over (order by mNo.seq desc) as rnum
+			, mNo.seq
+			, mNo.companyCode
+			, dbo.getCompanyName(mNo.companyCode) AS companyName
+			, mNo.plantCode
+			, dbo.getPlantName(mNo.companyCode,mNo.plantCode) AS plnatName
+			, mNo.manufacturingNo
+			, mNo.manufacturingName
+			, mNo.licensingNo
+			, mNo.status
+			, mNo.versionNo
+			, CASE 
+				WHEN mNo.status = 'N' THEN '번호생성'
+				WHEN mNo.status = 'P' THEN '진행중'
+				WHEN mNo.status = 'C' THEN '완료'
+				WHEN mNo.status = 'D' THEN '삭제'
+				WHEN mNo.status = 'AS' THEN '중단요청'
+				WHEN mNo.status = 'RS' THEN '중단요청승인'
+				WHEN mNo.status = 'S' THEN '중단'
+				WHEN mNo.status = 'RC' THEN '변경요청'
+				WHEN mNo.status = 'RE' THEN '신고중'
+				END AS statusName			
+			, mNoD.keepCondition
+			, dbo.getCodeName('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
+			, mNoD.keepConditionText
+			, mNoD.sellDate1
+			, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
+				WHEN mNoD.sellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN mNoD.sellDate1 = 'B' THEN '할란 후' END AS sellDate1Text
+			, mNoD.sellDate2
+			, mNoD.sellDate3
+			,CASE WHEN mNoD.sellDate3 = 'Y' THEN '년'
+				WHEN mNoD.sellDate3 = 'M' THEN '개월'
+				WHEN mNoD.sellDate3 = 'D' THEN '일'
+				WHEN mNoD.sellDate3 = 'H' THEN '시간' END AS sellDate3Text
+			, mNoD.sellDate4
+			, CASE WHEN mNoD.sellDate4 = 'D' THEN '제조일로부터'
+				WHEN mNoD.sellDate4 = 'H' THEN '제조시간으로부터'
+				WHEN mNoD.sellDate4 = 'B' THEN '할란 후' END AS sellDate4Text
+			, mNoD.sellDate5
+			, mNoD.sellDate6
+			,CASE WHEN mNoD.sellDate6 = 'Y' THEN '년' 
+				WHEN mNoD.sellDate6 = 'M' THEN '개월'
+				WHEN mNoD.sellDate6 = 'D' THEN '일'
+				WHEN mNoD.sellDate6 = 'H' THEN '시간' END AS sellDate6Text	
+			, mNoD.productType1
+			, dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, mNoD.productType2
+			, dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, mNoD.productType3
+			, dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, mNoD.sterilization
+			, dbo.getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
+			, (SELECT STUFF((SELECT ',' + dbo.getCodeName('PACKAGE_UNIT',packageUnit)
+							FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq
+		                 FOR XML PATH('')
+			   ), 1, 1, '') AS packageUnitNames
+				FROM manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq
+			GROUP BY a.dNoSeq) AS packageUnitNames
+			, mNoD.packageEtc
+			, dbo.getUserName(mNoD.regUserId) as userName
+			, CONVERT(CHAR(10), mNoD.regDate, 23) as regDate
+			FROM manufacturingNo mNo, 
+				(
+					(SELECT * FROM (
+						SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+						)AA WHERE AA.Row = 1
+					)
+				) mNoD
+			WHERE 1 = 1 
+				AND mNo.seq = mNoD.no_seq
+				<include refid="manufacturingNo.whereString" />
+		) tmp WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	<select id="selectDevDocInfo" parameterType="map" resultType="map">
+	/** manufacturingNo.selectDevDocInfo */
+		SELECT dDoc.productName 
+		FROM devDoc dDoc, manufacturingProcessDoc mDoc
+		WHERE 1 = 1
+			AND mDoc.dNo = #{dNo}
+			AND mDoc.docNo = dDoc.docNo
+			AND mDoc.docVersion = dDoc.docVersion
+	</select>
+	<select id="manufacturingNo" parameterType="map" resultType="map">
+	/** manufacturingNo.manufacturingNo */
+		SELECT TOP(1) 
+			mNo.seq
+			, mNoD.seq AS dNoSeq
+			, mNo.companyCode
+			, dbo.getCompanyName(mNo.companyCode) AS companyName
+			, mNo.plantCode
+			, dbo.getPlantName2(mNo.companyCode, mNo.plantCode) AS plantName
+			, mNo.manufacturingNo
+			, mNo.manufacturingName
+			, mNo.licensingNo
+			, mNo.status
+			, mNo.prevStatus
+			, mNo.versionNo
+			, (SELECT TOP(1) MAX(versionNo) OVER (PARTITION BY manufacturingNo, licensingNo)
+				FROM manufacturingNo
+				WHERE
+				<choose>
+					<when test="licensingNo != null and licensingNo != ''">
+						licensingNo = #{licensingNo}
+						AND manufacturingNo = #{manufacturingNo}
+					</when>
+					<otherwise>
+						licensingNo = (SELECT licensingNo FROM manufacturingNo WHERE seq = #{seq})
+						AND manufacturingNo = (SELECT manufacturingNo FROM manufacturingNo WHERE seq = #{seq})
+					</otherwise>
+				</choose>
+				) AS maxVersionNo
+			, mNoD.regUserId
+			, mNoM.dNo
+			, CASE 
+				WHEN mNo.status = 'N' THEN '번호생성'
+				WHEN mNo.status = 'P' THEN '진행중'
+				WHEN mNo.status = 'C' THEN '완료'
+				WHEN mNo.status = 'D' THEN '삭제'
+				WHEN mNo.status = 'AS' THEN '중단요청'
+				WHEN mNo.status = 'RS' THEN '중단요청승인'
+				WHEN mNo.status = 'S' THEN '중단'
+				WHEN mNo.status = 'RC' THEN '변경요청'
+				WHEN mNo.status = 'RE' THEN '신고중'
+				END AS statusName		
+			, mNoD.productType1
+			, dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, mNoD.productType2
+			, dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, mNoD.productType3
+			, dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, mNoD.sellDate1
+			, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
+				WHEN mNoD.sellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN mNoD.sellDate1 = 'B' THEN '할란 후' END AS sellDate1Text
+			, mNoD.sellDate2
+			, mNoD.sellDate3
+			, CASE WHEN mNoD.sellDate3 = 'Y' THEN '년'
+				WHEN mNoD.sellDate3 = 'M' THEN '개월'
+				WHEN mNoD.sellDate3 = 'D' THEN '일'
+				WHEN mNoD.sellDate3 = 'H' THEN '시간' END AS sellDate3Text
+			, mNoD.sellDate4
+			, CASE WHEN mNoD.sellDate4 = 'D' THEN '제조일로부터'
+				WHEN mNoD.sellDate4 = 'H' THEN '제조시간으로부터'
+				WHEN mNoD.sellDate4 = 'B' THEN '할란 후' END AS sellDate4Text
+			, mNoD.sellDate5
+			, mNoD.sellDate6
+			, CASE WHEN mNoD.sellDate6 = 'Y' THEN '년' 
+				WHEN mNoD.sellDate6 = 'M' THEN '개월'
+				WHEN mNoD.sellDate6 = 'D' THEN '일'
+				WHEN mNoD.sellDate6 = 'H' THEN '시간' END AS sellDate6Text
+		    , mNoD.keepCondition
+			, dbo.getCodeName('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
+			, mNoD.keepConditionText
+			, mNoD.sterilization
+			, mNoD.comment
+			, mNoD.qnsChange
+			, dbo.getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
+			, (SELECT STUFF((SELECT ',' + dbo.getCodeName('PACKAGE_UNIT',packageUnit)
+						FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq
+			            FOR XML PATH('')
+							), 1, 1, '') AS packageUnitNames
+				FROM
+					manufacturingNoPackageUnit a
+				WHERE 
+					a.dNoSeq = mNoD.seq
+				GROUP BY
+					a.dNoSeq
+				) AS packageUnitNames
+			, (SELECT STUFF((SELECT ',' + packageUnit
+						FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq
+			            FOR XML PATH('')
+							), 1, 1, '') AS packageUnits
+				FROM
+					manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq
+				GROUP BY
+					a.dNoSeq
+				) AS packageUnits
+			, mNoD.createPlant
+			, mNoD.oem
+			, mNoD.oemText
+			, mNoD.packageEtc
+		FROM manufacturingNo mNo,
+			(
+				(SELECT * FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+					)AA WHERE AA.Row = 1 AND AA.no_seq = #{seq}
+				)
+			) mNoD,
+			manufacturingNoMapping mNoM
+		WHERE
+			1 = 1
+			AND mNo.seq = mNoM.mNoSeq
+		<choose>
+			<when test="licensingNo != null and licensingNo != ''">
+				AND licensingNo = #{licensingNo}
+				AND manufacturingNo = #{manufacturingNo}
+				AND mNo.versionNo = #{versionNo}
+			</when>
+			<otherwise>
+				AND mNo.seq = #{seq}
+			</otherwise>
+		</choose>
+	</select>
+	<select id="manufacturingDocData" parameterType="map" resultType="map">
+	/** manufacturingNo.manufacturingDocData */
+		SELECT A.*, B.regDate FROM 
+	(SELECT 
+		doc.docNo
+		, doc.docVersion
+		, doc.productCode
+		, doc.productName 
+		, pDoc.regUserId
+		, dbo.getUserName(pDoc.regUserId) AS userName
+		, pDoc.plantCode
+		, pDoc.stlal
+	FROM manufacturingNoMapping mNo
+		, manufacturingProcessDoc pDoc
+		, devDoc doc
+	WHERE 1 = 1
+		AND mNo.mNoSeq = #{seq}
+		AND mNo.dNo = pDoc.dNo
+		AND doc.docNo = pDoc.docNo 
+		AND doc.docVersion = pDoc.docVersion) AS A
+		LEFT OUTER JOIN (SELECT 		
+		MATNR, WERKS, STLAL, max(regDate) as regDate
+		FROM devDocBomHeader		
+		GROUP BY MATNR, WERKS, STLAL) AS B
+		ON A.productCode = B.MATNR AND A.plantCode = B.WERKS AND A.stlal = B.STLAL
+	</select>
+	<select id="manufacturingNoDataList" parameterType="map" resultType="map">
+	/** manufacturingNo.manufacturingNoDataList */
+		SELECT 
+			seq
+			,no_seq
+			,regUserId
+			,dbo.getUserName(regUserId) as userName
+			,CONVERT(CHAR(10), regDate, 23) as regDate
+			,CASE WHEN versionNo > 1 THEN '변경'
+				ELSE '신규'
+			 END AS regTypeName
+			, ( select fmNo FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingReport') AS manufacturingReport
+			, ( select orgFileName FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingReport') AS manufacturingReportFileName
+			, ( select fmNo FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'sellDateReport') AS sellDateReport	
+			, ( select orgFileName FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'sellDateReport') AS sellDateReportFileName
+			, ( select fmNo FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingVersionUpRawMaterial') AS rawMaterialReport
+			, ( select orgFileName FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingVersionUpRawMaterial') AS rawMaterialReportFileName
+			, ( select fmNo FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingVersionUpPackage') AS packageReport
+			, ( select orgFileName FROM fileManager WHERE tbKey = (100000+${seq}) AND tbType = 'manufacturingVersionUpPackage') AS packageReportFileName
+		FROM manufacturingNoData 
+		WHERE 1 = 1
+			AND no_seq = #{seq}
+	</select>
+	
+	<select id="selectManufacturingNoData" parameterType="map" resultType="map">
+	/*manufacturingNo.selectManufacturingNoData*/
+	SELECT 
+		mNo.companyCode
+		, dbo.getCompanyName(mNo.companyCode) AS companyName
+		, mNo.plantCode
+		, dbo.getPlantName2(mNo.companyCode, mNo.plantCode) AS plantName
+		, mNo.manufacturingNo
+		, mNo.manufacturingName
+		, mNo.licensingNo
+		, mNo.status
+		, CASE 
+			WHEN mNo.status = 'N' THEN '번호생성'
+			WHEN mNo.status = 'P' THEN '진행중'
+			WHEN mNo.status = 'C' THEN '완료'
+			WHEN mNo.status = 'D' THEN '삭제'
+			WHEN mNo.status = 'AS' THEN '중단요청'
+			WHEN mNo.status = 'RS' THEN '중단요청승인'
+			WHEN mNo.status = 'S' THEN '중단'
+			WHEN mNo.status = 'RC' THEN '변경요청'
+			WHEN mNo.status = 'RE' THEN '신고중'
+			END AS statusName	
+		, mNoD.seq
+		,mNoD.no_seq
+		,mNoD.productType1
+		,dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+		,mNoD.productType2
+		,dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+		,mNoD.productType3
+		,dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+		,mNoD.sterilization
+		,dbo.getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
+		,mNoD.keepCondition
+		<!-- 
+		,CASE WHEN mNoD.keepCondition = 4 THEN keepConditionText
+			ELSE dbo.getCodeName('KEEPCONDITION2',mNoD.keepCondition)  END AS keepConditionName
+		 -->
+		, dbo.getCodeName('KEEPCONDITION2',mNoD.keepCondition)  AS keepConditionName	
+		,keepConditionText
+		,mNoD.sellDate1
+		,CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
+			WHEN mNoD.sellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN mNoD.sellDate1 = 'B' THEN '할란 후' END AS sellDate1Text
+		,mNoD.sellDate2
+		,mNoD.sellDate3
+		,CASE WHEN mNoD.sellDate3 = 'Y' THEN '년'
+			WHEN mNoD.sellDate3 = 'M' THEN '개월'
+			WHEN mNoD.sellDate3 = 'D' THEN '일'
+			WHEN mNoD.sellDate3 = 'H' THEN '시간' END AS sellDate3Text
+		,mNoD.sellDate4
+		,CASE WHEN mNoD.sellDate4 = 'D' THEN '제조일로부터'
+			WHEN mNoD.sellDate4 = 'H' THEN '제조시간으로부터'
+			WHEN mNoD.sellDate4 = 'B' THEN '할란 후' END AS sellDate4Text
+		,mNoD.sellDate5
+		,mNoD.sellDate6
+		,CASE WHEN mNoD.sellDate6 = 'Y' THEN '년'  
+			WHEN mNoD.sellDate6 = 'M' THEN '개월'
+			WHEN mNoD.sellDate6 = 'D' THEN '일'
+			WHEN mNoD.sellDate6 = 'H' THEN '시간' END AS sellDate6Text	
+		,mNoD.referral
+		,mNoD.oem
+		,mNoD.oemText
+		,mNoD.createPlant
+		,mNoD.comment
+		,mNoD.packageUnit
+	    ,dbo.getCodeName('PACKAGE_UNIT',mNoD.packageUnit) as packageUnitName
+		,mNoD.packageEtc
+		,mNoD.regUserId
+		,dbo.getUserName(mNoD.regUserId) as userName
+		,CONVERT(CHAR(10), mNoD.regDate, 23) as regDate
+		, ( select fmNo FROM fileManager WHERE tbKey = mNoD.seq AND tbType = 'manufacturingReport') AS manufacturingReport
+		, ( select orgFileName FROM fileManager WHERE tbKey = mNoD.seq AND tbType = 'manufacturingReport') AS manufacturingReportFileName
+		, ( select fmNo FROM fileManager WHERE tbKey = mNoD.seq AND tbType = 'sellDateReport') AS sellDateReport	
+		, ( select orgFileName FROM fileManager WHERE tbKey = mNoD.seq AND tbType = 'sellDateReport') AS sellDateReportFileName
+		, mNo.companyCode
+	FROM manufacturingNoData mNoD,
+	manufacturingNo mNo
+	WHERE 1 = 1
+		ANd mNoD.seq = #{seq}
+		ANd mNoD.no_seq = mNo.seq
+    </select>
+    
+    <select id="selectManufacturingNoData2" parameterType="map" resultType="map">
+	/*manufacturingNo.selectManufacturingNoData2*/
+	SELECT 
+		mNo.seq
+		, mNo.companyCode
+		, dbo.getCompanyName(mNo.companyCode) as companyName
+		, mNo.plantCode
+		, dbo.getPlantName(mNo.companyCode,mNo.plantCode) as plantName
+		, mNo.manufacturingNo
+		, mNo.manufacturingName
+		, mNo.licensingNo  
+		,mNoData.seq AS dNoSeq
+		,mNoData.no_seq
+	    ,mNoData.productType1
+	    ,dbo.getCodeName('PRODCAT1',mNoData.productType1) as productType1Name
+	    ,mNoData.productType2
+	    ,dbo.getCodeName('PRODCAT2',mNoData.productType2) as productType2Name
+	    ,mNoData.productType3
+	    ,dbo.getCodeName('PRODCAT3',mNoData.productType3) as productType3Name
+	    ,mNoData.sterilization
+		,dbo.getCodeName('STERILIZATION2',mNoData.sterilization) as sterilizationName
+		,mNoData.keepCondition
+		<!--  
+		,CASE WHEN mNoData.keepCondition = 4 THEN mNoData.keepConditionText
+			ELSE dbo.getCodeName('KEEPCONDITION2',mNoData.keepCondition)  END AS keepConditionName
+		-->	
+		,dbo.getCodeName('KEEPCONDITION2',mNoData.keepCondition)  AS keepConditionName
+		,mNoData.keepConditionText
+		,mNoData.sellDate1
+		,CASE WHEN mNoData.sellDate1 = 'D' THEN '제조일로부터'
+			WHEN mNoData.sellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN mNoData.sellDate1 = 'B' THEN '할란 후' END AS sellDate1Text
+		,mNoData.sellDate2
+		,mNoData.sellDate3
+		,CASE WHEN mNoData.sellDate3 = 'Y' THEN '년'
+			WHEN mNoData.sellDate3 = 'M' THEN '개월'
+			WHEN mNoData.sellDate3 = 'D' THEN '일'
+			WHEN mNoData.sellDate3 = 'H' THEN '시간' END AS sellDate3Text
+		,mNoData.sellDate4
+		,CASE WHEN mNoData.sellDate4 = 'D' THEN '제조일로부터' 
+			WHEN mNoData.sellDate4 = 'H' THEN '제조시간으로부터'  
+			WHEN mNoData.sellDate4 = 'B' THEN '할란 후' END AS sellDate4Text
+		,mNoData.sellDate5
+		,mNoData.sellDate6
+		,CASE WHEN mNoData.sellDate6 = 'Y' THEN '년'
+			WHEN mNoData.sellDate6 = 'M' THEN '개월'
+			WHEN mNoData.sellDate6 = 'D' THEN '일'
+			WHEN mNoData.sellDate6 = 'H' THEN '시간' END AS sellDate6Text	
+	    ,mNoData.referral
+	    ,mNoData.oem
+	    ,mNoData.oemText
+	    ,mNoData.createPlant
+	    ,mNoData.comment
+	    ,mNoData.packageUnit
+	    ,dbo.getCodeName('PACKAGE_UNIT',mNoData.packageUnit) as packageUnitName
+		,mNoData.packageEtc
+	    ,mNoData.regUserId
+	    ,dbo.getUserName(mNoData.regUserId) as userName
+	    ,CONVERT(CHAR(10), mNoData.regDate, 23) as regDate
+	FROM 
+		manufacturingNo mNo,
+		manufacturingNoData mNoData, 
+		(SELECT no_seq, max(versionNo) as versionNo FROM manufacturingNoData
+			GROUP BY no_seq, versionNo
+			HAVING versionNo = max(versionNo))mNoVersion	
+	WHERE 1 = 1
+		AND mNo.seq = #{seq}
+		AND mNoData.no_seq = mNo.seq
+		AND mNoData.no_seq = mNoVersion.no_seq
+		AND mNoData.versionNo = mNoVersion.versionNo
+    </select>
+    
+	<update id="updateManufacturingNoStatus" parameterType="map">
+    /*manufacturingNo.updateManufacturingNoStatus*/
+    UPDATE 
+    	manufacturingNo 
+    SET 
+    	status = #{status}
+    	<if test="prevStatus != null and prevStatus != '' ">
+    	, prevStatus = #{prevStatus}    		
+    	</if>
+    	<if test='isStopReq != null and isStopReq == "Y" '>
+    	, stopReqDate = GETDATE()    		
+    	</if>
+    	<if test='isStop != null and isStop == "Y" '>
+    	, stopDate = GETDATE()    		
+    	</if>
+    WHERE seq = #{no_seq}
+    </update>
+	<update id="updateManufacturingNoStatusByAppr" parameterType="map">
+		/*manufacturingNo.updateManufacturingNoStatusByAppReject*/
+		UPDATE
+			manufacturingNo
+		SET
+			status = #{status}
+		<if test="prevStatus != null and prevStatus != '' ">
+			, prevStatus = #{prevStatus}
+		</if>
+		<if test="stopReqDate == 'NOW'">
+			, stopReqDate = GETDATE()
+		</if>
+		<if test="stopReqDate == 'NULL'">
+			, stopReqDate = NULL
+		</if>
+	WHERE seq = #{no_seq}
+	</update>
+    <select id="selectManufacturingNoFile" parameterType="map" resultType="map">
+	/** manufacturingNo.selectManufacturingNoFile */
+	SELECT 
+		A.tbKey
+		, A.tbType
+		, A.fmNo
+		, A.orgFileName
+		, dbo.getUserName(A.regUserId) userName
+		, CONVERT(CHAR(19), A.regDate, 120) as regDate
+	 FROM 
+		fileManager A,  
+		(SELECT max(seq) AS seq FROM manufacturingNoData 
+			WHERE no_seq in (
+				SELECT 
+					distinct map.mNoSeq
+				FROM 
+					manufacturingProcessDoc doc, 
+					manufacturingNoMapping map
+				WHERE 1 = 1
+					AND doc.docNo = #{docNo}
+					AND doc.docVersion = #{docVersion}
+					AND doc.dNo = map.dNo
+			)
+		GROUP BY no_seq)B
+	WHERE tbKey = B.seq AND A.tbType = 'manufacturingReport'
+	</select>
+	<select id="selectCreatePlant" parameterType="map" resultType="map">
+	/** manufacturingNo.selectCreatePlant */
+		SELECT plantCode, plantName
+		FROM plant
+		WHERE 1 = 1
+		AND plantCode IN
+			<foreach collection="createPlant" item="plant" open="(" close=")" separator=",">
+	           	#{plant}
+	       	</foreach>
+	</select>
+	
+	<select id="selectPackageUnit" parameterType="map" resultType="map">
+	/** manufacturingNo.selectPackageUnit */
+		SELECT 
+			packageUnit
+			, dbo.getCodeName('PACKAGE_UNIT',packageUnit) as packageUnitName
+		FROM manufacturingNoPackageUnit
+               WHERE dNoSeq = #{dNoSeq}
+	</select>
+	
+	<select id="selectLaunchDate" parameterType="map" resultType="String">
+	/** manufacturingNo.selectLaunchDate */
+		SELECT 
+			convert(varchar(10), max(doc.launchDate), 120)  AS launchDate
+		FROM manufacturingNoMapping mNoM,
+		manufacturingProcessDoc mDoc,
+		devDoc doc
+		WHERE 1 = 1
+		AND mNoM.mNoseq = #{seq}
+		AND mNoM.dNo = mDoc.dNo
+		AND mDoc.docNo = doc.docNo
+		AND mDoc.docVersion = doc.docVersion
+		AND doc.isLatest = 1
+		AND doc.isClose != 1
+	</select>
+	<select id="manufacturingDocList" parameterType="map" resultType="map">
+	/** manufacturingNo.manufacturingDocList */
+	SELECT A.*, B.regDate FROM 
+		(SELECT 
+		doc.docNo
+		, pDoc.dNo
+		, doc.docVersion
+		, (SELECT max(docVersion) from devDoc where docNo = doc.docNo group by docNo) as devDocLastestVersion
+		, MAX(doc.docVersion) OVER (PARTITION BY doc.docNo) AS maxVersion
+		, ROW_NUMBER() OVER (PARTITION BY doc.docNo ORDER BY doc.docVersion DESC) AS rowNumber
+		, COUNT(*) OVER (PARTITION BY doc.docNo) AS versionCount
+		, doc.productCode
+		, doc.productName 
+		, doc.regUserId
+		, dbo.getUserName(doc.regUserId) AS userName
+		, pDoc.plantCode
+		, pDoc.stlal
+		, pDoc.state
+		, userTb.deptCode
+		, userTb.userGrade
+		, userTb.teamCode
+		, mNo.versionNo
+		, mNo.status
+		, pDoc.qns
+		, pDoc.isQnsReviewTarget
+	FROM manufacturingNoMapping mNoMapping
+		, manufacturingProcessDoc pDoc
+		, devDoc doc
+		, userTable2 userTb
+		, manufacturingNo mNo
+	WHERE 1 = 1
+		AND mNoMapping.mNoSeq = #{seq}
+		AND mNoMapping.dNo = pDoc.dNo
+		AND mNoMapping.mNoSeq = mNo.seq
+		AND doc.docNo = pDoc.docNo
+		AND doc.docVersion = pDoc.docVersion
+		AND doc.regUserId = userTb.userId
+		AND userTb.teamCode like 
+			(
+				SELECT CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN '%%'
+							WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN '%%'
+							WHEN isAdmin = 'Y' THEN '%%'
+							ELSE teamCode
+						END FROM userTable2 WHERE userId = #{loginUserId} )
+		<if test="versionNo != null and versionNo != '' ">
+		AND mNo.versionNo = #{versionNo}
+		</if>
+		) AS A
+		/*1) 권한이 3, 6, 20이 아니거나 2)팀코드가 6, 8, 10이 아니거나 3)관리자가 아닐 때 로그인 유저가 속한 팀의 제조공정서만 보이도록*/
+		LEFT OUTER JOIN (SELECT 		
+		MATNR, WERKS, STLAL, max(regDate) as regDate
+		FROM devDocBomHeader		
+		GROUP BY MATNR, WERKS, STLAL) AS B
+		ON A.productCode = B.MATNR AND A.plantCode = B.WERKS AND A.stlal = B.STLAL
+		ORDER BY A.docNo ASC, A.docVersion DESC
+	</select>
+	<select id="selectManufacturingStatusCount" resultType="map">
+	/** manufacturingNo.selectManufacturingStatusCount */
+		SELECT
+			mNo.status
+			 , count(mNo.status) AS CNT
+		FROM
+			manufacturingNo mNo,
+			manufacturingNoData mNoD
+		WHERE mNo.seq = mNoD.no_seq
+		GROUP BY status
+	</select>
+	
+	<select id="manufacturingNoStatusTotalCount" parameterType="map" resultType="int">
+	/** manufacturingNo.manufacturingNoStatusTotalCount */	
+		SELECT 
+			count(mNo.seq)			
+		FROM 
+			manufacturingNo mNo,
+			(
+				(SELECT * FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+					)AA WHERE AA.Row = 1
+				)
+			) mNoD
+		WHERE 1 = 1
+			AND mNo.status = #{status}
+			AND mNo.seq = mNoD.no_seq
+	</select>
+	
+	<select id="selectManufacturingNoStatusList" parameterType="map" resultType="map">
+	/** manufacturingNo.selectManufacturingNoStatusList */	
+		SELECT *
+		FROM (
+			 SELECT 
+			row_number() over (order by mNo.seq desc) as rnum	
+			, mNo.seq
+			, mNo.companyCode
+			, dbo.getCompanyName(mNo.companyCode) AS companyName
+			, mNo.plantCode
+			, dbo.getPlantName(mNo.companyCode,mNo.plantCode) AS plnatName
+			, mNo.manufacturingNo
+			, mNo.manufacturingName
+			, mNo.licensingNo
+			, mNo.status
+			, mNo.versionNo
+			, CASE 
+				WHEN mNo.status = 'N' THEN '번호생성'
+				WHEN mNo.status = 'P' THEN '진행중'
+				WHEN mNo.status = 'C' THEN '완료'
+				WHEN mNo.status = 'D' THEN '삭제'
+				WHEN mNo.status = 'AS' THEN '중단요청'
+				WHEN mNo.status = 'RS' THEN '중단요청승인'
+				WHEN mNo.status = 'S' THEN '중단'
+				WHEN mNo.status = 'RC' THEN '변경요청'
+				WHEN mNo.status = 'RE' THEN '신고중'
+				END AS statusName
+			, CASE 
+				WHEN mNo.prevStatus = 'P' THEN '생성'
+				WHEN mNo.prevStatus = 'RC' THEN '변경'				
+				END AS prevStatusName	
+			, CONVERT(CHAR(10), mNo.regDate, 23) as regDate
+			, CONVERT(CHAR(10), mNo.stopReqDate, 23) as stopReqDate
+			, CONVERT(CHAR(10), mNo.stopDate, 23) as stopDate
+			, mNoD.productType1
+			, dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, mNoD.productType2
+			, dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, mNoD.productType3
+			, dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, convert(varchar(10), mNo.reportSDate, 120)  AS reportSDate
+			, convert(varchar(10), mNo.reportEDate, 120)  AS reportEDate
+			, convert(varchar(10), mNo.versionUpReqDate, 120)  AS versionUpReqDate
+			, (SELECT 
+					convert(varchar(10), max(doc.launchDate), 120)  AS launchDate
+				FROM manufacturingNoMapping mNoM,
+				manufacturingProcessDoc mDoc,
+				devDoc doc
+				WHERE 1 = 1
+				AND mNoM.mNoseq = mNo.seq
+				AND mNoM.dNo = mDoc.dNo
+				AND mDoc.docNo = doc.docNo
+				AND mDoc.docVersion = doc.docVersion
+				AND doc.isLatest = 1
+				AND doc.isClose != 1) AS launchDate
+			, mNoD.seq as mNoD_seq
+		FROM 
+			manufacturingNo mNo,
+			(
+				(SELECT * FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+					)AA WHERE AA.Row = 1
+				)
+			) mNoD
+		WHERE 1 = 1
+			AND mNo.status = #{status}
+			AND mNo.seq = mNoD.no_seq
+	) tmp WHERE rnum between #{startRow} and #{endRow} order by rnum asc
+	</select>
+	
+	<update id="updateReportDate" parameterType="map">
+    /*manufacturingNo.updateReportDate*/
+    	UPDATE 
+    		manufacturingNo 
+    	SET status = #{status}
+    		, prevStatus = #{prevStatus}
+    		<if test="reportSDate != null and reportSDate != '' ">
+    		, reportSDate = #{reportSDate}    		
+    		</if>
+    		<if test="reportEDate != null and reportEDate != '' ">
+    		, reportEDate = #{reportEDate}  
+    		</if>
+    	WHERE 1 = 1 
+    		AND seq = #{seq}
+    </update>
+    
+    <select id="selectMappingCountBySeq" parameterType="map" resultType="int">
+	/*manufacturingNo.selectMappingCountBySeq*/
+	SELECT 
+		count(dNo)
+  	FROM manufacturingNoMapping
+	WHERE 1 = 1
+		AND mNoSeq = #{seq}
+    </select>
+    
+    <select id="selectManufacturingNoDataByDocNo" parameterType="map" resultType="map">
+	/*manufacturingNo.selectManufacturingNoDataByDocNo*/
+	SELECT 
+		mNo.manufacturingNo
+		, mNo.manufacturingName
+		, mNo.licensingNo
+		, mNoD.productType1 
+		, dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name 
+		, mNoD.productType2 
+		, dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name 
+		, mNoD.productType3 , dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+		, mNoD.keepCondition 
+		, dbo.getCodeName('KEEPCONDITION2',mNoD.keepCondition) as keepConditionName 
+		, mNoD.keepConditionText
+		, mNoD.sellDate1 
+		, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터' 
+			WHEN mNoD.sellDate1 = 'H' THEN '제조시간으로부터'
+			WHEN mNoD.sellDate1 = 'B' THEN '할란 후' 
+			END AS sellDate1Text 
+		, mNoD.sellDate2 
+		, mNoD.sellDate3 
+		, CASE WHEN mNoD.sellDate3 = 'Y' THEN '년'
+			WHEN mNoD.sellDate3 = 'M' THEN '개월' 
+			WHEN mNoD.sellDate3 = 'D' THEN '일' 
+			WHEN mNoD.sellDate3 = 'H' THEN '시간' 
+			END AS sellDate3Text
+		, (SELECT STUFF((SELECT ',' + dbo.getCodeName('PACKAGE_UNIT',packageUnit) FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq FOR XML PATH('') ), 1, 1, '') AS packageUnitNames FROM manufacturingNoPackageUnit a WHERE a.dNoSeq = mNoD.seq GROUP BY a.dNoSeq) AS packageUnitNames
+		, mNoD.packageEtc	
+	FROM 
+		manufacturingNo mNo,
+		manufacturingNoData mNoD, (
+			SELECT no_seq, max(versionNo) as versionNo FROM manufacturingNoData 
+			where no_seq = (
+				SELECT TOP(1) seq FROM manufacturingNo, manufacturingNoMapping
+				WHERE manufacturingNo.seq = manufacturingNoMapping.mNoSeq
+					AND manufacturingNoMapping.dNo = #{tbKey} ORDER BY versionNo DESC
+				<!-- SELECT seq FROM manufacturingNo WHERE seq IN (
+					select mNoSeq from manufacturingNoMapping where dNo = #{tbKey}
+				)
+				AND versionNo = (
+					SELECT MAX(versionNo) FROM (
+						SELECT * FROM manufacturingNo WHERE seq IN (select mNoSeq from manufacturingNoMapping where dNo = #{tbKey})
+					)
+				) a	-->
+			) 
+			GROUP BY no_seq, versionNo HAVING versionNo = max(versionNo)) B
+	WHERE 1 = 1
+		AND mNo.seq = mNoD.no_seq
+		AND mNoD.no_seq = B.no_seq
+		AND mNoD.versionNo = B.versionNo
+    </select>
+	 
+	<update id="updateManufacturingNoData" parameterType="map">
+		UPDATE manufacturingNoData
+		SET
+			manufacturingName = #{manufacturingName}
+			<if test = "productType1 != null">
+				, productType1 = #{productType1}
+			</if>
+			<if test = "productType2 != null">
+				, productType2 = #{productType2}
+			</if>
+			<if test = "productType3 != null">
+				, productType3 = #{productType3}
+			</if>
+			<if test = "sterilization != null">
+				, sterilization = #{sterilization}
+			</if>
+			<if test = "keepCondition != null">
+				, keepCondition = #{keepCondition}
+			</if>
+			<if test = "keepConditionText != null">
+				, keepConditionText = #{keepConditionText}
+			</if>
+			<if test = "sellDate1 != null">
+				, sellDate1 = #{sellDate1}
+			</if>
+			<if test = "sellDate2 != null">
+				, sellDate2 = #{sellDate2}
+			</if>
+			<if test = "sellDate3 != null">
+				, sellDate3 = #{sellDate3}
+			</if>
+			<choose>
+				<when test="sellDate4 != null">
+					, sellDate4 = #{sellDate4}
+				</when>
+				<otherwise>
+					, sellDate4 = ''
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="sellDate5 != null">
+					, sellDate5 = #{sellDate5}
+				</when>
+				<otherwise>
+					, sellDate5 = ''
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="sellDate6 != null">
+					, sellDate6 = #{sellDate6}
+				</when>
+				<otherwise>
+					, sellDate6 = ''
+				</otherwise>
+			</choose>
+			<if test = "referral != null">
+				, referral = #{referral}
+			</if>
+			<if test = "oem != null">
+				, oem = #{oem}
+			</if>
+			<if test = "oemText != null">
+				, oemText = #{oemText}
+			</if>
+			<choose>
+				<when test = "createPlant != null">
+					, createPlant = 
+					<foreach collection="createPlant" item="plant" open="'" close="'" separator=",">${plant}</foreach> 
+				</when>
+				<otherwise>
+					, createPlant = ''
+				</otherwise>
+			</choose>
+			<choose>
+				<when test = "packageUnit != null">
+					, packageUnit = 
+					<foreach collection="packageUnit" item="package" open="'" close="'" separator=",">${package}</foreach> 
+				</when>
+				<otherwise>
+					, packageUnit = ''
+				</otherwise>
+			</choose>
+			<if test = "packageEtc != null">
+				, packageEtc = #{packageEtc}
+			</if>
+			<if test = "comment != null">
+				, comment = #{comment}
+			</if>
+		WHERE no_seq = ${seq} and seq = ${dNoSeq}
+	</update>
+	
+	<update id="updateManufacturingNo" parameterType = "map">
+		UPDATE manufacturingNo
+		SET manufacturingName = #{manufacturingName}
+		WHERE seq = ${seq} AND manufacturingNo = ${manufacturingNo} AND licensingNo = #{licensingNo}
+	</update>
+	
+	<delete id="deleteManufacturingNoPackageUnit" parameterType = "map">
+		DELETE FROM manufacturingNoPackageUnit
+		WHERE dNoSeq = ${dNoSeq}
+	</delete>
+	
+	<insert id="updateManufacturingNoPackageUnit" parameterType = "map">
+		INSERT INTO manufacturingNoPackageUnit(dNoSeq, packageUnit)
+		VALUES
+		<foreach collection="packageUnit" item="package" index="index"  separator=",">
+			(#{dNoSeq}, ${package})
+		</foreach>
+	</insert>
+	
+	<select id="selectDevDocRegUserId" parameterType = "map" resultType="String">
+	/** manufacturingNo.selectDevDocRegUserId */
+		SELECT distinct(devD.regUserId)
+		FROM devDoc devD, manufacturingProcessDoc mPD, manufacturingNoMapping mNM, userTable2 userTb
+		WHERE devD.docNo = mPD.docNo and devD.docVersion = mPD.docVersion AND mPD.dNo = mNM.dNo
+		AND devD.regUserId = userTb.userId AND mNM.mNoSeq = ${seq}
+	</select>
+	
+	<select id="checkIsAdmin" parameterType = "map" resultType="String">
+		SELECT isAdmin FROM userTable2 WHERE userid = #{loginUserId}
+	</select>
+	
+	<select id="selectManufacturingNoVersionList" resultType = "map" parameterType="map">
+	/** manufacturingNo.selectManufacturingNoVersionList */
+		SELECT
+			seq
+			, versionNo
+			, MAX(versionNo) OVER (PARTITION BY manufacturingNo) AS maxVersionNo
+		FROM manufacturingNo
+		WHERE licensingNo = #{licensingNo}
+			AND manufacturingNo = #{manufacturingNo}
+		ORDER BY versionNo DESC
+	</select>
+	
+	
+	<select id="selectVersionUpList" parameterType="map" resultType="map">
+	/** manufacturingNo.selectVersionUpList */
+	SELECT A.*, B.regDate FROM 
+		(SELECT 
+		doc.docNo
+		, pDoc.dNo
+		, doc.docVersion
+		, (SELECT max(docVersion) from devDoc where docNo = doc.docNo group by docNo) as devDocLastestVersion
+		, MAX(doc.docVersion) OVER (PARTITION BY doc.productCode) AS maxVersion
+		, doc.productCode
+		, doc.productName 
+		, doc.regUserId
+		, dbo.getUserName(doc.regUserId) AS userName
+		, pDoc.plantCode
+		, pDoc.stlal
+		, userTb.deptCode
+		, userTb.userGrade
+		, userTb.teamCode
+		, mNo.versionNo
+	FROM manufacturingNoMapping mNoMapping
+		, manufacturingProcessDoc pDoc
+		, devDoc doc
+		, userTable2 userTb
+		, manufacturingNo mNo
+	WHERE 1 = 1
+		AND mNoMapping.mNoSeq = #{seq}
+		AND mNoMapping.dNo = pDoc.dNo
+		AND mNoMapping.mNoSeq = mNo.seq
+		AND doc.docNo = pDoc.docNo
+		AND doc.docVersion = pDoc.docVersion
+		AND doc.docNo = #{docNo}
+		AND doc.regUserId = userTb.userId
+		AND userTb.teamCode like 
+			(
+				SELECT CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN '%%'
+							WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN '%%'
+							WHEN isAdmin = 'Y' THEN '%%'
+							ELSE teamCode
+						END FROM userTable2 WHERE userId = #{loginUserId} )
+		<if test="versionNo != null and versionNo != '' ">
+		AND mNo.versionNo = #{versionNo}
+		</if>
+		) AS A
+		/*1) 권한이 3, 6, 20이 아니거나 2)팀코드가 6, 8, 10이 아니거나 3)관리자가 아닐 때 로그인 유저가 속한 팀의 제조공정서만 보이도록*/
+		LEFT OUTER JOIN (SELECT 		
+		MATNR, WERKS, STLAL, max(regDate) as regDate
+		FROM devDocBomHeader		
+		GROUP BY MATNR, WERKS, STLAL) AS B
+		ON A.productCode = B.MATNR AND A.plantCode = B.WERKS AND A.stlal = B.STLAL
+		ORDER BY A.productCode ASC, A.docVersion DESC
+	</select>
+	
+	<insert id="insertVersionUpData"	parameterType="map" useGeneratedKeys="true" keyProperty="versionUpSeq">
+	/** manufacturingNo.insertVersionUpData */
+		INSERT INTO manufacturingNoData(
+			no_seq
+			, productType1
+			<if test="productType2 != null and productType2 !=''">
+			, productType2
+			</if>
+			<if test="productType3 != null and productType3 != ''">
+			, productType3
+			</if>
+			, sterilization
+			, keepCondition
+			<if test="keepConditionText != null and keepCodntionText != ''">
+			, keepConditionText
+			</if>
+			, sellDate1
+			, sellDate2
+			, sellDate3
+			<if test="sellDate4 != null and sellDate6 != ''">
+			, sellDate4
+			, sellDate5
+			, sellDate6
+			</if>
+			, referral
+			, oem
+			<if test="oemText != null and oemText != ''">
+			, oemText
+			</if>
+			<if test="createPlant != null and createPlant != ''">
+			, createPlant
+			</if>
+			<if test="comment != null and comment != ''">
+			, comment
+			</if>
+			, regUserId
+			, regDate
+			, regType
+			, manufacturingName
+			, versionNo
+			<if test="packageEtc != null and packageEtc !=''">
+			, packageEtc
+			</if>
+			<if test="qnsChange != null and qnsChange != ''">
+			, qnsChange
+			</if>
+		)values(
+			#{no_seq}
+	      	, #{productType1}
+			<if test="productType2 != null and productType2 !=''">
+	      	, #{productType2}
+	      	</if>
+			<if test="productType3 != null and productType3 != ''">
+	      	, #{productType3}
+	      	</if>
+	      	, #{sterilization}
+	      	, #{keepCondition}
+			<if test="keepConditionText != null and keepCodntionText != ''">
+	      	, #{keepConditionText}
+	      	</if>
+	      	, #{sellDate1}
+	      	, #{sellDate2}
+	      	, #{sellDate3}
+	      	<if test="sellDate4 != null and sellDate6 != ''">
+			, #{sellDate4}
+	      	, #{sellDate5}
+	      	, #{sellDate6}
+	      	</if>
+	      	, #{referral}
+	      	, #{oem}
+			<if test="oemText != null and oemText != ''">
+	      	, #{oemText}
+	      	</if>
+   			<if test="createPlant != null and createPlant != ''">
+      			, <foreach collection="createPlant" item="plant" index="index"  open="'" close="'" separator=",">${plant}</foreach>
+      		</if>
+	      	<if test="comment != null and comment != ''">
+	      	, #{comment}
+			</if>
+	      	, #{userId}
+	      	, GETDATE()
+	      	, #{regType}
+	      	, #{manufacturingName}
+	      	, #{versionNo}
+	      	<if test="packageEtc != null and packageEtc !=''">
+			, #{packageEtc}
+			</if>
+			<if test="qnsChange != null and qnsChange != ''">
+			, #{qnsChange}
+			</if>
+			)
+		<selectKey keyProperty="no_seq" order="AFTER" resultType="String">
+			SELECT seq, 100000+seq as no_seq, licensingNo, manufacturingNo, status, MAX(versionNo) OVER (PARTITION BY manufacturingNo) AS versionNo
+			FROM manufacturingNo
+			WHERE licensingNo = #{licensingNo} AND manufacturingNo = #{manufacturingNo} and seq = #{no_seq}
+			<choose>
+				<when test="versionNo != null and versionNo !=''">
+					AND versionNo = #{versionNo}
+				</when>
+				<otherwise>
+					AND versionNo = MAX(versionNo)
+				</otherwise>
+			</choose> 
+		</selectKey>
+	</insert>
+	
+	<insert id="insertVersionUpMapping" parameterType="map">
+		/*manufacturingNo.insertVersionUpMapping*/
+		INSERT INTO manufacturingNoMapping(
+			mNoSeq
+			, dNo
+			, regUserId
+			, regDate 
+		)
+		VALUES
+		<foreach collection="requestDocNoArray" item="dNo" index="index"  separator=",">
+			( #{mNo_seq}, #{dNo}, #{userId}, GETDATE())
+		</foreach>
+		<selectKey keyProperty="dNo" order="AFTER" resultType="int">
+			SELECT TOP(1) A.dNo
+			FROM manufacturingNoMapping A, manufacturingProcessDoc B
+			WHERE 
+				A.dNo = B.dNo
+				AND B.state != '6'
+				AND A.mNoSeq = #{mNo_seq}
+		</selectKey>
+	</insert>
+	
+	<select id="selectVersionUpReason" parameterType="map" resultType="map">
+		/*manufacturingNo.selectVersionUpReason*/
+		SELECT
+			TOP(1)
+			mNoV.seq
+			, mNoV.manufacturingNameChange
+			, mNoV.oldManufacturingName
+			, mNoV.newManufacturingName
+			, mNoV.keepConditionChange
+			, dbo.getCodeName('KEEPCONDITION2', oldKeepCondition) AS oldKeepCondition
+			, dbo.getCodeName('KEEPCONDITION2', newKeepCondition) AS newKeepCondition
+			, mNoV.oldKeepConditionText
+			, mNoV.newKeepConditionText
+			, sellDateChange
+			, CASE WHEN oldSellDate1 = 'D' THEN '제조일로부터'
+				WHEN oldSellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN oldSellDate1 = 'B' THEN '할란 후' END AS oldSellDate1
+			, oldSellDate2
+			, CASE WHEN oldSellDate3 = 'Y' THEN '년'
+				WHEN oldSellDate3 = 'M' THEN '개월'
+				WHEN oldSellDate3 = 'D' THEN '일'
+				WHEN oldSellDate3 = 'H' THEN '시간' END AS oldSellDate3
+				,CASE WHEN newSellDate1 = 'D' THEN '제조일로부터'
+				WHEN newSellDate1 = 'H' THEN '제조시간으로부터'
+				WHEN newSellDate1 = 'B' THEN '할란 후' END AS newSellDate1
+			, newSellDate2
+			, CASE WHEN newSellDate3 = 'Y' THEN '년'
+				WHEN newSellDate3 = 'M' THEN '개월'
+				WHEN newSellDate3 = 'D' THEN '일'
+				WHEN newSellDate3 = 'H' THEN '시간' END AS newSellDate3
+			, CASE WHEN oldSellDate4 = 'D' THEN '제조일로부터'
+				WHEN oldSellDate4 = 'H' THEN '제조시간으로부터'
+				WHEN oldSellDate4 = 'B' THEN '할란 후' END AS oldSellDate4
+			, oldSellDate5
+			, CASE WHEN oldSellDate6 = 'Y' THEN '년'
+				WHEN oldSellDate6 = 'M' THEN '개월'
+				WHEN oldSellDate6 = 'D' THEN '일'
+				WHEN oldSellDate6 = 'H' THEN '시간' END AS oldSellDate6
+			, CASE WHEN newSellDate4 = 'D' THEN '제조일로부터'
+				WHEN newSellDate4 = 'H' THEN '제조시간으로부터'
+				WHEN newSellDate4 = 'B' THEN '할란 후' END AS newSellDate4
+			, newSellDate5
+			, CASE WHEN oldSellDate6 = 'Y' THEN '년'
+				WHEN newSellDate6 = 'M' THEN '개월'
+				WHEN newSellDate6 = 'D' THEN '일'
+				WHEN newSellDate6 = 'H' THEN '시간' END AS newSellDate6
+			, mNoV.QNSChange
+			, mNoV.newQNS
+			, dbo.getCodeName('STERILIZATION2', oldSterilization) AS oldSterilization
+			, dbo.getCodeName('STERILIZATION2', newSterilization) AS newSterilization
+			, mNoV.etcChange
+			, mNoV.oldOEM
+			, mNoV.newOEM
+			, mNoV.oldOEMText
+			, mNoV.newOEMText
+			, mNoV.oldReferral
+			, mNoV.newReferral
+			, mNoV.oldCreatePlant
+			, mNoV.newCreatePlant
+			, mNoV.oldComment
+			, mNoV.newComment
+		FROM
+			manufacturingNoVersionUp AS mNoV
+			, manufacturingNoMapping AS mNoM
+			, manufacturingProcessDoc AS mPD
+		WHERE
+			mNoV.seq = mNoM.mNoSeq
+			AND mNoM.dNo = mPD.dNo
+			AND mNoV.seq = #{seq }
+			<!-- <if test="docNo != null and docNo !='' ">
+			AND mNoM.dNo = #{docNo }
+			</if> -->
+	</select>
+	
+	<insert id="insertVersionUpHistory" parameterType="map">
+		/*manufacturingNo.insertVersionUpHistory*/
+		WITH oldData AS
+			(
+				SELECT
+					A.seq
+					, A.manufacturingName
+					, B.keepCondition
+					, ISNULL(B.keepConditionText, '') as keepConditionText
+					, B.sellDate1
+					, B.sellDate2
+					, B.sellDate3
+					, ISNULL(B.sellDate4, '') as sellDate4
+					, ISNULL(B.sellDate5, '') as sellDate5
+					, ISNULL(B.sellDate6, '') as sellDate6
+					, B.oem
+					, ISNULL(B.oemText, '') AS oemText
+					, B.referral
+					, ISNULL(B.comment, '') AS comment
+					, B.createPlant
+					, B.sterilization
+				FROM
+					manufacturingNo A
+					, manufacturingNoData B
+					, manufacturingNoMapping C
+				WHERE
+					A.seq = B.no_seq
+					AND A.seq = C.mNoSeq
+					AND A.seq = #{preSeq }
+					AND C.dNo = #{dNo }
+			)
+		, newData AS
+			(
+				SELECT
+					A.seq
+					, A.manufacturingName
+					, B.keepCondition
+					, ISNULL(B.keepConditionText, '') as keepConditionText
+					, B.sellDate1
+					, B.sellDate2
+					, B.sellDate3
+					, ISNULL(B.sellDate4, '') as sellDate4
+					, ISNULL(B.sellDate5, '') as sellDate5
+					, ISNULL(B.sellDate6, '') as sellDate6
+					, B.oem
+					, ISNULL(B.oemText, '') AS oemText
+					, B.referral
+					, ISNULL(B.comment, '') AS comment
+					, B.createPlant
+					, B.sterilization
+				FROM
+					manufacturingNo A
+					, manufacturingNoData B
+					, manufacturingNoMapping C
+				WHERE
+					A.seq = B.no_seq
+					AND A.seq = C.mNoSeq
+					AND A.seq = #{seq }
+					AND C.dNo = #{dNo }
+			)
+			
+		INSERT INTO manufacturingNoVersionUp
+			(
+				seq
+				, preSeq
+				, manufacturingNameChange
+				, oldManufacturingName
+				, newManufacturingName
+				, keepConditionChange
+				, oldKeepCondition
+				, newKeepCondition
+				, oldKeepConditionText
+				, newKeepConditionText
+				, sellDateChange
+				, oldSellDate1
+				, newSellDate1
+				, oldSellDate2
+				, newSellDate2
+				, oldSellDate3
+				, newSellDate3
+				, oldSellDate4
+				, newSellDate4
+				, oldSellDate5
+				, newSellDate5
+				, oldSellDate6
+				, newSellDate6
+				, QNSChange
+				, etcChange
+				, OEMChange
+				, oldOEM
+				, newOEM
+				, oldOEMText
+				, newOEMText
+				, referralChange
+				, oldReferral
+				, newReferral
+				, oldComment
+				, newComment
+				, oldCreatePlant
+				, newCreatePlant
+				, oldSterilization
+				, newSterilization
+				, newQNS
+			)
+		VALUES
+			(
+				#{seq }
+				, #{preSeq }
+				, #{manufacturingNameChange }
+				, (SELECT manufacturingName FROM oldData)
+				, (SELECT manufacturingName FROM newData)
+				, #{keepConditionChange }
+				, (SELECT keepCondition FROM oldData)
+				, (SELECT keepCondition FROM newData)
+				, (SELECT keepConditionText FROM oldData)
+				, (SELECT keepConditionText FROM newData)
+				, #{sellDateChange }
+				, (SELECT sellDate1 FROM oldData)
+				, (SELECT sellDate1 FROM newData)
+				, (SELECT sellDate2 FROM oldData)
+				, (SELECT sellDate2 FROM newData)
+				, (SELECT sellDate3 FROM oldData)
+				, (SELECT sellDate3 FROM newData)
+				, (SELECT sellDate4 FROM oldData)
+				, (SELECT sellDate4 FROM newData)
+				, (SELECT sellDate5 FROM oldData)
+				, (SELECT sellDate5 FROM newData)
+				, (SELECT sellDate6 FROM oldData)
+				, (SELECT sellDate6 FROM newData)
+				, #{QNSChange }
+				, #{etcChange }
+				, (SELECT CASE WHEN (SELECT oem FROM oldData) = (SELECT oem FROM newData) THEN 'N'
+								ELSE 'Y'
+								END)
+				, (SELECT oem FROM oldData)
+				, (SELECT oem FROM newData)
+				, (SELECT oemText FROM oldData)
+				, (SELECT oemText FROM newData)
+				, (SELECT CASE WHEN (SELECT referral FROM oldData) = (SELECT referral FROM newData) THEN 'N'
+								WHEN (SELECT createPlant FROM oldData) = (SELECT createPlant FROM newData) THEN 'N'
+								ELSE 'Y'
+								END)
+				, (SELECT referral FROM oldData)
+				, (SELECT referral FROM newData)
+				, (SELECT comment FROM oldData)
+				, (SELECT comment FROM newData)
+				, (SELECT createPlant FROM oldData)
+				, (SELECT createPlant FROM newData)
+				, (SELECT sterilization FROM oldData)
+				, (SELECT sterilization FROM newData)
+				, #{newQNS}
+			)
+	</insert>
+	
+	<select id="getManufacturingNoMappingBymNoseq" resultType="map" parameterType="map">
+		select * from manufacturingNoMapping where mNoseq = #{no_seq}
+	</select>
+
+	<select id="getDocStateListBySeq" resultType="map" parameterType="map">
+		SELECT
+			mn.seq
+			 ,mn.licensingNo
+			 ,mn.manufacturingNo
+			 ,mn.manufacturingName
+			 ,doc.docNo
+			 , doc.dNo
+			 , dd.productCode
+			 , dd.productName
+			 , DBO.GETPLANTNAME(doc.companyCode , doc.plantCode) AS PLANTNAME
+			 , doc.state
+			 , doc.docVersion
+		FROM manufacturingNoMapping as mm
+		    inner join manufacturingProcessDoc as doc on mm.dNo = doc.dNo
+			inner join devDoc as dd on dd.docNo = doc.docNo and dd.docVersion = doc.docVersion
+			inner join manufacturingNo as mn on mm.mNoSeq = mn.seq
+		WHERE mm.mNoSeq = #{no_seq}
+	</select>
+
+	<select id="selectManufacturingNoStatusListData" parameterType="map" resultType="map">
+		/** manufacturingNo.selectManufacturingNoStatusListData */
+		SELECT CONVERT(VARCHAR, v.licensingNo) + '-' + CONVERT(VARCHAR, v.manufacturingNo) as manufacturingNo2
+		     , ISNULL(v.productType1Name,'') + ' / ' + ISNULL(v.productType2Name,'') + ' / ' + ISNULL(v.productType3Name,'') as productTypeName
+		     , v.mNoD_seq as openView
+		     , v.stopReqDate as stopApprDate
+			 , ISNULL(c.noStopCount,0) AS noStopCount
+			 , ISNULL(c.devDocCount,0) AS devDocCount
+		     , v.*
+		FROM (
+			SELECT mNo.seq
+				 , mNo.companyCode
+				 , dbo.getCompanyName(mNo.companyCode) AS companyName
+				 , mNo.plantCode
+				 , dbo.getPlantName(mNo.companyCode,mNo.plantCode) AS plnatName
+				 , mNo.manufacturingNo
+				 , mNo.manufacturingName
+				 , mNo.licensingNo
+				 , mNo.status
+				 , mNo.versionNo
+				 , CASE
+					   WHEN mNo.status = 'N' THEN '번호생성'
+					   WHEN mNo.status = 'P' THEN '진행중'
+					   WHEN mNo.status = 'C' THEN '완료'
+					   WHEN mNo.status = 'D' THEN '삭제'
+					   WHEN mNo.status = 'AS' THEN '중단요청'
+					   WHEN mNo.status = 'RS' THEN '중단요청승인'
+					   WHEN mNo.status = 'S' THEN '중단'
+					   WHEN mNo.status = 'RC' THEN '변경요청'
+					   WHEN mNo.status = 'RE' THEN '신고중'
+				END AS statusName
+				 , CASE
+					   WHEN mNo.prevStatus = 'P' THEN '생성'
+					   WHEN mNo.prevStatus = 'RC' THEN '변경'
+				END AS prevStatusName
+				 , CONVERT(CHAR(10), mNo.regDate, 23) as regDate
+				 , CONVERT(CHAR(10), mNo.stopReqDate, 23) as stopReqDate
+				 , CONVERT(CHAR(10), mNo.stopDate, 23) as stopDate
+				 , mNoD.productType1
+				 , dbo.getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+				 , mNoD.productType2
+				 , dbo.getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+				 , mNoD.productType3
+				 , dbo.getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+				 , convert(varchar(10), mNo.reportSDate, 120)  AS reportSDate
+				 , convert(varchar(10), mNo.reportEDate, 120)  AS reportEDate
+				 , convert(varchar(10), mNo.versionUpReqDate, 120)  AS versionUpReqDate
+				 , (SELECT
+						convert(varchar(10), max(doc.launchDate), 120)  AS launchDate
+					FROM manufacturingNoMapping mNoM,
+						 manufacturingProcessDoc mDoc,
+						 devDoc doc
+					WHERE 1 = 1
+					  AND mNoM.mNoseq = mNo.seq
+					  AND mNoM.dNo = mDoc.dNo
+					  AND mDoc.docNo = doc.docNo
+					  AND mDoc.docVersion = doc.docVersion
+					  AND doc.isLatest = 1
+					  AND doc.isClose != 1) AS launchDate
+		   		 , mNoD.seq as mNoD_seq
+			FROM
+				manufacturingNo mNo,
+				(
+					(SELECT * FROM (
+						SELECT *, ROW_NUMBER() OVER(PARTITION BY no_seq ORDER BY versionNo DESC) 'Row' FROM manufacturingNoData
+						)AA WHERE AA.Row = 1
+					)
+				) mNoD
+			WHERE 1 = 1
+		  	AND mNo.status = #{status}
+		  	AND mNo.seq = mNoD.no_seq
+			) as v
+			LEFT JOIN
+			(
+			SELECT
+				mn.seq
+				, SUM(CASE WHEN doc.state != 6 THEN 1 ELSE 0 END) AS noStopCount
+				, SUM(1) AS devDocCount
+			FROM manufacturingNoMapping as mm inner join manufacturingProcessDoc as doc on mm.dNo = doc.dNo
+				inner join (SELECT docNo,MAX(docVersion) AS docVersion FROM devDoc GROUP BY docNo) as dd on dd.docNo = doc.docNo and dd.docVersion = doc.docVersion
+				inner join manufacturingNo as mn on mm.mNoSeq = mn.seq
+			group by mn.seq
+			) as c
+			ON v.seq = c.seq
+			order by  v.licensingNo desc, v.manufacturingNo desc, v.versionNo desc
+	</select>
+
+	<select id="selectManufacturingMaxVersionNoView" resultType="string">
+		/** manufacturingNo.selectManufacturingMaxVersionNoView */
+		SELECT
+				convert(varchar,mn.manufacturingNo)+ '-' +
+				convert(varchar,MAX(mn.versionNo)) AS manufacturingMaxVersionNo
+		FROM manufacturingNoMapping as mm inner join manufacturingProcessDoc as doc on mm.dNo = doc.dNo
+										  inner join devDoc as dd on dd.docNo = doc.docNo and dd.docVersion = doc.docVersion
+										  inner join manufacturingNo as mn on mm.mNoSeq = mn.seq
+		group by mn.manufacturingNo,doc.dNo
+	</select>
+
+	<select id="selectMgdListData" parameterType="map" resultType="hashmap">
+		SELECT
+			doc.docNo
+			 , pDoc.dNo
+			 , doc.docVersion
+			 , (SELECT max(docVersion) from devDoc where docNo = doc.docNo group by docNo) as devDocLastestVersion
+			 , MAX(doc.docVersion) OVER (PARTITION BY doc.docNo) AS maxVersion
+		, ROW_NUMBER() OVER (PARTITION BY doc.docNo ORDER BY doc.docVersion DESC) AS rowNumber
+		, COUNT(*) OVER (PARTITION BY doc.docNo) AS versionCount
+		, doc.productCode
+			 , doc.productName
+			 , doc.regUserId
+			 , dbo.getUserName(doc.regUserId) AS userName
+			 , pDoc.plantCode
+			 , pDoc.stlal
+			 , pDoc.state
+			 , userTb.deptCode
+			 , userTb.userGrade
+			 , userTb.teamCode
+			 , mNo.versionNo
+			 , mNo.status
+			 , pDoc.qns
+			 , pDoc.isQnsReviewTarget
+			 , userTb.teamCode
+			 , B.regDate
+			 , 0 as viewAuth
+		FROM manufacturingNoMapping mNoMapping
+				 inner join manufacturingProcessDoc pDoc on mNoMapping.dNo = pDoc.dNo
+				 inner join (SELECT docNo,MAX(docVersion) AS docVersion FROM devDoc GROUP BY docNo) mDoc ON mDoc.docNo = pDoc.docNo and mDoc.docVersion = pDoc.docVersion
+				 inner join devDoc doc on doc.docNo = pDoc.docNo and doc.docVersion = pDoc.docVersion
+				 inner join manufacturingNo mNo on mNoMapping.mNoSeq = mNo.seq
+				 left join userTable2 userTb on doc.regUserId = userTb.userId
+				 left join (
+					SELECT MATNR, WERKS, STLAL, max(regDate) as regDate
+					FROM devDocBomHeader
+					GROUP BY MATNR, WERKS, STLAL
+				) AS B ON doc.productCode = B.MATNR AND pDoc.plantCode = B.WERKS AND pDoc.stlal = B.STLAL
+		WHERE 1 = 1
+		  AND mNoMapping.mNoSeq = #{seq}
+	</select>
+
+	<select id="getAuthTeamCode" parameterType="string" resultType="string">
+		SELECT
+		    CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN ''
+				 WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN ''
+				 WHEN isAdmin = 'Y' THEN ''
+				 ELSE teamCode
+		    END
+		FROM userTable2
+		WHERE userId = #{loginUserId}
+	</select>
+
+	<select id="getAuthDevDoc" parameterType="int" resultType="map">
+		SELECT ISNULL(u.deptCode,'') AS deptCode,ISNULL(u.teamCode,'') AS teamCode,dd.regUserId,dd.regDate,dd.modUserId,dd.modDate
+		FROM manufacturingNoMapping as mm inner join manufacturingProcessDoc as doc on mm.dNo = doc.dNo
+										  inner join devDoc as dd on dd.docNo = doc.docNo and dd.docVersion = doc.docVersion
+										  inner join manufacturingNo as mn on mm.mNoSeq = mn.seq
+										  left join userTable2 as u on dd.regUserId = u.userId
+		where mm.mNoSeq = #{seq}
+	</select>
+</mapper>

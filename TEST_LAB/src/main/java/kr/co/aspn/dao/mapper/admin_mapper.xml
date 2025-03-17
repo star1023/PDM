@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+		</if>
+	</sql>
+	
+	
+<!-- 	<select id="AdminNoticeListCount" resultType="int">
+		 select count(*) from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		,(select count(*) from comment where tbKey=nNo and tbType='notice') as commentCount 
+		,nNo
+		,title
+		,content
+		,getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='notice' AND tbKey = nNo) as fileCount
+		 FROM notice
+		 <if test="keyword != '' and keyword !=null">
+		 	WHERE (title LIKE '%'+#{keyword}+'%' OR content LIKE '%'+#{keyword}+'%' OR getUserName(regUserId) LIKE '%'+#{keyword}+'%')
+		 </if> 
+		 )a
+	</select> -->
+	
+	<select id="AdminNoticeListCount" resultType="int">
+		 select count(*) from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		,(select count(*) from comment where tbKey=nNo and tbType='notice') as commentCount 
+		,nNo
+		,title
+		,content
+		,getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='notice' AND tbKey = nNo) as fileCount
+		 FROM notice
+		 WHERE 1=1
+		  <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 				AND (getUserName(regUserId) LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 			<when test="searchName == 'proname'">
+		 			 	AND (title LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (getUserName(regUserId) LIKE CONCAT('%',#{keyword},'%') OR title LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='') and (endDate !=null and endDate !=''))">
+		 	
+		 	AND DATE_FORMAT(regDate,'%Y-%m-%d') between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+	</select>
+	
+	<select id="getPagenatedAdminNoticeList" resultType="hashmap">
+		 select * from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		,(select count(*) from comment where tbKey=nNo and tbType='notice') as commentCount 
+		,nNo
+		,title
+		,content
+		,getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='notice' AND tbKey = nNo) as fileCount
+		,hits
+		 FROM notice
+		 WHERE 1=1
+		 <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 				AND (getUserName(regUserId) LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 			<when test="searchName == 'proname'">
+		 			 	AND (title LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (getUserName(regUserId) LIKE CONCAT('%',#{keyword},'%') OR title LIKE CONCAT('%',#{keyword},'%'))
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='' and startDate != undefined) and (endDate !=null and endDate !='' and endDate !=undefined))">
+		 	
+		 	AND DATE_FORMAT(regDate,'%Y-%m-%d') between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+ 	  	 where rn between #{startRow} and #{endRow}
+	 	 order by regDate desc
+	</select>
+	
+	<select id="getnoticeView" resultType="hashmap">
+		SELECT nNo, title,getUserName(regUserId) as userName,content,regDate,modUserId,regUserId FROM notice WHERE nNo = #{nNo}
+	</select>
+	
+	<insert id="noticeSave">
+		insert into notice(title,regUserId,content,regDate,hits) values(#{title},#{regUserId},#{content},sysdate(),0)
+	</insert>
+	
+	<delete id="noticeDelete">
+		delete from notice where nNo=${nNo}
+	</delete>
+	
+	<update id="noticeEdit">
+		update notice set 
+		title=#{title},
+		content=#{contents},
+		modUserId=#{modUserId}
+		where nNo=#{nNo}
+	</update>
+	
+	<select id="replyListByNo" resultType="hashmap">
+		select * from comment where tbType='notice' and tbKey=${nNo}
+	</select>
+	
+	<delete id="replyDeleteByNo">
+		delete from comment where cNo=${cNo} and tbType='${tbType}' and tbKey=${tbKey} 
+	</delete>
+	
+	<insert id="replyRegistByNo">
+		insert into comment(tbType,tbKey,tempKey,comment,isDelete,regUserId,regDate) values('${tbType}',${tbKey},0,'${comment}',0,'${regUserId}',sysdate())
+	</insert>
+	
+	<update id="ReplyUpdateByNo">
+		update comment set comment='${comment}',modDate=sysdate() where cNo=${cNo} and tbKey=${tbKey} and tbType='${tbType}'
+	</update>
+	
+	<update id="addHitsNotice">
+		update notice set hits=hits+1 where nNo = ${nNo}
+	</update>
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="manual">
+	<select id="selectManualCount" parameterType="map" resultType="int">
+		WITH MANUAL AS 
+		(
+		    SELECT
+		    	lcm.MANUAL_IDX
+		    	, lcm.REG_YN
+		    	, lm.* 
+		    FROM 
+		    	lab_cook_manual lcm
+		    	, lab_menu lm 
+		    WHERE 1 = 1
+		    	AND lcm.MENU_IDX = lm.MENU_IDX 
+		)
+		SELECT 
+			count(man.MANUAL_IDX) AS cnt
+		FROM 
+			MANUAL man
+		WHERE 1 = 1
+			AND man.IS_DELETE = 'N'
+			AND man.IS_LAST = 'Y'
+	</select>
+	
+	<select id="selectManualList" parameterType="map" resultType="hashmap">
+		WITH MANUAL AS 
+		(
+		    SELECT
+		    	lcm.MANUAL_IDX
+		    	, lcm.REG_YN
+		    	, lm.* 
+		    FROM 
+		    	lab_cook_manual lcm
+		    	, lab_menu lm 
+		    WHERE 1 = 1
+		    	AND lcm.MENU_IDX = lm.MENU_IDX 
+		)
+		SELECT 
+			*
+			, CASE WHEN man.REG_YN = 'Y' THEN '등록완료'
+				ELSE '미등록'
+				END as REG_YN_TXT
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = man.MENU_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = man.MENU_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = man.MENU_TYPE3) as CATEGORY_NAME3
+			, (SELECT COUNT(*) FROM lab_menu WHERE 1 = 1 AND MENU_CODE = man.MENU_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> man.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+		FROM 
+			MANUAL man
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT tmp.DOC_NO FROM (
+					SELECT 
+						row_number() over (order by  manaual.MENU_IDX DESC) as rnum
+						, manaual.* 
+					FROM 
+						MANUAL manaual
+					WHERE 1 = 1
+						AND manaual.IS_DELETE = 'N'
+						AND manaual.IS_LAST = 'Y'
+					)tmp
+				WHERE rnum between #{startRow} AND #{endRow}
+			)
+		ORDER BY man.DOC_NO DESC, man.MENU_IDX DESC	
+	</select>
+</mapper>

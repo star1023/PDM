@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="record">
+	<insert id="insertHistory">
+		INSERT INTO documentHistory(
+			tbType
+			, tbKey
+			, type
+			, resultFlag
+			, comment
+			, regDate
+			, regUserId
+		) VALUES (
+			#{tbType}
+			, #{tbKey}
+			, #{type}
+			, #{resultFlag}
+			, #{comment}
+			, sysdate()
+			, #{regUserId}
+		)
+	</insert>
+	
+	<select id="getHistoryList" resultType="hashmap">
+		SELECT seq
+			, tbType
+			, tbKey
+			, type
+			, CASE type WHEN 'create' THEN '생성'
+						WHEN 'update' THEN '수정'
+						WHEN 'stop' THEN '중단'
+						WHEN 'delete' THEN '삭제'
+						WHEN 'copy' THEN '복사'
+						ELSE ''
+				END AS typeText
+			, resultFlag
+			, CASE resultFlag WHEN 'S' THEN '성공'
+						ELSE '실패'
+				END AS resultFlagText 
+			, comment
+			, regUserId
+			, getUserName(regUserId) regUserName
+			, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		FROM documentHistory 
+		WHERE tbType = #{tbType} 
+		  and tbKey = #{tbKey}
+		  and type != 'delete'
+		ORDER BY seq DESC
+	</select>
+ 	
+	<select id="getHistoryListPrintExcel" resultType="hashmap">
+		/* 프린트와 다운로드 로그 가져오기 */
+		SELECT seq
+			, tbType
+			, tbKey
+			, type
+			, CASE 
+				WHEN type IN ('D', 'P') THEN '출력'
+				ELSE ''
+				END AS typeText
+			, CASE 
+				WHEN type = 'D' THEN '제조공정서 엑셀 다운로드'
+				WHEN type = 'P' THEN '제조공정서 프린트'
+				ELSE ''
+				END AS comment
+			, userId as regUserId
+			, getUserName(userId) regUserName
+			, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		FROM print_log
+		WHERE tbType = #{tbType} 
+		  and tbKey = #{tbKey}
+		ORDER BY seq DESC;
+	</select>
+
+</mapper>

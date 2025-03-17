@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="itemManuFac">
+	<select id="newItemManufacturingProcessDocList" resultType="hashmap">
+		select	imNo
+			, impNo
+			, productName
+			, state
+			, case when state = 0 then '등록' 
+			   		when state = 1 then '검토중' 
+			   		when state = 2 then '완료'
+			   		when state = 3 then '반려' end stateName
+			, left(CONVERT(VARCHAR, regDate, 120), 16) as regDate
+			, dbo.getUserName(regUserId) as userName
+			, isnull(left(CONVERT(VARCHAR, modDate, 120), 16), '') as modDate
+			, isnull(dbo.getUserName(modUserId), '') as userName
+			, ( select plantName from plant where companyCode = i.companyCode and plantCode = i.plantCode) as plantName
+				FROM	itemManufacturingProcessDoc i
+				WHERE	docNo = ${docNo} and docVersion = ${docVersion}
+				order by impNo
+	</select>
+</mapper>

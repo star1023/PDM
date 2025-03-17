@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="quick">
+	<insert id="registQuick" parameterType="map">
+		INSERT INTO QUICK (
+			sendDate,
+			sendTime,
+			sendUser,
+			destination,
+			transType,
+			transTypeName,
+			memo,
+			regUserId,
+			regDate,
+			isDelete
+		) VALUES (
+			#{sendDate},
+			#{sendTime},
+			#{sendUser},
+			#{destination},
+			#{transType},
+			#{transTypeName},
+			#{memo},
+			#{regUserId},
+			sysdate(),
+			'N'
+		)
+	</insert>
+	
+	<select id="getQuickInfoList" parameterType="map" resultType="map">
+		SELECT * 
+		FROM QUICK
+		WHERE sendDate BETWEEN #{startDate} AND #{endDate} 
+		AND isDelete != 'Y'
+		ORDER BY sendDate, sendTime
+	</select>
+	
+	<update id="deleteQuickInfo" parameterType="map">
+		UPDATE QUICK 
+		SET isDelete = 'Y'
+			, modUserId = #{modUserId}
+		WHERE qNo = #{qNo}
+	</update>
+</mapper>

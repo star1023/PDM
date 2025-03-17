@@ -1,0 +1,1321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="approval">
+	<select id="apporvalDocCount"  parameterType="map" resultType="int">
+	/* approvalDaoImpl.apporvalDocCount 결재 헤더정보	*/
+		SELECT	count(*)
+		FROM		approvalBoxHeader h
+		WHERE 1=1
+			<if test="type!='' and type!=null">
+			AND	lastState = #{type}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test='searchType.equals("U")'>
+					AND currentUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%', #{searchValue} , '%') or userName LIKE CONCAT('%', #{searchValue} , '%'))
+					</when>
+		      		<when test='searchType.equals("K")'>
+		      		AND title LIKE '%'+#{searchValue}+'%'
+		      		</when>
+		      	</choose>
+			</if>
+			AND regUserId = #{userId}		
+	</select>
+	
+	<select id="approvalDocList"  parameterType="map" resultType="ApprovalHeaderVO">
+	/* approvalDaoImpl.approvalDocList 결재 헤더정보	*/
+		SELECT	rn
+				, apprNo
+				, tbKey
+				, tbType
+				, case when tbType = 'manufacturingProcessDoc' then '제조공정서'
+						when tbType = 'techTransfer' then '기술이전서' 
+						when tbType = 'designRequestDoc' then '디자인의뢰서' 
+						when tbType = 'itemManufacturingProcessDoc' then '품목제조보고서'
+						when tbType = 'manufacturingNoStopProcess' then '품목제조보고서'
+						when tbType = 'report' then '보고서'
+						when tbType = 'circulation' then '회람'
+						when tbType = 'materialManagement' then '원료변경요청서'
+						when tbType = 'trialProductionReport' then '시생산 보고서' 
+						when tbType = 'productDesignDocDetail' then '제품 설계서'
+						when tbType = 'trialReportCreate' then '시생산결과보고서'
+						when tbType = 'trialReportAppr2' then '시생산결과보고서'
+						end tbTypeName
+				, type
+				<!--  
+					type = '5'(생성결재 >> 자재검토)
+					type = '6'(작성완료상신 >> 팀장결재)
+				-->
+				, case when type = '0' then '일반결재'
+					when type = '3' then '프린트결재'
+					when type = '5' then '자재검토'
+					when type = '6' then '팀장결재' end typeName
+				, title
+				, regUserId
+				, getUserName(regUserId) as regUserName
+				, getUserName(currentUserId) as currentUserName
+				, left(convert(ifnull(modDate, regDate), DATE), 16) as modDate
+				, lastState
+				, case when lastState = '0' then '진행중'
+					   when lastState = '1' then '결재완료'
+					   when lastState = '2' then '반려' end lastStateName	
+				, currentStep
+				, totalStep	   			
+				, link
+	FROM	(
+					select	row_number() over (order by apprNo desc) as rn 
+								, apprNo
+								, tbKey
+								, tbType
+								, type	
+								, title
+								, regUserId	
+								, currentUserId	
+								, regDate			
+								, modDate
+								, lastState
+								, currentStep
+								, totalStep
+								, link
+								, (select max(seq) from approvalBoxInfo where apprNo = h.apprNo and state != 3) as realStep 
+								, (select ifnull(max(apprNo), 0) from approvalBoxHeader where h.tbType = tbType and h.tbKey = tbKey and lastState = 0 ) as lastApprNo
+								, (select ifnull(max(apprNo), 0) from approvalBoxHeader where h.tbType = tbType and h.tbKey = tbKey and lastState = 2 ) as maxApprNo
+								, apprNoCancel
+					from		approvalBoxHeader h
+				WHERE 1=1
+					<if test="type!='' and type!=null">
+					AND	lastState = #{type}
+					</if>
+					<if test="searchType != null and searchType != '' ">
+						<choose>
+							<when test='searchType.equals("U")'>
+							AND currentUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT('%',#{searchValue},'%'))
+							</when>
+				      		<when test='searchType.equals("K")'>
+				      		AND title LIKE CONCAT('%',#{searchValue},'%')
+				      		</when>
+				      	</choose>
+					</if>
+					AND regUserId = #{userId}	
+				) t
+	WHERE rn between #{startRow} and #{endRow}
+	</select>
+	
+	<select resultType="hashmap" id="approvalLineList">
+	/* approvalDaoImpl.approvalLineList 결재 헤더정보	*/
+		SELECT apprLineNo, lineName FROM approvalLineHeader WHERE regUserId = #{userId} AND tbType = #{tbType} ORDER BY apprLineNo desc 
+	</select>
+	
+	
+	<select id="apprHeaderInfo" parameterType="map" resultType="ApprovalHeaderVO">
+		/* approvalDaoImpl.apprHeaderInfo 결재 헤더정보	*/
+		SELECT 		
+			A.* 
+			, case when tbType = 'manufacturingProcessDoc' then '제조공정서'
+				when tbType = 'techTransfer' then '기술이전서' 
+				when tbType = 'designRequestDoc' then '디자인의뢰서' 
+				when tbType = 'itemManufacturingProcessDoc' then '품목제조보고서'
+				when tbType = 'manufacturingNoStopProcess' then '품목제조보고서'
+				when tbType = 'report' then '보고서'
+				when tbType = 'circulation' then '회람' 
+				when tbType = 'materialManagement' then '원료변경요청서'
+				when tbType = 'trialProductionReport' then '시생산 보고서'
+				when tbType = 'productDesignDocDetail' then '제품 설계서'
+				when tbType = 'trialReportCreate' then '시생산결과보고서'
+				when tbType = 'trialReportAppr2' then '시생산결과보고서'
+				end tbTypeName 
+		FROM(
+			SELECT tbKey
+				,	tbType
+				,	type
+				,	currentStep
+				,	currentUserId
+				,	totalStep
+				,	lastState
+				,	regDate
+				,	regUserId
+				,	title
+				,	link
+				, apprNo
+				, modDate
+				, getUserName(h.regUserId) AS userName
+				, getUserDeptName(h.regUserId) AS deptCodeName
+				, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = h.regUserId)) AS authName
+				,  (select count(*) from approvalBoxInfo where apprNo = h.apprNo and state = 1) as maxSeq
+				, comment
+			FROM APPROVALBOXHEADER h
+			WHERE	1 = 1
+			<if test="apprNo != null and apprNo != '' "> 
+				AND APPRNO = #{apprNo}
+			</if>	
+			<if test="tbKey != null and tbKey != '' "> 
+				AND tbKey = #{tbKey}
+			</if>
+			<if test="tbType != null and tbType != '' "> 
+				AND tbType = #{tbType}
+			</if>
+			<if test="type != null and type != '' "> 
+				AND type = #{type}
+			</if>
+		) A
+		ORDER BY A.regDate desc
+		limit 1
+	</select>
+	
+	<select id="apprItemInfo" parameterType="map" resultType="ApprovalItemVO">
+		/* approval.apprItemInfo 결재 아이템 정보 */
+		SELECT
+			apbNo
+			,apprNo
+			,seq
+			,targetUserId
+			,state
+			,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			,modDate
+			, note
+			, getUserName(targetUserId) AS userName
+			, getUserDeptName(targetUserId) AS deptCodeName
+			, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = targetUserId)) AS authName
+			, case when seq = 1 then '기안' 
+			  else case when state = 0 then '대기' 
+			  when state = 1 then '승인'
+			  when state = 2 then '반려' 
+			  else '' end
+		      end as stateText
+		    ,(SELECT userName FROM USERTABLE2 WHERE userId = proxyId) as proxyId
+			,proxyYN
+		FROM approvalBoxInfo
+		WHERE 1 = 1
+			AND APPRNO = #{apprNo}
+			AND state != 3
+		ORDER BY SEQ DESC
+	</select>
+	
+	<select id="apprItemInfo2" parameterType="map" resultType="ApprovalItemVO">
+		/* approval.apprItemInfo2 결재 아이템 정보 (날짜개선 판) */
+		SELECT
+			apbNo
+			,apprNo
+			,seq
+			,targetUserId
+			,state
+			,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			,DATE_FORMAT(modDate,'%Y-%m-%d') AS modDate
+			, note
+			, getUserName(targetUserId) AS userName
+			, getUserDeptName(targetUserId) AS deptCodeName
+			, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = targetUserId)) AS authName
+			, case when seq = 1 then '기안' 
+			  else case when state = 0 then '대기' 
+			  when state = 1 then '승인'
+			  when state = 2 then '반려' 
+			  else '' end
+		      end as stateText
+		    ,(SELECT userName FROM USERTABLE2 WHERE userId = proxyId) as proxyId
+			,proxyYN
+		FROM approvalBoxInfo
+		WHERE 1 = 1
+			AND APPRNO = #{apprNo}
+			AND state != 3
+		ORDER BY SEQ DESC
+	</select>
+	
+	<select id="apprReferenceInfo" parameterType="string" resultType="ApprovalReferenceVO">
+	/* approvalDaoImpl.apprReferenceInfo 결재 회람 정보 */
+		SELECT
+				arNo 
+			,	apprNo
+			,	tbKey
+			,	tbType
+			,	title
+			,	DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			,	regUserId
+			,	targetUserId
+			,	link
+			,	type
+			, getUserName(targetUserId) AS userName
+			, getUserDeptName(targetUserId) AS deptCodeName
+			, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = targetUserId)) AS authName
+			, getUserName(regUserId) AS regUserName
+		FROM approvalReference
+		WHERE APPRNO = #{apprNo}
+	</select>
+	
+	<select id="printRequest" parameterType="ApprovalHeaderVO" resultType="string">
+		/* approvalDaoImpl.printRequest */
+		SELECT requestReason FROM confiDocRequest WHERE APPRNO = #{apprNo}
+	</select>
+	
+	<select id="proxyInfo" parameterType="map" resultType="int">
+		/* approvalDaoImpl.getProxyInfo 대리결재자 확인 여부 */
+		SELECT COUNT(TARGETUSERID) 
+		FROM PROXYAPPROVAL PA
+		JOIN APPROVALBOXHEADER 
+		ON SOURCEUSERID = CURRENTUSERID
+		WHERE APPRNO = #{apprNo}
+		AND LASTSTATE <![CDATA[ <> ]]> 2 
+		AND TARGETUSERID = #{userId}
+		AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')  AND ISDELETE = 'N'
+	</select>
+	<select id="detailApprovalLineList" resultType="hashmap">
+	/* approvalDaoImpl.detailApprovalLineList 결재 헤더정보	*/
+		SELECT			apprLineNo
+								, apprType
+								, targetUserId		
+								, userName
+								,getCodeName('GRADE',u.userGrade) AS gradeCodeName
+								,getCodeName('DEPT',u.deptCode) AS deptCodeName
+								,getCodeName('TEAM',u.teamCode) AS teamCodeName	
+			FROM			approvalLineInfo i
+			INNER JOIN 	userTable2 u
+			ON				i.targetUserId = u.userId
+			WHERE			apprLineNo = #{apprLineNo}
+			AND u.isDelete='N'
+			ORDER BY 	apprType
+	</select>
+	<delete id="deleteApprovalLineHeader" parameterType="string">
+		delete
+		from approvalLineHeader
+		where apprLineNo = #{apprLineNo}
+	</delete>
+	<delete id="deleteApprovalLineInfo" parameterType="string">
+		delete
+		from approvalLineInfo
+		where apprLineNo = #{apprLineNo}
+	</delete>
+	<select id="selectinsertApprovalLineHeader" resultType="hashmap">
+		insert into approvalLineHeader(lineName, tbType, regUserId, regDate)
+		values(#{lineName},#{tbType},#{regUserId}, sysdate())
+	
+		SELECT LAST_INSERT_ID()
+	</select>
+	<insert id="insertApprovalLineInfo">
+		insert into approvalLineInfo(apprLineNo, apprType, targetUserId)
+			values(#{apprLineNo}, #{apprType}, #{targetUserId})
+	</insert>
+	<select id="selectRegUserInfo" parameterType="map" resultType="map">
+		SELECT	userId, userName, getUserDeptName(userId) AS deptCodeName, getUserTeamName(userId) AS teamCodeName
+			FROM 	userTable2 
+			WHERE userId = #{userId}
+	</select>
+	
+	<select id="detailDdNo" parameterType="string" resultType="map">
+		SELECT docNo,docVersion  FROM devDoc WHERE ddNo = #{ddNo} AND isHidden != 'Y'
+	</select>
+	
+	<select id="apporvalListCount"  parameterType="map" resultType="int">
+	/* approvalDaoImpl.apporvalListCount 결재 리스트 수	*/
+		SELECT count(apprNo)
+		FROM (
+			<choose>
+			<when test="type != null and type != '' ">
+				<choose>
+					<when test="type == 0">
+					SELECT h.* 
+					FROM approvalBoxHeader h
+					WHERE 1=1
+						AND	lastState = '0' 
+						AND (
+							currentUserId = #{userId} 
+							OR currentUserId in(
+								SELECT sourceUserId 
+								FROM proxyApproval 
+								WHERE targetUserId = #{userId}  
+									AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')
+									AND isDelete = 'N'
+						)
+					)
+					</when>
+					<when test="type == 1 or type == 2">
+					SELECT h.* 
+					FROM approvalBoxHeader h , approvalBoxInfo i
+					WHERE 1=1 
+						AND	lastState in ('1','2')
+						AND h.apprNo = i.apprNo
+						AND i.targetUserId = #{userId}  
+						AND i.state in ('1','2')
+					</when>
+		      	</choose>
+			</when>
+			<otherwise>
+			SELECT h.* 
+			FROM approvalBoxHeader h
+			WHERE 1=1
+				AND	lastState = '0' 
+				AND (
+					currentUserId = #{userId} 
+					OR currentUserId in(
+						SELECT sourceUserId 
+						FROM proxyApproval 
+						WHERE targetUserId = #{userId}  
+							AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')
+							AND isDelete = 'N'
+				)
+			)
+			UNION
+			SELECT h.* 
+			FROM approvalBoxHeader h , approvalBoxInfo i
+			WHERE 1=1 
+				AND	lastState in ('1','2')
+				AND h.apprNo = i.apprNo
+				AND i.targetUserId = #{userId}  
+				AND i.state in ('1','2')
+			</otherwise>
+		</choose>
+		) APPR
+		WHERE 1 =1 
+		<if test="type != null and type != '' ">
+			AND	lastState = #{type}
+		</if>
+		<if test="searchType != null and searchType != '' ">
+			<choose>
+				<when test='searchType.equals("U")'>
+				AND regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT(%',#{searchValue},'%'))
+				</when>
+	      		<when test='searchType.equals("K")'>
+	      		AND title LIKE CONCAT('%',#{searchValue},'%')
+	      		</when>
+	      	</choose>
+		</if>
+	</select>
+	
+	<select id="apporvalList"  parameterType="map" resultType="ApprovalHeaderVO">
+	/* approvalDaoImpl.apporvalList 결재 헤더정보	*/
+		SELECT 
+			rn
+			, apprNo
+			, tbKey
+			, tbType
+			, case when tbType = 'manufacturingProcessDoc' then '제조공정서'
+				when tbType = 'techTransfer' then '기술이전서' 
+				when tbType = 'designRequestDoc' then '디자인의뢰서' 
+				when tbType = 'itemManufacturingProcessDoc' then '품목제조보고서'
+				when tbType = 'manufacturingNoStopProcess' then '품목제조보고서'
+				when tbType = 'report' then '보고서'
+				when tbType = 'circulation' then '회람'
+				when tbType = 'materialManagement' then '원료변경요청서'
+				when tbType = 'trialProductionReport' then '시생산 보고서' 
+				when tbType = 'productDesignDocDetail' then '제품 설계서'
+			    when tbType = 'trialReportCreate' then '시생산결과보고서'
+				when tbType = 'trialReportAppr2' then '시생산결과보고서'
+				end tbTypeName
+			, type
+			<!--  
+				type = '5'(생성결재 >> 자재검토)
+				type = '6'(작성완료상신 >> 팀장결재)
+			-->
+			, case when type = '0' then '일반결재'
+				when type = '3' then '프린트결재'
+				when type = '5' then '자재검토'
+				when type = '6' then '팀장결재' end typeName
+			, title
+			, regUserId
+			, getUserName(regUserId) as regUserName
+			, getUserName(currentUserId) as currentUserName
+			, left(convert(ifnull(modDate, regDate), DATE), 16) as modDate
+			, lastState
+			, case when lastState = '0' then '진행중'
+			   when lastState = '1' then '결재완료'
+			   when lastState = '2' then '반려' end lastStateName	
+			, currentStep
+			, totalStep	   			
+			, link
+		FROM (
+		SELECT	
+			row_number() over (order by apprNo desc) as rn 
+				, apprNo
+				, tbKey
+				, tbType
+				, type	
+				, title
+				, regUserId	
+				, currentUserId	
+				, regDate			
+				, modDate
+				, lastState
+				, currentStep
+				, totalStep
+				, link
+		FROM	(
+			SELECT *
+			FROM (
+				<choose>
+			<when test="type != null and type != '' ">
+				<choose>
+					<when test="type == 0">
+					SELECT h.* 
+					FROM approvalBoxHeader h
+					WHERE 1=1
+						AND	lastState = '0' 
+						AND (
+							currentUserId = #{userId} 
+							OR currentUserId in(
+								SELECT sourceUserId 
+								FROM proxyApproval 
+								WHERE targetUserId = #{userId}  
+									AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')
+									AND isDelete = 'N'
+						)
+					)
+					</when>
+					<when test="type == 1 or type == 2">
+					SELECT h.* 
+					FROM approvalBoxHeader h , approvalBoxInfo i
+					WHERE 1=1 
+						AND	lastState in ('1','2')
+						AND h.apprNo = i.apprNo
+						AND i.targetUserId = #{userId}  
+						AND i.state in ('1','2')
+					</when>
+		      	</choose>
+			</when>
+			<otherwise>
+			SELECT h.* 
+			FROM approvalBoxHeader h
+			WHERE 1=1
+				AND	lastState = '0' 
+				AND (
+					currentUserId = #{userId} 
+					OR currentUserId in(
+						SELECT sourceUserId 
+						FROM proxyApproval 
+						WHERE targetUserId = #{userId}  
+							AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')   
+							AND isDelete = 'N'
+				)
+			)
+			UNION
+			SELECT h.* 
+			FROM approvalBoxHeader h , approvalBoxInfo i
+			WHERE 1=1 
+				AND	lastState in ('1','2')
+				AND h.apprNo = i.apprNo
+				AND i.targetUserId = #{userId}  
+				AND i.state in ('1','2')
+			</otherwise>
+		</choose>
+			) APPR			
+		) t
+		WHERE 1 =1 
+		<if test="type != null and type != '' ">
+			AND	lastState = #{type}
+		</if>
+		<if test="searchType != null and searchType != '' ">
+			<choose>
+				<when test='searchType.equals("U")'>
+				AND regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT('%',#{searchValue},'%'))
+				</when>
+	      		<when test='searchType.equals("K")'>
+	      		AND title LIKE CONCAT('%',#{searchValue},'%')
+	      		</when>
+	      	</choose>
+		</if>
+		) a 
+		WHERE rn between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="refListCount"  parameterType="map" resultType="int">
+		SELECT count(*)
+		FROM approvalBoxHeader h
+			inner join	approvalReference r
+			on h.apprNo = r.apprNo
+		WHERE r.targetUserId = #{userId} 
+			AND ((r.type = 'C' AND h.lastState = 1) OR (r.type = 'R'))
+			<if test="type!='' and type!=null">
+			AND	r.type = #{type}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test='searchType.equals("U")'>
+					AND h.regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT('%',#{searchValue},'%'))
+					</when>
+		      		<when test='searchType.equals("K")'>
+		      		AND h.title LIKE CONCAT('%',#{searchValue},'%')
+		      		</when>
+		      	</choose>
+			</if>
+	</select>
+	
+	<select id="refList"  parameterType="map" resultType="ApprovalHeaderVO">
+		SELECT	rn
+			, apprNo
+			, tbType
+			, tbKey
+			, case when tbType = 'manufacturingProcessDoc' then '제조공정서'
+				when tbType = 'techTransfer' then '기술이전서' 
+				when tbType = 'designRequestDoc' then '디자인의뢰서' 
+				when tbType = 'itemManufacturingProcessDoc' then '품목제조보고서'
+				when tbType = 'manufacturingNoStopProcess' then '품목제조보고서'
+				when tbType = 'report' then '보고서'
+				when tbType = 'circulation' then '회람'
+				when tbType = 'materialManagement' then '원료변경요청서'
+				when tbType = 'trialProductionReport' then '시생산 보고서' 
+				when tbType = 'productDesignDocDetail' then '제품 설계서'
+				when tbType = 'trialReportCreate' then '시생산결과보고서'
+				when tbType = 'trialReportAppr2' then '시생산결과보고서'
+				end tbTypeName 
+			, case when type = 'C' then '회람'
+				when type = 'R' then '참조' end typeName
+			,title
+			, regUserId
+			, getUserName(regUserId) as regUserName
+			, getUserName(targetUserId) as targetUserName
+			, case when type = 'C' then left(convert(modDate, DATE), 16)
+				when type = 'R' then left(convert(regDate, DATE), 16)  end regDate
+			, type
+			, link
+	FROM(
+		SELECT row_number() over (order by h.apprNo desc) as rn 
+			, h.apprNo
+			, h.tbType
+			, h.tbKey
+			, h.title
+			, h.regUserId	
+			, r.targetUserId
+			, r.regDate
+			, h.modDate
+			, r.type
+			, h.link
+		FROM approvalBoxHeader h
+			inner join	approvalReference r
+			on h.apprNo = r.apprNo
+		WHERE r.targetUserId = #{userId} 
+			AND ((r.type = 'C' AND h.lastState = 1) OR (r.type = 'R')) 
+			<if test="type!='' and type!=null">
+			AND	r.type = #{type}
+			</if>
+			<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test='searchType.equals("U")'>
+					AND h.regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT('%',#{searchValue},'%'))
+					</when>
+		      		<when test='searchType.equals("K")'>
+		      		AND h.title LIKE CONCAT('%',#{searchValue},'%')
+		      		</when>
+		      	</choose>
+			</if>
+		) t
+	WHERE t.rn between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="myCount"  parameterType="map" resultType="int">
+		SELECT	count(*)
+		FROM		approvalBoxHeader h
+		WHERE 1=1
+			AND	lastState = '0'
+			AND regUserId = #{userId}		
+	</select>
+	
+	<select id="apprCount"  parameterType="map" resultType="int">
+		SELECT count(*) 
+			FROM approvalBoxHeader h
+			WHERE 1=1
+				AND	lastState = '0' 
+				AND (
+					currentUserId = #{userId} 
+					OR currentUserId in(
+						SELECT sourceUserId 
+						FROM proxyApproval 
+						WHERE targetUserId = #{userId}  
+							AND DATE_FORMAT(sysdate(),'%Y-%m-%d') between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d')
+							AND isDelete = 'N'
+				)
+			)	
+	</select>
+	
+	<select id="refCount"  parameterType="map" resultType="int">
+		SELECT (
+			SELECT count(r.apprNo)
+			FROM approvalReference r			
+			WHERE r.targetUserId = #{userId}
+				AND  r.type = 'R'
+				AND r.regDate = sysdate()
+			)+(
+			SELECT count(r.apprNo)
+			FROM approvalBoxHeader h
+				inner join	approvalReference r
+				on h.apprNo = r.apprNo
+			WHERE r.targetUserId = #{userId}
+				AND  r.type = 'C' 
+				AND h.lastState = 1
+				AND h.modDate = sysdate()
+		) AS refCount
+	</select>
+	
+	<delete id="deleteApprHeader" parameterType="int">
+    /*report.deleteApprHeader*/
+    DELETE FROM approvalBoxHeader WHERE apprNo = #{apprNo}
+    </delete>
+    <delete id="deleteApprItem" parameterType="int">
+    /*report.deleteApprItem*/
+    DELETE FROM approvalBoxInfo WHERE apprNo = #{apprNo}
+    </delete>
+    <delete id="deleteRefCirc" parameterType="int">
+    /*report.deleteRefCirc*/
+    DELETE FROM approvalReference WHERE apprNo = #{apprNo} 
+    </delete>
+    <select id="newApprovalBoxHeaderSave" resultType="hashmap">
+    	INSERT INTO approvalBoxHeader(tbKey,tbType,type,currentStep,currentUserId,totalStep,lastState,title,regUserId,regDate,referenceId,comment,tempKey) 
+    	VALUES(#{tbKey},#{tbType},#{type},#{currentStep},#{currentUserId},#{totalStep},0,#{title},#{regUserId},sysdate(),#{referenceId},#{comment},#{tempKey})
+    	
+    	SELECT LAST_INSERT_ID()
+    </select>
+    <insert id="approvalBoxInfoSave">
+    	INSERT INTO approvalBoxInfo(apprNo,seq,targetUserId,state,regDate) VALUES(#{apprNo},#{seq},#{targetUserId},#{state},sysdate())
+    </insert>
+    <insert id="approvalReferenceSave">
+    	INSERT INTO approvalReference(apprNo, tbKey, tbType, title, regDate, regUserId, targetUserId, link, type) 
+    	VALUES(#{apprNo},#{tbKey},#{tbType},#{title},sysdate(),#{regUserId},#{targetUserId},#{link}, #{type})
+    </insert>
+    <select id="approvalBoxDataForEmail" parameterType="string">
+    	SELECT 	apprNo
+			, tbKey
+			, tbType
+			, type
+			, title
+			, currentUserId
+			, getUserName(currentUserId) as nextUserName
+			, getUserEmail(currentUserId) as nextUserEmail
+			, regUserId
+			, getUserName(regUserId) as regUserName
+			, getUserEmail(regUserId) as regUserEmail
+			, link		
+			, case when tbType = 'manufacturingProcessDoc' then (SELECT docProdName FROM manufacturingProcessDoc WHERE dNo = h.tbKey)
+			       when tbType = 'techTransfer' then (SELECT productName FROM techTransfer t INNER JOIN devDoc d ON t.docNo = d.docNo and t.docVersion = d.docVersion WHERE t.tNo = h.tbKey)
+				   when tbType = 'designRequestDoc' then (SELECT productName FROM designRequestDoc t INNER JOIN devDoc d ON t.docNo = d.docNo and t.docVersion = d.docVersion WHERE t.drNo = h.tbKey)
+				   when tbType = 'itemManufacturingProcessDoc' then (SELECT productName FROM itemManufacturingProcessDoc WHERE imNo = h.tbKey) 
+				   when tbType = 'productDesignDocDetail' then (SELECT productName FROM productDesignDoc WHERE pNo = (SELECT pNo FROM productDesignDocDetail WHERE pdNo = h.tbKey))
+				   else '' end productName	   
+	FROM 	approvalBoxHeader h
+	WHERE 	apprNo = #{apprNo}
+    </select>
+    <select id="approvalBoxDataForEmailReference">
+    	SELECT		arNo
+					, apprNo
+					, title
+					, link
+					, targetUserId
+					, getUserEmail(targetUserId) as nextUserEmail
+	FROM		approvalReference
+	WHERE		apprNo = #{apprNo}
+					AND type = #{type}
+    </select>
+    <select id="nextApprovalUserInfo" resultType="hashmap">
+    	SELECT 	count(apprNo) as cnt
+					, getUserName(#{nextUserId}) as nextUserName 
+		FROM 		approvalBoxHeader 
+		WHERE 		lastState = 0 
+					AND currentUserId = #{nextUserId}
+					AND tbType = #{tbType} 
+    </select>
+    <select id="nextApprovalBoxInfo" resultType="hashmap">
+    	SELECT		seq, targetUserId, (select count(seq) from approvalBoxInfo WHERE apprNo = #{apprNo}) as totalStep
+		FROM		approvalBoxInfo
+		WHERE		apprNo = #{apprNo} and seq > #{currentStep} and state = 0
+		ORDER BY seq 
+		limit 1
+    </select>
+    <update id="approvalBoxHeaderUpdate">
+    	 UPDATE		approvalBoxHeader 
+   		 SET		
+   		 	currentStep = #{currentStep} 
+   		 	, currentUserId = #{currentUserId}
+   		 	, modDate = sysdate()
+   		 	<if test="totalStep !='' and totalStep != null">
+   		 	, totalStep = #{totalStep}
+   		 	</if>
+		 WHERE 		apprNo = #{apprNo}
+    </update>
+    <update id="apprStateUpdateManufac"> 
+    	update manufacturingProcessDoc set state=#{state} , apprNo=#{apprNo} where dNo = #{tbKey}
+    </update>
+    <update id="approvalBoxHeaderLinkUpdate">
+    	update approvalBoxHeader set link = #{link} where apprNo = #{apprNo} and tbKey = #{tbKey} and tbType = #{tbType}
+    </update>
+    
+    <insert id="approvalBoxHeaderCopy" parameterType="map">
+    /*apporval.approvalBoxHeaderCopy*/
+    <selectKey keyProperty="apprNo" resultType="int" order="AFTER">
+    INSERT INTO 
+    	approvalBoxHeader(
+    		tbKey
+    		,tbType
+    		,type
+    		,currentStep
+    		,currentUserId
+    		,totalStep
+    		,lastState
+    		,title
+    		,regUserId
+    		,regDate
+    		,modDate
+    		,referenceId
+    		,tempKey
+    		,link
+    		,comment)
+    	(SELECT 	
+    		tbKey
+    		,tbType
+    		,type
+    		,currentStep
+    		,currentUserId
+    		,totalStep
+    		,0
+    		,title
+    		,regUserId
+    		,sysdate()
+    		,sysdate()
+    		,referenceId
+    		,tempKey
+    		,link
+    		,comment
+    	FROM 	
+    		approvalBoxHeader
+    	WHERE 1 = 1
+    		AND apprNo = #{oldApprNo}
+    	)	
+    select SCOPE_IDENTITY()
+    </selectKey>
+    </insert>
+    <insert id="approvalBoxInfoCopy" parameterType="map">
+    /*apporval.approvalBoxInfoCopy*/
+    INSERT INTO 
+    	approvalBoxInfo(
+    		apprNo
+      		,seq
+      		,targetUserId
+      		,state
+ 		    ,regDate
+      		,modDate
+      		,note)
+    	(SELECT 	
+    		#{newApprNo}
+      		,seq
+      		,targetUserId
+      		,0
+ 		    ,sysdate()
+      		,sysdate()
+      		,''
+    	FROM 	
+    		approvalBoxInfo
+    	WHERE 1 = 1
+    		AND apprNo = #{oldApprNo}
+    		AND state != 3
+    	)	
+    </insert>
+    <insert id="approvalReferenceCopy" parameterType="map">
+    /*apporval.approvalReferenceCopy*/
+    INSERT INTO 
+    	approvalReference(
+    		apprNo
+	      	,tbKey
+	      	,tbType
+	      	,title
+	      	,regDate
+	      	,regUserId
+	      	,targetUserId
+	      	,link
+	      	,type)
+    	(SELECT 	
+    		#{newApprNo}
+      		,tbKey
+      		,tbType
+      		,title
+ 		    ,sysdate()
+      		,regUserId
+      		,targetUserId
+      		,link
+	      	,type
+    	FROM 	
+    		approvalReference
+    	WHERE 1 = 1
+    		AND apprNo = #{oldApprNo}
+    	)	
+    </insert>
+     <update id="approvalStateUpdate" parameterType="map"> 
+    	UPDATE 
+    		${tableName} 
+    	SET 
+    		${stateFildName}=#{state} 
+    	<if test="apprNo !='' and apprNo != null">
+    		, apprNo=#{apprNo} 
+    	</if>		
+    	WHERE ${tbKyeName} = #{tbKey}
+    </update>
+    <select id="getDetailApprovalLineList" resultType="hashmap" parameterType="string">
+    	SELECT			apprLineNo
+								, apprType
+								, targetUserId		
+								, getUserDeptName(u.userId) AS deptCodeName
+								, getUserTeamName(u.userId) AS teamCodeName
+								, userName
+			FROM			approvalLineInfo i
+			INNER JOIN 	userTable2 u
+			ON				i.targetUserId = u.userId
+			WHERE			apprLineNo = #{apprLineNo}
+			AND u.isDelete='N'
+			ORDER BY 	apprType
+    </select>
+    <update id="updateApprvalItemInfo" parameterType="map"> 
+    /* approval.updateApprvalItemInfo 결재여부 업데이트*/
+    	UPDATE 
+    		approvalBoxInfo 
+    	SET 
+    		modDate = sysdate()
+    		,note = #{note}
+    		,proxyId = #{proxyId}
+    		,proxyYN = #{proxyYN}
+    		,state = #{state}
+    	WHERE apprNo = #{apprNo}
+    		AND seq = #{currentStep}
+    </update>
+    <select id="apprvalItemState" parameterType="map" resultType="int">
+    /* approval.apprvalItemState 결재아이템 카운트*/
+    SELECT COUNT(apprNo)+1
+    FROM approvalBoxInfo
+    WHERE 1 = 1
+    	AND apprNo = #{apprNo}
+    	AND (state = 1 or state = 3)
+    </select>
+    <update id="updateArrpvalHeader" parameterType="map"> 
+    /* approval.updateArrpvalHeader 결재헤더 업데이트*/
+    	UPDATE 
+    		approvalBoxHeader 
+    	SET 
+    		lastState = #{lastState}
+    		,modDate = sysdate()
+    	WHERE 1 = 1 
+    		AND apprNo = #{apprNo}
+    </update>
+    <select id="getApprNo" resultType="hashmap">
+    	select apprNo from approvalBoxHeader 
+    	where tbType = #{tbType} 
+    	and tbKey = #{tbKey}
+    	<if test="type !='' and type != null">
+    		and type = #{type}
+    	</if>
+    	order by regDate desc
+    </select>
+    <select id="apprItemInfoByApbNo" parameterType="map" resultType="ApprovalItemVO">
+		/* approval.apprItemInfoByApbNo 결재 아이템 정보 */
+		SELECT
+			apbNo
+			,apprNo
+			,seq
+			,targetUserId
+			,state
+			,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			,modDate
+			, note
+			, getUserName(targetUserId) AS userName
+			, getUserDeptName(targetUserId) AS deptCodeName
+			, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = targetUserId)) AS authName
+			, case when seq = 1 then '기안' 
+			  else case when state = 0 then '대기' 
+			  when state = 1 then '승인'
+			  when state = 2 then '반려' 
+			  else '' end
+		      end as stateText
+		    ,(SELECT userName FROM USERTABLE2 WHERE userId = proxyId) as proxyId
+			,proxyYN
+		FROM approvalBoxInfo
+		WHERE apbNo = #{apbNo}
+	</select>
+	<select id="getDocData" parameterType="map" resultType="map">
+		SELECT 
+			a.docNo, a.docVersion, b.productName
+		FROM 
+			<choose>
+				<when test='tbType.equals("designRequestDoc")'>
+				designRequestDoc a, devDoc b
+				</when>
+	      		<when test='tbType.equals("manufacturingProcessDoc")'>
+	      		manufacturingProcessDoc a, devDoc b
+	      		</when>
+	      	</choose>
+		WHERE 1 = 1
+			<choose>
+				<when test='tbType.equals("designRequestDoc")'>
+				AND a.drNo = #{tbKey}
+				</when>
+	      		<when test='tbType.equals("manufacturingProcessDoc")'>
+	      		AND a.dNo = #{tbKey}
+	      		</when>
+	      	</choose>
+	      	AND b.docNo = a.docNo
+			AND b.docVersion = a.docVersion
+			AND b.isHidden != 'Y'
+	</select>
+	
+	<select id="printConfirmData" parameterType="map" resultType="ApprovalHeaderVO">
+	/* approval.printConfirmData 프린트 결재 정보*/
+		SELECT
+			apprH.apprNo 
+			,apprH.tbKey
+    		,apprH.tbType
+    		,apprH.type
+    		,apprH.lastState
+    		, (SELECT COUNT(p_log.apprNo) 
+    			FROM print_log p_log 
+    			WHERE p_log.apprNo = apprH.apprNo 
+				AND p_log.tbType = apprH.tbType
+				AND p_log.tbKey = apprH.tbKey
+				AND p_log.type in ( 'D', 'P')
+				AND p_log.userId = apprH.regUserId) AS printCount
+		FROM 
+			approvalBoxHeader apprH
+		WHERE 1 = 1
+			AND apprH.tbType = #{tbType}
+			AND apprH.tbKey = #{tbKey}
+			AND apprH.type = #{type}
+			AND apprH.regUserId = #{regUserId}
+		ORDER BY apprH.apprNo DESC
+		limit 1  
+	</select>
+	
+	<select id="getMfgApprNoList" resultType="int">
+		SELECT apprNo FROM approvalBoxHeader 
+		WHERE tbType = 'manufacturingProcessDoc' 
+		  AND tbKey in (SELECT dNo FROM manufacturingProcessDoc WHERE docNo = #{docNo} and docVersion = #{docVersion})
+	</select>
+	
+	<select id="getDesignApprNoList" resultType="int">
+		SELECT apprNo FROM approvalBoxHeader 
+		WHERE tbType = 'designRequestDoc' 
+		  AND tbKey in (SELECT drNo FROM designRequestDoc WHERE docNo = #{docNo} and docVersion = #{docVersion})
+	</select>
+	
+	<select  id="apprCountType" parameterType="map" resultType="map">
+	/*approval.apprCountType 받은결재 유형별 문서 수*/
+		SELECT lastState, count(lastState) as apprCount FROM ( 
+			SELECT 
+				h.* 
+			FROM 
+			approvalBoxHeader h 
+			WHERE 1=1 
+				AND lastState = '0' 
+				AND ( currentUserId = #{userId} OR currentUserId in( SELECT sourceUserId FROM proxyApproval WHERE targetUserId = #{userId} AND DATE_FORMAT(sysdate(),'%Y-%m-%d') 
+				between DATE_FORMAT(startDate,'%Y-%m-%d') AND DATE_FORMAT(endDate,'%Y-%m-%d') AND isDelete = 'N' ) ) 
+				UNION 
+			SELECT h.* 
+			FROM approvalBoxHeader h , 
+				approvalBoxInfo i 
+			WHERE 1=1 
+			AND lastState in ('1','2') 
+			AND h.apprNo = i.apprNo 
+			AND i.targetUserId = #{userId} 
+			AND i.state in ('1','2') 
+		) APPR 
+		GROUP BY lastState
+	</select>
+	<select  id="myCountType" parameterType="map" resultType="map">
+	/*approval.myCountType 상신한 결재 유형별 문서 수*/	
+		SELECT	
+			lastState, 
+			count(lastState) as apprCount
+		FROM		
+			approvalBoxHeader h
+		WHERE 1=1
+			AND regUserId = #{userId}	
+		group by lastState
+	</select>
+	<delete id="approvalLineHeaderDelete" parameterType="string">
+		delete  from approvalLineHeader where apprLineNo = #{apprLineNo}
+	</delete>
+	<delete id="approvalLineItemDelete" parameterType="string">
+		delete  from approvalLineInfo where apprLineNo = #{apprLineNo}
+	</delete>
+	
+	
+	<select id="countReviewDoc"  parameterType="map" resultType="int">
+		SELECT	 count(*)
+		FROM	approvalBoxHeader h
+		INNER JOIN
+		(
+			SELECT  				drNo, imNo
+			FROM					designRequestDoc d
+			RIGHT	OUTER JOIN	itemManufacturingProcessDoc i
+			ON						d.docNo = i.docNo 
+										AND d.docVersion = i.docVersion
+			WHERE					d.docNo = #{docNo} 
+										AND d.docVersion = #{docVersion}
+			
+			UNION							
+										
+			SELECT  				drNo, imNo
+			FROM					designRequestDoc d
+			LEFT	OUTER JOIN	itemManufacturingProcessDoc i
+			ON						d.docNo = i.docNo 
+										AND d.docVersion = i.docVersion
+			WHERE					d.docNo = #{docNo} 
+										AND d.docVersion = #{docVersion}							
+		) t
+		ON	h.tbType = 'designRequestDoc' AND h.tbKey = t.drNo
+		WHERE		h.lastState = 0
+						AND currentStep = 2
+						AND type = 0
+	</select>
+	
+	<select id="apporvingListCount"  parameterType="map" resultType="int">
+	/* approvalDaoImpl.apporvingListCount 결재 리스트 수	*/
+		SELECT 
+			count(ah.apprNo)
+		FROM approvalBoxHeader ah, 
+			(SELECT  row_number() over (order by h.apprNo desc) as rn, h.apprNo
+			FROM approvalBoxHeader h
+				JOIN approvalBoxInfo i
+				ON h.apprNo = i.apprNo AND i.targetUserId = #{userId}  AND i.state = '1'					
+				WHERE 1=1
+				AND	h.lastState = '0'
+				<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test='searchType.equals("U")'>
+					AND h.regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE CONCAT('%',#{searchValue},'%') or userName LIKE CONCAT('%',#{searchValue},'%'))
+					</when>
+		      		<when test='searchType.equals("K")'>
+		      		AND h.title LIKE CONCAT('%',#{searchValue},'%')
+		      		</when>
+		      	</choose> 
+		      	</if>
+				group by h.apprNo
+				)temp
+		WHERE 1 = 1 
+			AND ah.apprNo = temp.apprNo
+	</select>
+	
+	<select id="apporvingList"  parameterType="map" resultType="ApprovalHeaderVO">
+	/* approvalDaoImpl.apporvingList 결재 헤더정보	*/
+		SELECT 
+			temp.rn
+			, ah.apprNo
+			, ah.tbKey
+			, ah.tbType
+			, case when ah.tbType = 'manufacturingProcessDoc' then '제조공정서'
+					when ah.tbType = 'techTransfer' then '기술이전서' 
+					when ah.tbType = 'designRequestDoc' then '디자인의뢰서' 
+					when ah.tbType = 'itemManufacturingProcessDoc' then '품목제조보고서'
+					when ah.tbType = 'manufacturingNoStopProcess' then '중단요청'
+					when ah.tbType = 'report' then '보고서'
+					when ah.tbType = 'circulation' then '회람'
+					when ah.tbType = 'materialManagement' then '원료변경요청서' 
+					when ah.tbType = 'trialProductionReport' then '시생산 보고서' 
+					when ah.tbType = 'productDesignDocDetail' then '제품 설계서'
+					when ah.tbType = 'trialReportCreate' then '시생산결과보고서'
+					when ah.tbType = 'trialReportAppr2' then '시생산결과보고서'
+					end tbTypeName
+			, ah.type
+			, case when ah.type = '0' then '일반결재'
+				when ah.type = '3' then '프린트결재'
+				when ah.type = '5' then '생성결재'
+				when ah.type = '6' then '작성완료상신' end typeName
+			, ah.title
+			, ah.regUserId
+			, getUserName(ah.regUserId) as regUserName
+			, getUserName(ah.currentUserId) as currentUserName
+			, left(convert(ifnull(ah.modDate, ah.regDate), DATE),16) as modDate
+			, ah.lastState
+			, case when ah.lastState = '0' then '진행중'
+				when ah.lastState = '1' then '결재완료'
+				when ah.lastState = '2' then '반려' end lastStateName	
+			, ah.currentStep
+			, ah.totalStep	   			
+			, ah.link
+		FROM approvalBoxHeader ah, 
+			(SELECT  row_number() over (order by h.apprNo desc) as rn, h.apprNo
+			FROM approvalBoxHeader h
+				JOIN approvalBoxInfo i
+				ON h.apprNo = i.apprNo AND i.targetUserId = #{userId}  AND i.state = '1'					
+				WHERE 1=1
+				AND	h.lastState = '0'
+				<if test="searchType != null and searchType != '' ">
+				<choose>
+					<when test='searchType.equals("U")'>
+					AND h.regUserId in (SELECT userId FROM userTable2 WHERE userId LIKE '%' || #{searchValue} || '%' or userName LIKE '%' || #{searchValue} || '%')
+					</when>
+		      		<when test='searchType.equals("K")'>
+		      		AND h.title LIKE '%' || #{searchValue} || '%'
+		      		</when>
+		      	</choose> 
+		      	</if>
+				group by h.apprNo
+				)temp
+		WHERE 1 = 1 
+			AND ah.apprNo = temp.apprNo
+			AND temp.rn between #{startRow} AND #{endRow}
+			ORDER BY temp.rn ASC
+	</select>
+	
+	<select id="apprItemInfoExcel" parameterType="map" resultType="ApprovalItemVO">
+		SELECT
+			apbNo
+			,apprNo
+			,seq
+			,targetUserId
+			,state
+			,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			,DATE_FORMAT(modDate,'%Y-%m-%d') AS modDate
+			, note
+			, getUserName(targetUserId) AS userName
+			, getUserDeptName(targetUserId) AS deptCodeName
+			, getCodeName('GRADE', (SELECT userGrade FROM userTable2 where userId = targetUserId)) AS authName
+			, case when seq = 1 then '기안' 
+				else case when state = 0 then '대기' 
+				when state = 1 then '승인'
+				when state = 2 then '반려' 
+				else '' end
+				end as stateText
+			,(SELECT userName FROM USERTABLE2 WHERE userId = proxyId) as proxyId
+			,proxyYN
+		FROM approvalBoxInfo
+		WHERE 1 = 1
+			AND APPRNO = (
+				SELECT APPRNO FROM approvalBoxHeader 
+				WHERE tbKey = #{tbKey} and tbType = #{tbType} and type=#{type} ORDER BY regDate DESC limit 1
+			)
+			AND state != 3
+		ORDER BY SEQ
+	</select>
+	
+	<select id="getPrintApprTargetList" parameterType="map" resultType="hashmap">
+		SELECT userId, username, deptCode
+			, getUserDeptName(userId)
+			, getCodeName(userGrade, 'TEAM') 
+		FROM userTable2 
+		WHERE userGrade = 2
+		  AND deptcode = (SELECT deptCode FROM userTable2 WHERE userId = #{currentUserId})
+		  AND isDelete = 'N'
+		UNION ALL
+		SELECT userId, username, deptCode
+			, getUserDeptName(userId)
+			, getCodeName(userGrade, 'TEAM') 
+		FROM userTable2 
+		WHERE userId = 'bkson'
+	</select>
+	
+	<insert id="insertApprovalLineHeader" parameterType="map">
+		INSERT INTO approvalLineHeader(
+			lineName
+			, tbType
+			, regUserId
+			, regDate
+		) VALUES (
+			#{lineName}
+			, #{tbType}
+			, #{regUserId}
+			, sysdate()
+		)
+		<selectKey keyProperty="apprLineNo" resultType="int" order="AFTER">
+			SELECT IDENT_CURRENT('approvalLineHeader')
+		</selectKey>
+	</insert>
+	
+	<insert id="insertApprovalBoxHeader" parameterType="map">
+		INSERT INTO approvalBoxHeader(
+			tbKey
+			,tbType
+			,type
+			,currentStep
+			,currentUserId
+			,totalStep
+			,lastState
+			,title
+			,regUserId
+			,regDate
+			,referenceId
+			,comment
+			,tempKey
+			,link
+		) VALUES (
+			#{tbKey}
+			,#{tbType}
+			,#{type}
+			,#{currentStep}
+			,#{currentUserId}
+			,#{totalStep}
+			,0
+			,#{title}
+			,#{regUserId}
+			,sysdate()
+			,#{referenceId}
+			,#{comment}
+			,#{tempKey}
+			,#{link}
+		)
+		<selectKey keyProperty="apprNo" resultType="int" order="AFTER">
+			SELECT LAST_INSERT_ID('approvalBoxHeader')
+		</selectKey>
+	</insert>
+	
+	<insert id="insertApprovalBoxInfo" parameterType="map">
+    	INSERT INTO approvalBoxInfo(
+    		apprNo
+    		,seq
+    		,targetUserId
+    		,state
+    		,regDate
+    	) VALUES (
+    		#{apprNo}
+    		,#{seq}
+    		,#{targetUserId}
+    		,#{state}
+    		,sysdate()
+    	)
+    </insert>
+    
+    <insert id="insertApprovalReference" parameterType="map">
+    	INSERT INTO approvalReference(
+    		apprNo
+    		, tbKey
+    		, tbType
+    		, title
+    		, regDate
+    		, regUserId
+    		, targetUserId
+    		, link
+    		, type
+    	) VALUES (
+    		#{apprNo}
+    		,#{tbKey}
+    		,#{tbType}
+    		,#{title}
+    		,sysdate()
+    		,#{regUserId}
+    		,#{targetUserId}
+    		,#{link}
+    		, #{type}
+    	)
+    </insert>
+    
+    <select id="getRegUserId" resultType="string">
+    	SELECT regUserId FROM ${tableName} WHERE ${tbKyeName} = #{tbKey}
+    </select>
+    
+    <select id="getMfgPlantName" resultType="string">		
+    	<if test='tbType == "manufacturingProcessDoc"'>	
+	    	SELECT getPlantName(companyCode, plantCode) plantName FROM ${tbType} WHERE dNo = #{tbKey}
+    	</if>	
+    	<if test='tbType == "materialManagement"'>	
+    		SELECT getPlantName(companyCode, plant) plantName FROM ${tbType} WHERE mmNo = #{tbKey}
+    	</if>	
+    	<if test='tbType == "productDesignDocDetail"'>	
+    		SELECT getPlantName(companyCode, plant) plantName FROM productDesignDoc
+    		WHERE pNo = (select pNo from ${tbType} where pdNo = #{tbKey})
+    	</if>
+		<if test="tbType == 'manufacturingNoStopProcess'">
+			SELECT getPlantName2(companyCode,plantCode) AS plantName FROM manufacturingNo WHERE seq = #{tbKey}
+		</if>
+    </select>	
+    
+    <select id="countPrint"  parameterType="map" resultType="int">
+    	
+		SELECT count(*) pCount from print_log 
+		where tbType = #{tbType} and tbKey = #{tbKey} and userId = #{regUserId}
+	</select>
+
+	<select id="isApprExsiste" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM approvalBoxHeader WHERE apprNo = #{apprNo}
+	</select>
+
+</mapper>
+
+<!-- Builder 개발서버 반영 원복 재실행을 위한 주석 추가 -->

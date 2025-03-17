@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="faq">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="FaqNoticeListCount" resultType="int">
+		 select count(*) from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		,nNo
+		,title
+		,content
+		,dbo.getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='faq' AND tbKey = nNo) as fileCount
+		 FROM faq
+	<!-- 	 <if test="keyword != '' and keyword !=null">
+		 	WHERE (title LIKE '%'+#{keyword}+'%' OR content LIKE '%'+#{keyword}+'%' OR dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%')
+		 </if> -->
+		 <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'content'">
+		 				WHERE (content LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	WHERE (title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				WHERE (title LIKE '%'+#{keyword}+'%' OR content LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 )a
+	</select>
+	
+	<select id="getPagenatedFaqNoticeList" resultType="hashmap">
+		 select * from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		,nNo
+		,title
+		,content
+		,dbo.getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='faq' AND tbKey = nNo) as fileCount
+		 FROM faq
+		 <!-- <if test="keyword != '' and keyword !=null">
+		 	WHERE (title LIKE '%'+#{keyword}+'%' OR content LIKE '%'+#{keyword}+'%' OR dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%')
+		 </if> -->
+		   <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'content'">
+		 				WHERE (content LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	WHERE (title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				WHERE (title LIKE '%'+#{keyword}+'%' OR content LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 )a
+	  	 where rn between #{startRow} and #{endRow}
+	 	 order by regDate desc
+	</select>
+	
+	<select id="getFaqNoticeView" resultType="hashmap">
+		SELECT nNo, title,dbo.getUserName(regUserId) as userName,content,regDate,modUserId FROM faq WHERE nNo = #{nNo}
+	</select>
+	
+	<insert id="noticeSave">
+		insert into faq(title,regUserId,content,regDate) values(#{title},#{regUserId},#{content},GETDATE())
+	</insert>
+	
+	<delete id="FaqnoticeDelete">
+		delete from faq where nNo=${nNo}
+	</delete>
+	
+	<update id="FaqnoticeEdit">
+		update faq set 
+		title=#{title},
+		content=#{contents},
+		modUserId=#{modUserId}
+		where nNo=#{nNo}
+	</update>
+</mapper>

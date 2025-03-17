@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="productDesign">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+			<if test="page.sortField != null and page.sortOrder != null">
+				ORDER BY ${page.sortField} ${page.sortOrder}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="countForProductDesignDoc" resultType="int" parameterType="string">
+		select count(*) from productDesignDoc where regUserId = #{regUserId}
+	</select>
+	
+	<select id="getProductDesignDocInfo" resultType="hashmap">
+		/** productDesign.getProductDesignDocInfo */
+		SELECT * FROM (
+			SELECT row_number() over (order by pNo desc) as rn
+				, pNo
+				, productName
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				, regUserId
+				, getUserName(regUserId) as userName
+				, productCategory
+				, (SELECT itemName FROM CODEITEM WHERE itemcode = productCategory) categoryName
+				, plant
+				, (SELECT plantname FROM PLANT WHERE plantCode = plant) plantName
+				, companyCode
+ 				, (SELECT company_name FROM COMPANY WHERE company_code = companyCode) companyName
+ 				, productType1
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT1' AND itemCode = productType1) productType1Text
+				, productType2
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT2' AND itemCode = productType2) productType2Text
+				, productType3
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT3' AND itemCode = productType3) productType3Text
+				, sterilization
+				, etcDisplay
+			FROM productDesignDoc
+			WHERE 1=1
+			<if test="pNo != null">
+				and pNo = #{pNo}
+			</if>
+		) a
+	</select>
+	
+	<select id="getProductDesignListCount" resultType="int">
+		SELECT count(*) FROM productDesignDoc
+		<if test="search != null">
+			<if test='search.ownerType == "user"'>
+				AND regUserId = #{search.ownerId}
+			</if>
+			<if test='search.ownerType == "team"'>
+				<if test='search.teamCode == ""'>
+					AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+				</if>
+				<if test='search.teamCode != ""'>
+					AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+				</if>
+			</if>
+			<if test="search.searchField != null and search.searchValue != null">
+				<if test='search.searchField != "" and search.searchValue != ""'>
+					AND ${search.searchField} like concat('%',#{search.searchValue},'%')
+				</if>
+			</if>
+		</if>
+	</select>
+	
+	<select id="getPagenatedProductDesignList" resultType="hashmap">
+		/** productDesign.getPagenatedProductDesignList */
+		SELECT * FROM (
+			SELECT row_number() over (order by pNo desc) as rn
+				, pNo
+				, ProductName
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				, regUserId
+				, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+				, modUserId
+				, getUserName(regUserId) as userName
+				, (SELECT itemName FROM CODEITEM WHERE itemcode = productCategory) categoryName
+				, (SELECT plantname FROM PLANT WHERE plantCode = plant) plantName
+				, productType1
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT1' AND itemCode = productType1) productType1Text
+				, productType2
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT2' AND itemCode = productType2) productType2Text
+				, productType3
+				, (SELECT itemName FROM codeItem WHERE groupCode = 'PRODCAT3' AND itemCode = productType3) productType3Text
+				, sterilization
+				, etcDisplay
+			FROM productDesignDoc
+			WHERE 1=1
+			<if test="search != null">
+				<if test='search.ownerType == "user"'>
+					AND regUserId = #{search.ownerId}
+				</if>
+				<if test='search.ownerType == "team"'>
+					<if test='search.teamCode == ""'>
+						AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+					</if>
+					<if test='search.teamCode != ""'>
+						AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+					</if>
+				</if>
+				<if test="search.searchField != null and search.searchValue != null">
+					<if test='search.searchField != "" and search.searchValue != ""'>
+					<choose>
+						<when test="search.searchField == 'userName'">
+							AND getUserName(regUserId) like concat('%',#{search.searchValue},'%')
+						</when>
+						<otherwise>
+							AND ${search.searchField} like concat('%',#{search.searchValue},'%')
+						</otherwise>
+					</choose>
+					</if>
+				</if>
+			</if>
+		) a
+		<include refid="pagenation"></include>
+	</select>
+	
+	<insert id="productDesignSave">
+		INSERT INTO productDesignDoc (
+			productName
+			, companyCode
+			, plant
+			, productType1
+			, productType2
+			, productType3
+			, sterilization
+			, etcDisplay
+			, regUserId
+			, regDate
+		) VALUES (
+			#{productName}
+			, #{companyCode}
+			, #{plant}
+			, #{productType1} 
+			, #{productType2}
+			, #{productType3}
+			, #{sterilization}
+			, #{etcDisplay}
+			, #{regUserId}
+			, sysdate()
+		)
+	</insert>
+	
+	<update id="updateProductDesignDoc">
+		UPDATE productDesignDoc SET
+			productName = #{productName}
+			, companyCode = #{companyCode}
+			, plant = #{plant}
+			, productCategory = #{productCategory}
+			, productType1 = #{productType1}
+			, productType2 = #{productType2}
+			, productType3 = #{productType3}
+			, sterilization = #{sterilization}
+			, etcDisplay = #{etcDisplay}
+			, modUserId = #{modUserId}
+			, modDate = sysdate()
+		WHERE pNo = #{pNo}
+	</update>
+	
+	<select id="getPagenatedProductDesignItemList" resultType="hashmap">
+		SELECT	pdNo
+			, getUserName(regUserId) as userName
+			, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+			, regUserId
+			, oldYn
+			, ifnull(memo, '') as memo
+			, getUserName(modUserId) as modUserName
+			, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+			, modUserId
+			, (SELECT fileName FROM imageFileManager WHERE tbType = 'productDesign' AND tbKey = t.pdNo) imageFileName
+		FROM (
+			SELECT ROW_NUMBER() OVER (ORDER BY pdNo DESC) AS rn
+				, pdNo
+				, regDate
+				, regUserId
+				, oldYn
+				, memo
+				, modUserId
+				, modDate
+			FROM productDesignDocDetail
+			WHERE 1=1
+			<if test="pNo != null">
+				and pNo = #{pNo}
+			</if>
+		) t
+		<include refid="pagenation"></include>
+	</select>
+	
+	<select id="getProductDetail" resultType="hashmap">
+		SELECT p.pNo
+			, d.pdNo
+			, d.pdaNo
+			, d.productName
+			, d.regUserId
+			, getUserName(d.regUserId) as regUserName
+			, plant
+			, (select plantName + '('+plant +')' from plant where companyCode = p.companyCode and plantCode = p.plant) as plantName
+			, productCategory
+			, getCodeName('PRODCAT', productCategory) as productCategoryName
+			, productCategoryText	
+			, DATE_FORMAT(d.regDate,'%Y-%m-%d') as regDate
+			, d.makeProcess
+			, d.productPrice
+			, d.plantPrice
+			, p.companyCode
+			, (select fmNo from fileManager where tbType = 'productDetail' and tbKey = d.pdaNo) as fmNo
+			, mixNumber
+			, mixNumberKG
+			, mixNumber * mixNumberKG
+			, d.doughWeight
+			, ifnull(d.memo, '') as memo
+		FROM productDesignDoc p
+		INNER JOIN productDetail d
+		ON p.pNo = d.pNo
+		WHERE d.pNo = #{pNo} and d.pdNo = #{pdNo}
+	</select>
+	
+	<select id="getProductDetailTableList" resultType="hashmap">
+		<![CDATA[
+			SELECT pdtNo, pNo, pdNo, itemType, itemTypeName, itemCode, itemName
+				, itemPrice, mixNumber
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+				, subProductName, memo
+			FROM productDetailTable 
+			WHERE pNo = #{pNo} 
+			  AND pdNo = #{pdNo}
+			  AND itemtype= #{itemType}
+		]]>
+	</select>
+	
+	<select id="getProductDetailCostList" resultType="hashmap">
+		SELECT type
+			, max(name) as name
+			, max(weight) as weight 
+			, max(kgPrice) as kgPrice 
+			, CONCAT(sum(orgPrice)) as orgPrice
+			, case when type like '%base%' then replace(type, 'base', 'mixTable') else replace(type, 'content', 'contTable') end as rowId
+		FROM productDetailCost
+		WHERE pNo = #{pNo} and pdNo = #{pdNo}
+		GROUP BY type with rollup
+	</select>
+	
+	<select id="getItemTypeList" resultType="string">
+		SELECT itemType FROM productDetailTable 
+		WHERE pNo = #{pNo} and pdNo = #{pdNo}
+		GROUP BY itemType
+	</select>
+	
+	<insert id="insertProductDesignDocDetail" parameterType="kr.co.aspn.vo.ProductDesignDocDetail">
+		<![CDATA[
+			INSERT INTO ProductDesignDocDetail (	
+				pNo
+				, makeProcess
+				, sumMixWeight
+				, productPrice
+				, plantPrice
+				, yieldRate
+				, memo
+				, volume
+				, regUserId
+				, regDate
+				, oldYN
+				, state
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{makeProcess}
+				, #{sumMixWeight, jdbcType=FLOAT}
+				, #{productPrice, jdbcType=FLOAT}
+				, #{plantPrice, jdbcType=FLOAT}
+				, #{yieldRate, jdbcType=FLOAT}
+				, #{memo, jdbcType=VARCHAR}
+				, #{volume, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+				, 'N'
+				, '0'
+			)
+		]]>
+		<selectKey keyProperty="pdNo" resultType="String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailSub" parameterType="kr.co.aspn.vo.ProductDesignDocDetailSub">
+		<![CDATA[
+			INSERT INTO ProductDesignDocDetailSub (
+				pNo
+				, pdNo
+				, subProdName
+				, subProdDesc
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{subProdName, jdbcType=VARCHAR}
+				, #{subProdDesc, jdbcType=VARCHAR}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdsNo" resultType="string" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailSubMix" parameterType="kr.co.aspn.vo.ProductDesignDocDetailSubMix">
+		<![CDATA[
+			INSERT INTO ProductDesignDocDetailSubMix (
+				pNo
+				, pdNo
+				, pdsNo
+				, name
+				, weight
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{pdsNo, jdbcType=VARCHAR}
+				, #{name, jdbcType=VARCHAR}
+				, #{weight, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdsmNo" resultType="String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailSubMixItem" parameterType="kr.co.aspn.vo.ProductDesignDocDetailSubMixItem">
+		<![CDATA[
+			INSERT INTO productDesignDocDetailSubMixItem(
+				pNo
+				, pdNo
+				, pdsNo
+				, pdsmNo
+				, itemImNo
+				, itemSapCode
+				, itemName
+				, itemUnit
+				, itemUnitPrice
+				, mixingRatio
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{pdsNo, jdbcType=VARCHAR}
+				, #{pdsmNo, jdbcType=VARCHAR}
+				, #{itemImNo, jdbcType=VARCHAR}
+				, #{itemSapCode, jdbcType=VARCHAR}
+				, #{itemName, jdbcType=VARCHAR}
+				, #{itemUnit, jdbcType=VARCHAR}
+				, #{itemUnitPrice, jdbcType=FLOAT}
+				, #{mixingRatio, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdsmiNo" resultType="string" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailSubContent" parameterType="kr.co.aspn.vo.ProductDesignDocDetailSubContent">
+		<![CDATA[
+			INSERT INTO ProductDesignDocDetailSubContent (
+				pNo
+				, pdNo
+				, pdsNo
+				, name
+				, weight
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{pdsNo, jdbcType=VARCHAR}
+				, #{name, jdbcType=VARCHAR}
+				, #{weight, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdscNo" resultType="String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailSubContentItem" parameterType="kr.co.aspn.vo.ProductDesignDocDetailSubContentItem">
+		<![CDATA[
+			INSERT INTO productDesignDocDetailSubContentItem (
+				pNo
+				, pdNo
+				, pdsNo
+				, pdscNo
+				, itemImNo
+				, itemSapCode
+				, itemName
+				, itemUnit
+				, itemUnitPrice
+				, mixingRatio
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{pdsNo, jdbcType=VARCHAR}
+				, #{pdscNo, jdbcType=VARCHAR}
+				, #{itemImNo, jdbcType=VARCHAR}
+				, #{itemSapCode, jdbcType=VARCHAR}
+				, #{itemName, jdbcType=VARCHAR}
+				, #{itemUnit, jdbcType=VARCHAR}
+				, #{itemUnitPrice, jdbcType=FLOAT}
+				, #{mixingRatio, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdsciNo" resultType="string" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertProductDesignDocDetailPackage" parameterType="kr.co.aspn.vo.ProductDesignDocDetailPackage">
+		<![CDATA[
+			INSERT INTO ProductDesignDocDetailPackage (
+				pNo
+				, pdNo
+				, itemImNo
+				, itemSapCode
+				, itemName
+				, itemSapPrice
+				, itemVolume
+				, itemUnitPrice
+				, regUserId
+				, regDate
+			) VALUES (
+				#{pNo, jdbcType=VARCHAR}
+				, #{pdNo, jdbcType=VARCHAR}
+				, #{itemImNo, jdbcType=VARCHAR}
+				, #{itemSapCode, jdbcType=VARCHAR}
+				, #{itemName, jdbcType=VARCHAR}
+				, #{itemSapPrice, jdbcType=FLOAT}
+				, #{itemVolume, jdbcType=FLOAT}
+				, #{itemUnitPrice, jdbcType=FLOAT}
+				, #{regUserId, jdbcType=VARCHAR}
+				, sysdate()
+			)
+		]]>
+		<selectKey keyProperty="pdpNo" resultType="string" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<update id="updateProductDesignDocDetail" parameterType="kr.co.aspn.vo.ProductDesignDocDetail">
+		<![CDATA[
+			UPDATE ProductDesignDocDetail 
+			SET 
+				makeProcess = #{makeProcess, jdbcType=VARCHAR}
+				, sumMixWeight = #{sumMixWeight, jdbcType=FLOAT}
+				, yieldRate = #{yieldRate, jdbcType=FLOAT}
+				, productPrice = #{productPrice, jdbcType=FLOAT}
+				, plantPrice = #{plantPrice, jdbcType=FLOAT}
+				, memo = #{memo, jdbcType=VARCHAR}
+				, volume = #{volume, jdbcType=VARCHAR}
+				, modUserId = #{modUserId, jdbcType=VARCHAR}
+				, modDate = sysdate()
+			WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<delete id="deleteProductDesignDoc">
+		DELETE FROM productDesignDoc WHERE pNo = #{pNo, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteProductDesignDocDetail">
+		DELETE FROM ProductDesignDocDetail
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailSub">
+		DELETE FROM ProductDesignDocDetailSub
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailSubMix">
+		DELETE FROM ProductDesignDocDetailSubMix
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailSubMixItem">
+		DELETE FROM ProductDesignDocDetailSubMixItem
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailSubContent">
+		DELETE FROM ProductDesignDocDetailSubContent
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailSubContentItem">
+		DELETE FROM ProductDesignDocDetailSubContentItem
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteProductDesignDocDetailPackage">
+		DELETE FROM ProductDesignDocDetailPackage
+		WHERE pNo = #{pNo, jdbcType=VARCHAR} and pdNo = #{pdNo, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="getProductDesignDocDetail" resultType="kr.co.aspn.vo.ProductDesignDocDetail">
+		SELECT a.*
+			, (SELECT fileName FROM imageFileManager WHERE tbType = 'productDesign' AND tbKey = a.pdNo) imageFileName
+			, (SELECT productName FROM productDesignDoc WHERE pNo = a.pNo) productName 
+		FROM ProductDesignDocDetail a WHERE pdNo = #{pdNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailSub" resultType="kr.co.aspn.vo.ProductDesignDocDetailSub">
+		SELECT * FROM ProductDesignDocDetailSub WHERE pdNo = #{pdNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailSubMix" resultType="kr.co.aspn.vo.ProductDesignDocDetailSubMix">
+		SELECT * FROM ProductDesignDocDetailSubMix WHERE pdsNo = #{pdsNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailSubMixItem" resultType="kr.co.aspn.vo.ProductDesignDocDetailSubMixItem">
+      SELECT *
+      <if test="plantCode != '' and plantCode != null ">
+      , getMatCodeCheck(#{plantCode}, itemSapCode) AS matStatus
+      </if>
+      FROM ProductDesignDocDetailSubMixItem WHERE pdsmNo = #{pdsmNo}
+   </select>
+	
+	<select id="getProductDesignDocDetailSubContent" resultType="kr.co.aspn.vo.ProductDesignDocDetailSubContent">
+		SELECT * FROM ProductDesignDocDetailSubContent WHERE pdsNo = #{pdsNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailSubContentItem" resultType="kr.co.aspn.vo.ProductDesignDocDetailSubContentItem">
+      SELECT *
+      <if test="plantCode != '' and plantCode != null ">
+      , getMatCodeCheck(#{plantCode}, itemSapCode) AS matStatus
+      </if> 
+      FROM ProductDesignDocDetailSubContentItem WHERE pdscNo = #{pdscNo}
+   </select>
+	
+	<select id="getProductDesignDocDetailPackage" resultType="kr.co.aspn.vo.ProductDesignDocDetailPackage">
+		SELECT * 
+		<if test="plantCode != '' and plantCode != null ">
+      	, getMatCodeCheck(#{plantCode}, itemSapCode) AS matStatus
+      	</if>
+      	FROM ProductDesignDocDetailPackage WHERE pdNo = #{pdNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailCostView" resultType="kr.co.aspn.vo.ProductDeisgnDocDetailCostView">
+		SELECT *, (SELECT subProdName FROM ProductDesignDocDetailSub WHERE pno = cv.pNo AND  pdNo = cv.pdNo AND pdsNo = cv.pdsNo ) AS subProdName FROM productDesignDocDetailCostView cv WHERE pdNo = #{pdNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailPNoList" resultType="String">
+		select pdNo from productDesignDocDetail where pNo = #{pNo}
+	</select>
+	
+	<select id="getDesignDocSummaryList" resultType="hashmap">
+		SELECT pNo, productName FROM productDesignDoc 
+		WHERE 1=1
+		<if test='companyCode != null and companyCode != ""'>AND companyCode = #{companyCode}</if>
+		<if test='plantCode != null and plantCode != ""'>AND plant = #{plantCode} </if>
+		<if test='productName != null and productName != ""'>AND productName LIKE concat('%',#{productName},'%')</if>
+		<if test='isAdmin == null or isAdmin == ""'>
+			AND regUserId = #{userId, jdbcType=VARCHAR}
+		</if>
+		ORDER BY pNo DESC
+		LIMIT 1000
+	</select>
+	
+	<select id="getDesignDocDetailSummaryList" resultType="hashmap">
+		SELECT pNo, pdNo, regUserId, getUserName(regUserId) userName, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+		FROM productDesignDocDetail
+		WHERE pNo = #{pNo}
+	</select>
+	
+	<select id="getLatestMaterialList" resultType="hashmap">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(PARTITION BY sapCode ORDER BY supplyDate) rn, a.* 
+			FROM material a 
+			WHERE isDelete != 'Y' 
+			  AND isSample != 'Y' 
+			  AND isHidden = 'N'
+		) a WHERE imNo IN <foreach collection="imNoArr" item="imNo" open="(" separator="," close=")">#{imNo}</foreach>
+	</select>
+	
+	<select id="getHistoryList" resultType="hashmap">
+		SELECT * FROM documentHistory WHERE tbType = #{tbType} and tbKey = #{tbKey}
+	</select>
+	
+	<select id="getPagenatedPopupListCount" resultType="int">
+		/* getPagenatedPopupListCount */
+		SELECT	COUNT(*)
+		FROM (
+			SELECT ROW_NUMBER() OVER (ORDER BY pdNo DESC) AS rn
+				, pdNo
+                , pNo
+				, regDate
+				, regUserId
+				, oldYn
+				, memo
+				, modUserId
+				, modDate
+				, (SELECT productName FROM productDesignDoc WHERE pNo = a.pNo) productName
+			FROM productDesignDocDetail a
+			WHERE 1=1
+		) t
+		WHERE 1=1
+		<if test="search != null">
+			<if test='search.ownerType == "user"'>
+				AND regUserId = #{search.ownerId}
+			</if>
+			<if test='search.ownerType == "team"'>
+				<if test='search.teamCode == ""'>
+					AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+				</if>
+				<if test='search.teamCode != ""'>
+					AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+				</if>
+			</if>
+			<if test="search.searchField != null and search.searchValue != null">
+				<if test='search.searchField != "" and search.searchValue != ""'>
+					AND ${search.searchField} like concat('%',#{search.searchValue},'%')
+				</if>
+			</if>
+		</if>
+	</select>
+	
+	<select id="getPagenatedPopupList" resultType="hashmap">
+		/* getPagenatedPopupList */
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER (ORDER BY pdNo DESC) AS rn  
+		       	, a.pdNo
+		        , a.pNo
+				, a.regDate
+				, a.regUserId
+				, a.oldYn
+				, a.memo
+				, a.modUserId
+				, a.modDate
+				, b.productName
+			FROM productDesignDocDetail a
+		    INNER JOIN productDesignDoc b on a.pNo = b.pNo
+		    <if test="search != null">
+				<if test='search.ownerType == "user"'>
+					AND regUserId = #{search.ownerId}
+				</if>
+				<if test='search.ownerType == "team"'>
+					<if test='search.teamCode == ""'>
+						AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+					</if>
+					<if test='search.teamCode != ""'>
+						AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+					</if>
+				</if>
+				<if test="search.searchField != null and search.searchValue != null">
+					<if test='search.searchField != "" and search.searchValue != ""'>
+						AND ${search.searchField} like concat('%',#{search.searchValue},'%')
+					</if>
+				</if>
+			</if>
+		) t
+		<include refid="pagenation"></include>
+	</select>
+	
+	<select id="getProductDesignDoc" resultType="kr.co.aspn.vo.ProductDesignDocVO">
+		SELECT * FROM productDesignDoc WHERE pNo = #{pNo}
+	</select>
+	
+	<select id="getProductDesignDocDetailListCount" parameterType="map" resultType="int">
+		SELECT COUNT(1)
+		FROM productDesignDocDetail
+		WHERE 1=1
+		<if test="pNo != null">
+			and pNo = #{pNo}
+		</if>
+	</select>
+	
+	<select id="getProductDesignDocDetailList" parameterType="map" resultType="map">
+		SELECT	pdNo
+			, getUserName(regUserId) as userName
+			, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+			, regUserId
+			, oldYn
+			, ifnull(memo, '') as memo
+			, getUserName(modUserId) as modUserName
+			, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+			, modUserId
+			, state
+			, stateText
+			, (SELECT fileName FROM imageFileManager WHERE tbType = 'productDesign' AND tbKey = t.pdNo) imageFileName
+		FROM (
+			SELECT ROW_NUMBER() OVER (ORDER BY pdNo DESC) AS rnum
+				, pdNo
+				, regDate
+				, regUserId
+				, oldYn
+				, memo
+				, modUserId
+				, modDate
+				, state
+				, CASE state 
+					WHEN '0' THEN '등록'
+					WHEN '1' THEN '승인'
+					WHEN '2' THEN '반려'
+					WHEN '3' THEN '결재중'
+					ELSE '미지정 상태값'
+				end stateText
+			FROM productDesignDocDetail
+			WHERE 1=1
+			<if test="pNo != null">
+				and pNo = #{pNo}
+			</if>
+		) t
+		<if test="searchCompany != null and searchCompany != '' ">
+			AND companyCode = #{searchCompany}
+		</if>
+		WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	
+</mapper>

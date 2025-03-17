@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="batch">
+	<update id="setStroage" parameterType="map">
+	/* batch.setStroage */
+		MERGE storageLocation AS T  
+		USING (SELECT #{COMPANY}, #{WERKS}, #{LGORT}) AS S (companyCode, plantCode, storageCode) 
+		ON	T.companyCode = S.companyCode
+		AND T.plantCode = S.plantCode
+		AND T.storageCode = S.storageCode
+		WHEN MATCHED THEN 
+		UPDATE SET 
+			storageName = #{LGOBE}
+		WHEN NOT MATCHED THEN 
+		INSERT (
+			companyCode,
+			plantCode, 
+			storageCode, 
+			storageName
+			) 
+		VALUES(
+			#{COMPANY},
+			#{WERKS}, 
+			#{LGORT}, 
+			#{LGOBE}
+			); 
+	</update>
+	
+	
+	<update id="setLine" parameterType="map">
+	/* batch.setLine */
+		MERGE plantLine AS T 
+		USING (SELECT #{COMPANY}, #{WERKS}, #{ARBPL}) AS S (companyCode, plantCode, lineCode) 
+		ON  T.companyCode = S.companyCode 
+		      AND T.plantCode = S.plantCode 
+		      AND T.lineCode = S.lineCode 
+		WHEN MATCHED THEN 
+		UPDATE SET lineName = #{KTEXT}, isDel = 'N' 
+		WHEN NOT MATCHED BY TARGET THEN 
+		INSERT (companyCode, plantCode, lineCode, lineName, isDel) 
+		VALUES(#{COMPANY}, #{WERKS}, #{ARBPL}, #{KTEXT}, 'N');
+	</update>
+	
+	<update id="setVendor" parameterType="map">
+	/* batch.setVendor */
+		MERGE supplyCompany AS T  
+		USING (SELECT #{COMPANY}, #{MATNR}, #{LIFNR}) AS S (companyCode, itemCode, vendorCode) 
+		ON	T.companyCode = S.companyCode 
+			AND T.itemCode = S.itemCode 		
+			AND T.vendorCode = S.vendorCode
+		WHEN MATCHED THEN 
+		UPDATE SET vendorName = #{NAME1}, 
+		<choose>
+			<when test="LOEKZ != '' and LOEKZ !=null">
+		isDel = 'Y' 		
+			</when>
+			<otherwise>
+		isDel = 'N' 	
+			</otherwise>
+		</choose>
+		WHEN NOT MATCHED THEN 
+		INSERT (companyCode, itemCode, vendorCode, vendorName, isDel) 
+		VALUES(#{COMPANY}, #{MATNR}, #{LIFNR}, #{NAME1}, 
+		<choose>
+			<when test="LOEKZ != null and LOEKZ == 'X' ">
+		'Y' 		
+			</when>
+			<otherwise>
+		'N' 	
+			</otherwise>
+		</choose>
+		);
+	</update>
+	
+	<update id="setMaterial" parameterType="map">
+	/* batch.setMaterial */
+		MERGE material AS T   
+		USING (SELECT #{MATNR}, #{WERKS}, #{COMPANY}) AS S (sapCode, plant,company)  
+		ON	T.sapCode = S.sapCode 
+			AND T.plant = S.plant 
+			AND T.company = S.company
+		WHEN MATCHED THEN 
+			UPDATE SET	
+				name=#{MAKTX}, 
+				price=CONVERT(float,#{DANGA})*100,
+				unit=#{MEINS},
+				exitUnit=#{AUSME},
+				type=#{type},
+				isDelete=#{isDelete},
+				isSample='N',	
+				regUserId=#{user},
+				supplyDate=#{BEDAT},	
+				supplyCompany=#{NAME1},		
+				regDate=sysdate(),
+            	statusCode = #{status}
+		WHEN NOT MATCHED BY TARGET THEN 
+			INSERT (
+			sapCode
+			,name
+			,plant
+			,price
+			,unit
+			,exitUnit
+			,type
+			,isDelete
+			,isSample
+			,isHidden
+			,regUserId
+			,regDate
+			,company
+			,supplyDate
+			,supplyCompany
+			,statusCode
+			) 
+			VALUES(
+			 #{MATNR}
+			, #{MAKTX}
+			, #{WERKS}
+			, CONVERT(float,#{DANGA})*100
+			, #{MEINS}
+			, #{AUSME}
+			, #{type}
+			,#{isDelete}
+			, 'N'
+			, 'N'
+			, #{user}
+			, sysdate()
+			, #{COMPANY}
+			, #{BEDAT}
+			, #{NAME1}
+			, #{status}
+			);
+	</update>
+	
+	<insert id="insertBatchLog" parameterType="map">
+		INSERT INTO 
+		batch_log
+		(
+			companyCode
+			,batchType
+			,totalCount
+			,successCount
+			,etcCount
+			,batchTime
+		) VALUES (
+			#{companyCode}
+			,#{batchType}
+			,CONVERT(int, #{totalCount})
+			,CONVERT(int, #{successCount})
+			,CONVERT(int, #{etcCount})
+			,sysdate()
+		)
+	</insert>
+	<select id="materialSample" resultType="map">
+		/* batch.materialSample */
+		SELECT 
+			imNo
+			,sapCode
+			,name
+	    	,plant
+	    	,price
+	    	,regUserId
+	    	,unit
+	     	,exitUnit
+	      	,isDelete
+	      	,isSample
+	      	,type
+	      	,regDate
+	      	,modUserId
+	      	,company
+	      	,isHidden 
+		FROM material 
+		WHERE 1 = 1
+			AND IsSample = 'Y'
+			 <![CDATA[ 
+			AND CONVERT(regDate, DATE) < convert(DATE_ADD(sysdate(), INTERVAL -1 MONTH),DATE)
+			]]>
+		ORDER BY regDate DESC
+	</select>
+	<delete id="deleteMaterialSample">
+		/* batch.deleteMaterialSample */
+		DELETE
+		FROM material 
+		WHERE 1 = 1
+			AND IsSample = 'Y'
+			 <![CDATA[ 
+			AND CONVERT(regDate, DATE) < convert(DATE_ADD(sysdate(), INTERVAL -1 MONTH),DATE)
+			]]>
+	</delete>
+	<select id="sellingMasterData" resultType="map">
+	/* batch.sellingMasterData 매출 마스터 데이터*/
+		SELECT 
+			seq
+			,productName
+			,productCode
+			,erpProductCode
+			,userId 
+		FROM 
+			sellingMaster
+		WHERE 1 = 1
+			AND isDelete = 'N'
+			AND CONVERT(sysdate(), DATE) BETWEEN CONVERT(startDate, DATE) AND CONVERT(endDate, DATE)	
+	</select>
+	<select id="masterSeq" resultType="int" parameterType="String">
+	/* batch.masterSeq 매출 마스터 SEQ */
+		SELECT 
+			seq
+		FROM 
+			sellingMaster
+		WHERE 1 = 1
+			AND isDelete = 'N'
+			AND erpProductCode = #{MATNR}
+	</select>
+	
+	<insert id="insertSellingData" parameterType="list">
+	/* batch.insertSellingData 매출 데이터 */
+		<foreach item="item" index="index" collection="list"  open="" separator="" close="">
+		MERGE sellingData AS T   
+		USING (SELECT #{item.master_seq}, #{item.year}, #{item.month}) AS S (master_seq, year,month)  
+		ON	T.master_seq = S.master_seq 
+			AND T.year = S.year 
+			AND T.month = S.month
+		WHEN MATCHED THEN 
+			UPDATE SET	
+				selling=#{item.selling}
+		WHEN NOT MATCHED BY TARGET THEN 
+			INSERT (
+				master_seq
+				,year
+				,month
+				,selling
+			) 
+			VALUES(
+				 #{item.master_seq}
+				,#{item.year}
+				,#{item.month}
+				,#{item.selling}
+			);
+		</foreach>
+	</insert>
+	
+	<update id="updateProductName" parameterType="map">
+		UPDATE 
+			devDoc 
+		SET productName = #{MAKTX} 
+		WHERE 1 = 1 
+			AND productCode = #{MATNR}
+	</update>
+	
+	<update id="batchUserLock">
+		UPDATE userTable2 SET isLock = 'Y'
+		FROM userTable2 a JOIN (
+			SELECT ISNULL(b.lastLoginDate, sysdate()-100) lastLoginDate
+				, a.*
+			FROM userTable2 a
+			LEFT OUTER JOIN (
+				SELECT userId, CONVERT(DATE, MAX(loginDate)) lastLoginDate FROM userLogin_log GROUP BY userId
+			) b ON a.userid = b.userId
+		) b ON a.userId = b.userId
+		WHERE DATEDIFF(b.lastLoginDate, sysdate()) > 90
+	</update>
+	
+</mapper>

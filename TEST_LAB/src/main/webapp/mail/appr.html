@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>결재알림메일</title>
+</head>
+<body>
+<table width="100%" bgcolor="#fafafa">
+	<tr>
+		<td  align="center">
+			<table style="border-radius:10px;background-color:#fff; border:1px solid #ccc; width:600px; margin:20px;">
+				<tr>
+					<td>
+						<span style="width:100%; text-align:left; display:block">
+							<img src="http://pclab.spc.co.kr/resources/images/logo_mail.png" />
+						</span>
+					</td>
+				</tr>
+				<tr>
+					<td valign="top"  align="left">
+						<span style="width:100%;font-family:'맑은고딕',Malgun Gothic; text-align:left; font-size:25px; padding-top:20px; padding-left:30px; box-sizing:border-box; color:#63615c; font-weight:bold; float:left;">
+							파리크라상 연구개발 시스템 결재 알림메일						
+						</span>
+						<span style=" padding-top:10px;width:100%;font-family:'맑은고딕',Malgun Gothic; text-align:left; font-size:14px; padding-left:30px; box-sizing:border-box; color:#CCC;  float:left;">
+							<strong style="color:#999; font-weight:normal">
+								${receiver_name}님께 ${dist} 문서가 도착하였습니다.
+							</strong><br />  
+							빠른 처리 부탁드립니다.<br />
+						</span>
+						<div style="padding:30px; float:left; width:100%;box-sizing:border-box; font-family:'맑은고딕',Malgun Gothic; ">
+							<span style="padding:10px 0 15px 0; float:left">
+								<img src="http://pclab.spc.co.kr/resources/images/img_dot.png" style="vertical-align:middle"/>${dist}</span>
+									<table style="width:100%;font-family:'맑은고딕',Malgun Gothic; border-top:1px solid #CCC; border-collapse:collapse; font-size:14px; " >
+										<tr>
+											<td style="width:30%; background-color:#fafafa; border-bottom:1px solid #eeeeee;padding:10px;" >
+												문서번호
+											</td>
+											<td style="width:70%; border-bottom:1px solid #eeeeee;padding:10px;" >
+												<a href="${link}">${apprNo}</a>
+											</td>
+										</tr>
+										<tr>
+											<td style="width:30%; background-color:#fafafa; border-bottom:1px solid #eeeeee;padding:10px;" >
+												기안자
+											</td>
+											<td style="width:70%; border-bottom:1px solid #eeeeee;padding:10px;" >
+												${register}
+											</td>
+										</tr>
+										<tr>
+											<td style="width:30%; background-color:#fafafa; border-bottom:1px solid #eeeeee;padding:10px;" >
+												문서 유형
+											</td>
+											<td style="width:70%; border-bottom:1px solid #eeeeee;padding:10px;" >
+												${tbType}
+											</td>
+										</tr>
+										<tr>
+											<td style="width:30%; background-color:#fafafa; border-bottom:1px solid #eeeeee;padding:10px;" >
+												제품명
+											</td>
+											<td style="width:70%; border-bottom:1px solid #eeeeee;padding:10px;" >
+												${docname}
+											</td>
+										</tr>
+										<tr>
+											<td style="width:30%; background-color:#fafafa; border-bottom:1px solid #eeeeee;padding:10px;" >
+												제목
+											</td>
+											<td style="width:70%; border-bottom:1px solid #eeeeee;padding:10px;" >
+												${title}
+											</td>
+										</tr>
+									</table>
+								</div>
+								<ul style="padding:0px 20px 10px 20px; float:left; width:100%;box-sizing:border-box; font-family:'맑은고딕',Malgun Gothic; font-size:13px; color:#999">
+									<li style="list-style:none;padding-bottom:5px;">- 본 메일은 발신전용이며, 문의 사항 있을 시 문의메일 (${ADMIN_MAIL})을 이용해 주세요. </li> 
+								</ul>
+							</td>
+						</tr>
+						<tr>
+							<td bgcolor="#fafafa" style="border-top:1px solid #ebebeb">
+								<table width="100%">
+									<tr>
+										<td align="center" valign="top" style="padding:10px 20px 20px 20px;"> 
+											<span style=" font-size:12px; color:#CCC; text-align:left; font-family:'맑은고딕',Malgun Gothic;">
+												서울특별시 서초구 남부순환로 2620 강남피타워 (주)파리크라상 <br/>
+												ALL RIGHTS RESERVED (C) PARISBAGUETTE. PARISCROISSANT CO.,LTD.<br/>												
+ 											</span>
+ 										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

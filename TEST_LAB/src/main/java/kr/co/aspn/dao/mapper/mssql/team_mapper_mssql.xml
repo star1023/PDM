@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+		</if>
+	</sql> 
+	
+	<select id="TeamNoticeListCount" resultType="int">
+		 select count(*) from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		 ,(select count(*) from dbo.comment where tbKey=nNo and tbType='team') as commentCount 
+		,nNo
+		,title
+		,content
+		,dbo.getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='team' AND tbKey = nNo) as fileCount
+		,departName
+		 FROM departNotice
+		 	WHERE departName = '${deptCode}'
+		  <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 				AND (dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	AND (title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%' OR title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='') and (endDate !=null and endDate !=''))">
+		 	
+		 	AND convert(varchar(10), regDate, 120) between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+	</select>
+	
+	<select id="getPagenatedTeamNoticeList" resultType="hashmap">
+		 select * from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		 ,(select count(*) from dbo.comment where tbKey=nNo and tbType='team') as commentCount 
+		,nNo
+		,title
+		,content
+		,dbo.getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='team' AND tbKey = nNo) as fileCount
+		,departName
+		 FROM departNotice
+		 	WHERE departName = '${deptCode}'
+		  <if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword !=null and keyword != undefined">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 				AND (dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	AND (title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (dbo.getUserName(regUserId) LIKE '%'+#{keyword}+'%' OR title LIKE '%'+#{keyword}+'%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='') and (endDate !=null and endDate !=''))">
+		 	
+		 	AND convert(varchar(10), regDate, 120) between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+	   	where rn between #{startRow} and #{endRow}
+	 	 order by regDate desc
+	</select>
+	
+	<select id="getTeamNoticeView" resultType="hashmap">
+		SELECT nNo, title,dbo.getUserName(regUserId) as userName,content,regDate,modUserId,departName,dbo.getCodeName('DEPT',departName) AS deptCodeName,hits FROM departNotice WHERE nNo = #{nNo}
+	</select>
+	
+	<insert id="noticeSave">
+		insert into departNotice(title,regUserId,content,regDate,departName,hits) values(#{title},#{regUserId},#{content},GETDATE(),'${departName}',0)
+	</insert>
+	
+	<delete id="TeamnoticeDelete">
+		delete from departNotice where nNo=${nNo}
+	</delete>
+	
+	<update id="TeamnoticeEdit">
+		update departNotice set 
+		title=#{title},
+		content=#{contents},
+		modUserId=#{modUserId}
+		where nNo=#{nNo}
+	</update>
+	
+	<select id="replyListByNo" resultType="hashmap">
+		select * from dbo.comment where tbType='team' and tbKey=${nNo}
+	</select>
+	
+	<delete id="replyDeleteByNo">
+		delete from dbo.comment where cNo=${cNo} and tbType='team' and tbKey=${tbKey} 
+	</delete>
+	
+	<insert id="replyRegistByNo">
+		insert into dbo.comment(tbType,tbKey,tempKey,comment,isDelete,regUserId,regDate) values('team',${tbKey},0,'${comment}',0,'${regUserId}',GETDATE())
+	</insert>
+	
+	<update id="ReplyUpdateByNo">
+		update dbo.comment set comment='${comment}',modDate=GETDATE() where cNo=${cNo} and tbKey=${tbKey} and tbType='team'
+	</update>
+	
+	<update id="addHitsTeam">
+		update dbo.departNotice set hits = hits+1 where nNo = ${nNo}
+	</update>
+</mapper>

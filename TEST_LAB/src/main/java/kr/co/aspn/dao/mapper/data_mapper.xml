@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="data">
+
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+			<if test="page.sortField != null and page.sortOrder != null">
+				ORDER BY ${page.sortField} ${page.sortOrder}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="getCompanyList" resultType="hashmap">
+		SELECT company_code companyCode, company_name companyName, company_order companyOrder FROM COMPANY
+	</select>
+	
+	<select id="getPlantList" resultType="hashmap">
+		SELECT plantCode
+			, plantName
+			, companyCode
+			, (SELECT COMPANY_NAME FROM COMPANY WHERE COMPANY_CODE = companyCode) companyName 
+		FROM PLANT
+	</select>
+	
+	<select id="getPlantLineList" resultType="hashmap">
+		SELECT companyCode
+			, (SELECT COMPANY_NAME FROM COMPANY WHERE COMPANY_CODE = companyCode) companyName
+			, plantCode
+			, lineCode
+			, lineName 
+		FROM plantLine
+	</select>
+
+	<select id="getCodeList" resultType="hashmap">
+		SELECT ITEMCODE, ITEMNAME FROM CODEITEM WHERE ISDELETE = 'N' AND GROUPCODE = #{groupCode} ORDER BY ORDERNO ASC
+	</select>
+	
+	<select id="getMaterialListPopupTotal" resultType="int">
+		SELECT COUNT(*)
+		FROM material 
+		WHERE isDelete != 'Y' AND isHidden != 'Y' 
+		<if test="search != null">
+			<choose>
+				<when test="search.itemType != null and search.itemType != ''">
+					AND type like concat('%',#{search.itemType},'%')
+				</when>
+				<otherwise>
+					AND type in ('B', 'R')
+				</otherwise>
+			</choose>
+			<if test="search.companyCode != null and search.companyCode != ''">
+				AND company = #{search.companyCode}
+			</if>
+			<if test="search.plant != null and search.plant != ''">
+				AND plant = #{search.plant}
+			</if>
+		</if>
+		<if test="search != null">
+			<if test='search.searchValue != null and search.searchValue != ""'>
+				AND (
+					sapCode LIKE concat('%',#{search.searchValue},'%')
+					OR name LIKE concat('%',#{search.searchValue},'%')
+				)
+				
+			</if>
+		</if>
+	</select>
+	<select id="getMaterialListPopup" resultType="hashmap">
+		SELECT getItemDispName(company, sapCode)
+			, imNo itemImNo
+			, sapCode itemSAPCode
+			, name itemName
+			, plant
+			, IFNULL(getPlantName2(company, plant), '') plantName
+			, ROUND(IFNULL(price, 0),5) as itemPrice
+			, regUserId
+			, unit itemUnit
+			, exitUnit itemExitUnit
+			, isDelete
+			, isSample
+			, type itemType
+			, DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
+			, modUserId
+			, company companyCode
+			, getItemDispName(company,sapCode) AS itemDispName
+			, IFNULL(supplyDate, DATE_FORMAT(regDate,'%Y-%m-%d')) AS supplyDate
+			, IFNULL(supplyCompany, '') AS supplyCompany
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY supplyDate DESC, regDate DESC, imNo DESC) rn, material.*
+			FROM material 
+			WHERE isDelete != 'Y' AND isHidden != 'Y'
+			<if test="search != null">
+				<choose>
+					<when test="search.itemType != null and search.itemType != ''">
+						AND type like concat('%',#{search.itemType},'%')
+					</when>
+					<otherwise>
+						AND type in ('B', 'R')
+					</otherwise>
+				</choose>
+				<if test="search.companyCode != null and search.companyCode != ''">
+					AND company = #{search.companyCode}
+				</if>
+				<if test="search.plant != null and search.plant != ''">
+					AND plant = #{search.plant}
+				</if>
+			</if>
+			<if test="search != null">
+				<if test='search.searchValue != null and search.searchValue != ""'>
+					AND (
+						sapCode LIKE concat('%',#{search.searchValue},'%')
+						OR name LIKE concat('%',#{search.searchValue},'%')
+					)
+				</if>
+			</if>
+		) a
+		<include refid="pagenation"></include>
+	</select>
+	
+	<select id="getStorageList" resultType="hashmap">
+		SELECT companyCode, plantCode, storageCode, storageName FROM storageLocation 
+		WHERE companyCode like #{companyCode} AND plantCode like concat('%',#{plantCode},'%')
+		ORDER BY storageCode
+	</select>
+	
+	<select resultType="hashmap" id="insertMax">SELECT LAST_INSERT_ID(#{tbType}) as max </select>
+	
+	<select id="userList" resultType="hashmap">
+		SELECT uNo,userId,userPw,userName,userGrade,userGradeName,regDate,userCode,email,deptCode,deptFullName,parentCode,titCode,titCodeName,userType  
+		FROM userTable 
+		<if test="grade !=null and grade !=''">
+			where userGrade = '${grade}'
+		</if>
+	</select>
+	
+	<select id="userInfo" parameterType="string" resultType="hashmap">
+		select userName, getCodeName('DEPT',deptCode) AS deptFullName  from userTable2  where userId = #{userId}
+	</select>
+	
+	<select id="getUserInfo" parameterType="string" resultType="hashmap">
+		select getUserINfo(#{userId}) as result
+	</select>
+	
+	<select id="countForState" parameterType="string" resultType="hashmap">
+	select (select COUNT(*) from manufacturingProcessDoc where state=0 and regUserId=#{regUserId})+(select COUNT(*) from designRequestDoc where state=0 and regUserId=#{regUserId}) regist ,
+	(select COUNT(*) from manufacturingProcessDoc where state=3 and regUserId=#{regUserId})+(select COUNT(*) from designRequestDoc where state=1 and regUserId=#{regUserId}) ongoing ,
+	(select COUNT(*) from manufacturingProcessDoc where state=1 and regUserId=#{regUserId})+(select COUNT(*) from designRequestDoc where state=2 and regUserId=#{regUserId}) approve,
+	(select COUNT(*) from manufacturingProcessDoc where state=2 and regUserId=#{regUserId})+(select COUNT(*) from designRequestDoc where state=3 and regUserId=#{regUserId}) restoration
+	</select>
+	
+	<select id="getMaterialList" resultType="hashmap">
+		SELECT imNo, sapCode, name, plant, company
+			, DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate 
+		FROM material 
+		WHERE isDelete = 'N'
+		  AND isSample = 'N' 
+		  AND isHidden = 'N'
+		  AND type != 'R'
+		  AND (sapCode LIKE concat('%',#{searchValue},'%') or name like concat('%',#{searchValue},'%'))
+	</select>
+	
+	<select id="getMaterialInfo" resultType="hashmap">
+		SELECT * FROM material WHERE imNo = #{imNo}
+	</select>
+	
+	<update id="updateTxTest1">
+		UPDATE material
+		SET
+			isDelete = #{value}
+		WHERE imNo = '293456'
+	</update>
+	
+	<update id="updateTxTest2">
+		UPDATE material
+		SET
+			isSample = #{value}
+		WHERE imNo = '293456'
+	</update>
+	
+	<update id="updateTxTest3">
+		UPDATE material
+		SET
+			type = #{value}
+		WHERE imNo = '293456'
+	</update>
+	
+	<select id="checkMaterial" resultType="hashmap">
+		SELECT *
+		FROM material 
+		WHERE isDelete != 'Y' AND isHidden != 'Y'
+		  AND sapCode = #{sapCode}
+		<choose>
+			<when test="type != null and type != ''">
+				AND type like #{type}
+			</when>
+			<otherwise>
+				AND type in ('B', 'R')
+			</otherwise>
+		</choose>
+		  AND company = #{company}
+		  AND plant = #{plant}
+	</select>
+</mapper>

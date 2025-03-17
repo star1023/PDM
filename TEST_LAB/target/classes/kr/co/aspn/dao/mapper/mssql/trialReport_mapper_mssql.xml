@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="trialReport">
+
+	<!--  -->
+	<insert id="trialReportCreate" parameterType="TrialReportHeader" useGeneratedKeys="true" keyProperty="rNo">
+		/* trialReport.trialReportCreate */
+		INSERT INTO trialReportHeader
+		    (createUser,createName,createDate,docNo,docVersion,dNo,line,state,reportTemplateNo,reportTemplateName,reportContents,reportContentsAppr1)
+		VALUES
+		(#{createUser},dbo.getUserName(#{createUser}),getDate(), #{docNo}, #{docVersion}, #{dNo}, #{line}, #{state},#{reportTemplateNo},#{reportTemplateName},#{reportContents},#{reportContentsAppr1})
+	</insert>
+
+	<insert id="trialReportCommentCreate" parameterType="TrialReportComment">
+		/* trialReport.trialReportCommentCreate */
+		INSERT INTO trialReportComment
+		    (rNo,writerUserId,createDate)
+		VALUES
+		(#{rNo},#{writerUserId},GETDATE())
+	</insert>
+
+	<update id="changeTrialReportState" parameterType="hashmap">
+		/* trialReport.changeTrialReportState */
+		UPDATE trialReportHeader
+		SET state = #{state}
+		WHERE rNo = #{rNo}
+	</update>
+
+	<update id="updateTrialReportProperty" parameterType="hashmap">
+		/* trialReport.updateTrialReportProperty */
+		UPDATE trialReportHeader
+		SET ${key} = #{value}
+		WHERE rNo = #{id}
+	</update>
+
+	<select id="getTrialReportHeader" parameterType="string" resultType="TrialReportHeader">
+		/* trialReport.getTrialReportHeader */
+		SELECT T.rNo
+			 ,CONVERT(VARCHAR,T.startDate,23) AS startDate
+			 ,CONVERT(VARCHAR,T.endDate,23) AS endDate
+			 ,T.createUser
+			 ,T.createName
+			 ,CONVERT(VARCHAR,T.createDate,20) AS createDate
+			 ,T.docNo
+			 ,T.docVersion
+			 ,T.dNo
+			 ,T.line
+			 ,P.lineName
+			 ,T.distChannel
+			 ,CONVERT(VARCHAR,T.releasePlanDate,23) AS releasePlanDate
+			 ,CONVERT(VARCHAR,T.releaseRealDate,23) AS releaseRealDate
+			 ,T.result
+			 ,dbo.getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,T.apprNo1
+			 ,T.apprNo2
+			 ,T.state
+			 <!-- 
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '1차결재 진행중' WHEN '20' THEN '1차결재 승인' WHEN '21' THEN '1차결재 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '2차결재 진행중' WHEN '50' THEN '2차결재승인' WHEN '51' THEN '2차결재 반려'
+				 ELSE '' END) AS stateName 
+			-->
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '자재검토 진행중' WHEN '20' THEN '자재검토 완료' WHEN '21' THEN '자재검토 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '팀장결재 진행중' WHEN '50' THEN '팀장결재 완료' WHEN '51' THEN '팀장결재 반려'
+				 ELSE '' END) AS stateName
+			 ,T.reportTemplateNo
+			 ,T.reportTemplateName
+			 ,T.changeUser
+			 ,T.changeName
+			 ,T.changeDate
+			 ,T.reportContents
+		     ,T.reportContentsAppr1
+			 ,T.editLock
+			 ,D.plantCode
+			 ,D.companyCode
+			 ,dev.productName
+		FROM trialReportHeader AS T
+		    INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+			LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+			LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+		WHERE T.rNo = #{rNo}
+	</select>
+	
+	<select id="getTrialReportComment" parameterType="string" resultType="TrialReportComment">
+		/* trialReport.getTrialReportComment */
+		SELECT C.cNo
+			 ,C.rNo
+			 ,C.writerUserId
+			 ,U.userName AS writerUserName
+			 ,U.deptCode As writerDeptCode
+			 ,dbo.getUserDeptName(writerUserId) As writerDeptCodeName
+			 ,U.teamCode AS writerTeamCode
+			 ,dbo.getUserTeamName(writerUserId) AS writerTeamCodeName
+			 ,C.createDate
+			 ,C.writeDate
+			 ,ISNULL(C.writerComment,'') AS writerComment
+			 ,C.isEditing
+		FROM trialReportComment AS C
+				 LEFT JOIN userTable2 AS U ON C.writerUserId = U.userId
+		WHERE rNo = #{rNo}
+	</select>
+	
+	<select id="getTrialReportFiles" parameterType="string" resultType="TrialReportFile">
+		/* trialReport.getTrialReportFiles */
+		SELECT fNo
+			 ,rNo
+			 ,gubun
+			 ,fileName
+			 ,orgFileName
+			 ,path
+			 ,regDate
+			 ,regUserId
+			 ,isDelete
+		FROM trialReportFile
+		WHERE rNo = #{rNo}
+		AND isDelete != 'Y'
+	</select>
+
+	<select id="trialReportListCount" parameterType="map" resultType="map">
+		/* trialReport.trialReportListCount */
+		DECLARE @COUNT_writeStart AS INT , @COUNT_writeEnd AS INT ,@COUNT_apprEnd AS INT
+
+		SELECT @COUNT_writeStart = COUNT(1)
+		FROM trialReportComment AS C
+				 INNER JOIN trialReportHeader AS T ON C.rNo = T.rNo
+				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+		WHERE C.writerUserId = #{userId}
+		  AND T.state IN ('20','30')
+
+		SELECT @COUNT_writeEnd = COUNT(1)
+		FROM trialReportHeader AS T
+				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+		WHERE T.state IN ('35','40','51')
+		<!--  
+		<if test="authCheckType == 'DEPT' or authCheckType == ''">
+			AND EXISTS (
+			SELECT C.rNo
+			FROM trialReportComment AS C
+			INNER JOIN userTable2 AS U ON C.writerUserId = U.userId
+			WHERE U.deptCode = (SELECT deptCode FROM userTable2 WHERE userId = #{userId})
+			AND C.rNo = T.rNo
+			)
+		</if>
+		-->
+		
+		SELECT @COUNT_apprEnd = COUNT(1)
+		FROM trialReportHeader AS T
+				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+				 LEFT JOIN userTable2 AS UT ON UT.userId = dev.regUserId
+		WHERE T.state = '50'
+		<if test="authCheckType != 'ALL'">
+		AND (
+			UT.teamCode = (SELECT teamCode FROM userTable2 WHERE userId = #{userId})
+			OR EXISTS (
+				SELECT C.rNo
+				FROM trialReportComment AS C
+				WHERE C.writerUserId = #{userId}
+				AND C.rNo = T.rNo
+			)
+			<if test="authCheckType == 'OTHER'">
+			OR (
+				<!-- 1차 자재검토 결재내역 결재자 참조자 -->
+				T.apprNo1 IN (
+					SELECT apprNo
+					FROM approvalBoxInfo 
+					WHERE targetUserId = #{userId}
+					AND seq != '1'
+					UNION
+					SELECT apprNo
+					FROM approvalReference 
+					WHERE targetUserId = #{userId}
+				)
+				<!-- 2차 팀장 결재내역 결재자 참조자 -->
+				OR T.apprNo2 IN (
+					SELECT apprNo
+					FROM approvalBoxInfo 
+					WHERE targetUserId = #{userId}
+					AND seq != '1'
+					UNION
+					SELECT apprNo
+					FROM approvalReference 
+					WHERE targetUserId = #{userId}
+				)
+			)
+			</if>
+		)
+		</if>
+		<!-- 230925 이전 조회권한  -->	
+		<!-- 
+		<if test="authCheckType == 'TEAM' or authCheckType == ''">
+			AND EXISTS (
+			SELECT C.rNo
+			FROM trialReportComment AS C
+			INNER JOIN userTable2 AS U ON C.writerUserId = U.userId
+			WHERE U.deptCode = (SELECT deptCode FROM userTable2 WHERE userId = #{userId})
+			AND C.rNo = T.rNo
+			)
+		</if>
+		 -->
+		SELECT @COUNT_writeStart AS COUNT_writeStart, @COUNT_writeEnd AS COUNT_writeEnd, @COUNT_apprEnd AS COUNT_apprEnd
+	</select>
+
+	<select id="trialReportListPage" parameterType="map" resultType="map">
+		/* trialReport.trialReportListPage */
+		SELECT V.*
+		FROM
+		    (
+		<choose>
+			<when test="status == 'writeStart'">
+				<include refid="trialReportComment_view"/>
+				WHERE C.writerUserId = #{userId}
+				AND T.state IN ('20','30')
+			</when>
+			<when test="status == 'writeEnd'">
+				<include refid="trialReportHeader_view"/>
+				WHERE T.state IN ('35','40','51')
+				<!--  
+				<if test="authCheckType != 'ALL'">
+				AND (
+					UT.teamCode = (SELECT teamCode FROM userTable2 WHERE userId = #{userId})
+					OR EXISTS (
+						SELECT C.rNo
+						FROM trialReportComment AS C
+						WHERE C.writerUserId = #{userId}
+						AND C.rNo = T.rNo
+					)
+				)
+				</if>
+				-->
+			</when>
+			<when test="status == 'apprEnd'">
+				<include refid="trialReportHeader_view"/>
+				WHERE T.state = '50'
+				<if test="authCheckType != 'ALL'">
+				AND (
+					UT.teamCode = (SELECT teamCode FROM userTable2 WHERE userId = #{userId})
+					OR EXISTS (
+						SELECT C.rNo
+						FROM trialReportComment AS C
+						WHERE C.writerUserId = #{userId}
+						AND C.rNo = T.rNo
+					)
+					<if test="authCheckType == 'OTHER'">
+					OR (
+						<!-- 1차 자재검토 결재내역 결재자 참조자 -->
+						T.apprNo1 IN (
+							SELECT apprNo
+							FROM approvalBoxInfo 
+							WHERE targetUserId = #{userId}
+							AND seq != '1'
+							UNION
+							SELECT apprNo
+							FROM approvalReference 
+							WHERE targetUserId = #{userId}
+						)
+						<!-- 2차 팀장 결재내역 결재자 참조자 -->
+						OR T.apprNo2 IN (
+							SELECT apprNo
+							FROM approvalBoxInfo 
+							WHERE targetUserId = #{userId}
+							AND seq != '1'
+							UNION
+							SELECT apprNo
+							FROM approvalReference 
+							WHERE targetUserId = #{userId}
+						)
+					)
+					</if>
+				)
+				</if>
+			</when>
+		</choose>
+		<if test="searchType != null and searchType != '' ">
+			<choose>
+				<when test="searchType == 'rNo'">
+					AND T.rNo = #{searchValue}
+				</when>
+				<when test="searchType == 'dNo'">
+					AND T.dNo = #{searchValue}
+				</when>
+				<when test="searchType == 'productName'">
+					AND dev.productName LIKE '%${searchValue}%'
+				</when>
+			</choose>
+		</if>
+			) AS V
+		WHERE V.RN between #{startRow} AND #{endRow}
+	</select>
+
+	<select id="trialReportListForDevDocDetail" parameterType="map" resultType="TrialReportHeader">
+		SELECT T.rNo
+				,dev.productName
+				,CONVERT(VARCHAR,T.startDate,23) AS startDate
+				,CONVERT(VARCHAR,T.endDate,23) AS endDate
+				,T.createUser
+				,T.createName
+				,CONVERT(VARCHAR,T.createDate,20) AS createDate
+				,T.docNo
+				,T.docVersion
+				,T.dNo
+				,T.line
+				,P.lineName
+				,T.distChannel
+				,CONVERT(VARCHAR,T.releasePlanDate,23) AS releasePlanDate
+				,CONVERT(VARCHAR,T.releaseRealDate,23) AS releaseRealDate
+				,T.result
+				,dbo.getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+				,T.apprNo1
+				,T.apprNo2
+				,T.state
+				<!-- 
+				,(CASE T.state
+					WHEN '00' THEN '생성' WHEN '10' THEN '1차결재 진행중' WHEN '20' THEN '1차결재 승인' WHEN '21' THEN '1차결재 반려'
+					WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '2차결재 진행중' WHEN '50' THEN '2차결재승인' WHEN '51' THEN '2차결재 반려'
+					ELSE '' END) AS stateName 
+				-->
+				,(CASE T.state
+					WHEN '00' THEN '생성' WHEN '10' THEN '자재검토 진행중' WHEN '20' THEN '자재검토 완료' WHEN '21' THEN '자재검토 반려'
+					WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '팀장결재 진행중' WHEN '50' THEN '팀장결재 완료' WHEN '51' THEN '팀장결재 반려'
+					ELSE '' END) AS stateName
+				,T.reportTemplateNo
+				,T.reportTemplateName
+				,T.changeUser
+				,T.changeName
+				,T.changeDate
+				,T.reportContents
+				,T.editLock
+				,D.plantCode
+				,D.companyCode
+		FROM trialReportHeader AS T
+			INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+			LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+			LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+		WHERE T.docNo = #{docNo}
+		    AND T.docVersion = #{docVersion}
+			AND T.state > '00'
+		ORDER BY T.rNo DESC
+	</select>
+
+	<sql id="trialReportComment_view" >
+		SELECT ROW_NUMBER() OVER (ORDER BY T.rNo DESC,C.cNo ASC) AS RN
+		     ,C.cNo
+			 ,T.rNo
+			 ,dev.productName
+			 ,CONVERT(VARCHAR,T.startDate,23) AS startDate
+			 ,CONVERT(VARCHAR,T.endDate,23) AS endDate
+			 ,T.createUser
+			 ,T.createName
+			 ,CONVERT(VARCHAR,T.createDate,20) AS createDate
+			 ,T.docNo
+			 ,T.docVersion
+			 ,T.dNo
+			 ,T.line
+			 ,P.lineName
+			 ,T.distChannel
+			 ,CONVERT(VARCHAR,T.releasePlanDate,23) AS releasePlanDate
+			 ,CONVERT(VARCHAR,T.releaseRealDate,23) AS releaseRealDate
+			 ,T.result
+			 ,dbo.getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,T.apprNo1
+			 ,T.apprNo2
+			 ,T.state
+			 <!-- 
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '1차결재 진행중' WHEN '20' THEN '1차결재 승인' WHEN '21' THEN '1차결재 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '2차결재 진행중' WHEN '50' THEN '2차결재승인' WHEN '51' THEN '2차결재 반려'
+				 ELSE '' END) AS stateName 
+			 -->
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '자재검토 진행중' WHEN '20' THEN '자재검토 완료' WHEN '21' THEN '자재검토 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '팀장결재 진행중' WHEN '50' THEN '팀장결재 완료' WHEN '51' THEN '팀장결재 반려'
+				 ELSE '' END) AS stateName
+			 ,T.reportTemplateNo
+			 ,T.reportTemplateName
+			 ,T.changeUser
+			 ,T.changeName
+			 ,T.changeDate
+			 ,T.editLock
+			 ,D.plantCode
+			 ,D.companyCode
+			 ,C.writerUserId
+			 ,dbo.getUserName(C.writerUserId) AS writerUserName
+			 ,CONVERT(VARCHAR,C.writeDate,23) AS writeDate
+			 ,0 AS writedCount
+		     ,0 AS totalCount
+		FROM trialReportComment AS C
+				 INNER JOIN trialReportHeader AS T ON C.rNo = T.rNo
+				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+	</sql>
+	
+	<sql id="trialReportHeader_view">
+		SELECT ROW_NUMBER() OVER (ORDER BY T.rNo DESC) AS RN
+		     ,T.rNo
+			 ,dev.productName
+			 ,CONVERT(VARCHAR,T.startDate,23) AS startDate
+			 ,CONVERT(VARCHAR,T.endDate,23) AS endDate
+			 ,T.createUser
+			 ,T.createName
+			 ,CONVERT(VARCHAR,T.createDate,20) AS createDate
+			 ,T.docNo
+			 ,T.docVersion
+			 ,T.dNo
+			 ,T.line
+			 ,P.lineName
+			 ,T.distChannel
+			 ,CONVERT(VARCHAR,T.releasePlanDate,23) AS releasePlanDate
+			 ,CONVERT(VARCHAR,T.releaseRealDate,23) AS releaseRealDate
+			 ,T.result
+			 ,dbo.getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,T.apprNo1
+			 ,T.apprNo2
+			 ,T.state
+			 <!-- 
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '1차결재 진행중' WHEN '20' THEN '1차결재 승인' WHEN '21' THEN '1차결재 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '2차결재 진행중' WHEN '50' THEN '2차결재승인' WHEN '51' THEN '2차결재 반려'
+				 ELSE '' END) AS stateName 
+			 -->
+			 ,(CASE T.state
+				 WHEN '00' THEN '생성' WHEN '10' THEN '자재검토 진행중' WHEN '20' THEN '자재검토 완료' WHEN '21' THEN '자재검토 반려'
+				 WHEN '30' THEN '작성중' WHEN '35' THEN '작성완료' WHEN '40' THEN '팀장결재 진행중' WHEN '50' THEN '팀장결재 완료' WHEN '51' THEN '팀장결재 반려'
+				 ELSE '' END) AS stateName
+			 ,T.reportTemplateNo
+			 ,T.reportTemplateName
+			 ,T.changeUser
+			 ,T.changeName
+			 ,T.changeDate
+			 ,T.editLock
+			 ,D.plantCode
+			 ,D.companyCode
+			 ,UT.teamCode
+			 ,0 AS writedCount
+			 ,0 AS totalCount
+		FROM trialReportHeader AS T
+				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
+				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
+				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
+				 LEFT JOIN userTable2 AS UT ON UT.userId = dev.regUserId
+	</sql>
+
+	<select id="trialReportWritedStutes" resultType="map" parameterType="map">
+		/* trialReport.trialReportWritedStutes */
+		SELECT
+			  rNo
+			 ,SUM(CASE WHEN writeDate IS NULL THEN 0 ELSE 1 END) AS writedCount
+			 ,SUM(1) AS totalCount
+		FROM trialReportComment
+		<if test="rNos != null">
+		<where>
+			rNo IN
+			<foreach collection="rNos" item="rNo" separator="," open="(" close=")">
+				#{rNo}
+			</foreach>
+		</where>
+		</if>
+		GROUP BY rNo
+	</select>
+
+	<update id="saveTrialReportHeader" parameterType="map" >
+		/* trialReport.saveTrialReportHeader */
+		UPDATE TrialReportHeader
+		SET distChannel = #{distChannel}
+			,releasePlanDate = #{releasePlanDate}
+			,releaseRealDate = #{releaseRealDate}
+			,result = #{result}
+		  	,editLock = 0
+			,reportContents = #{reportContents}
+		WHERE rNo = #{rNo}
+	</update>
+
+	<update id="saveTrialReportComment" parameterType="map">
+		/* trialReport.saveTrialReportComment */
+		UPDATE TrialReportComment
+		SET isEditing = 0
+		<if test="writerComment != null and writerComment != ''">
+			,writerComment = #{writerComment}
+			,writeDate = GETDATE()
+		</if>
+		WHERE cNo = #{cNo}
+	</update>
+
+	<insert id="insertTrialReportFile" parameterType="TrialReportFile" useGeneratedKeys="true" keyProperty="fNo">
+		/* trialReport.insertTrialReportFile */
+		INSERT INTO trialReportFile
+			(rNo
+			,gubun
+			,fileName
+			,orgFileName
+			,path
+			,regDate
+			,regUserId
+			,isDelete)
+		VALUES
+			(#{rNo}
+			,#{gubun}
+			,#{fileName}
+			,#{orgFileName}
+			,#{path}
+			,GETDATE()
+			,#{regUserId}
+			,#{isDelete})
+	</insert>
+
+	<update id="updateTrialReportFile" parameterType="TrialReportFile" >
+		/* trialReport.updateTrialReportFile */
+		UPDATE trialReportFile
+		SET rNo = #{rNo}
+			,gubun = #{gubun}
+			,fileName = #{fileName}
+			,orgFileName = #{orgFileName}
+			,path = #{path}
+			,regDate = GETDATE()
+			,regUserId = #{regUserId}
+			,isDelete = #{isDelete}
+		WHERE fNo = #{fNo}
+	</update>
+	
+	<update id="updateTrialReportCommentProperty" parameterType="map">
+		/* trialReport.updateTrialReportProperty */
+		UPDATE TrialReportComment
+		SET ${key} = #{value}
+		WHERE cNo = #{id}
+	</update>
+
+
+	<select id="getTrialReportAttachFiles" resultType="map">
+		/*  trialReport.getTrialReportAttachFiles 시생산보고서 첨부파일 목록 조회 */
+		SELECT a.*
+			, dbo.getUserName(a.regUserId) regUserName 
+		FROM trialReportFile a
+		WHERE 1=1
+		AND rNo = #{rNo}
+		AND gubun = #{gubun}
+	</select>
+</mapper>

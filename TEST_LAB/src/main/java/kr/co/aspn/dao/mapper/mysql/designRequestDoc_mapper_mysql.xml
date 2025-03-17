@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="designRequest">
+	<select id="newDesignRequestDocList" resultType="hashmap">
+		SELECT		drNo
+				, drpNo
+				, title
+				, state
+				, case when state = 0 then '등록' 
+			  			  when state = 1 then '검토중' 
+			   			  when state = 2 then '완료' 
+			   			  when state = 3 then '반려' end stateName
+				, DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
+				, getUserName(regUserId) as userName
+				, DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
+				, ifnull(getUserName(modUserId), '') as userName
+				, (select count(cNo) from comment where tbType = 'designRequestDoc' and tbKey = d.drNo) as cCnt
+				, regUserId
+				FROM		designRequestDoc d
+				WHERE		docNo = ${docNo} and docVersion = ${docVersion}
+				ORDER BY drpNo desc
+	</select>
+	
+	<select id="designRequestDocMax" resultType="hashmap">
+		SELECT max(drpNo) as drpNo FROM designRequestDoc WHERE docNo = '${docNo}' and docVersion = '${docVersion}'  
+	</select>
+	
+	<insert id="designRequestDocSave">
+		insert into designRequestDoc(drpNo,docNo,docVersion,title,content,department,director,reqDate,regUserId,regDate,state)
+	 	values(${drpNo},${docNo},${docVersion},'${title}','${content}','${department}','${director}','${reqDate}','${regUserId}',sysdate(),0)
+	</insert>
+	
+	<select id="designRequestDocView" resultType="hashmap">
+		SELECT drNo,drpNo,docNo,docVersion,title,content,department,director,reqDate,regDate,regUserId,modDate,modUserId,state FROM designRequestDoc 
+		WHERE docNo = ${docNo} and docVersion = ${docVersion} and drpNo = ${drpNo}
+	</select>
+	
+	<update id="updateCommentTbKey">
+		update comment set tbKey = ${tbKey} , tempKey = ${tempKey}
+		where tbType = ${tbType} and tempKey = ${tempKey}
+	</update>
+	
+	<update id="designRequestDocStateUpdate">
+		UPDATE		designRequestDoc 
+		SET		 	state = ${state}
+		WHERE 		drNo = '${drNo}'
+	</update>
+</mapper>

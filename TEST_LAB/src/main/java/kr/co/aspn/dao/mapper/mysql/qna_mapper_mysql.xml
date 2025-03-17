@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qna">
+	
+	<sql id="pagenation">
+		<if test="page != null">
+			<if test="page.countPerPage != null">
+				WHERE rn between ${(page.showPage-1)*page.countPerPage+1} and ${page.showPage*page.countPerPage}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="QnaNoticeListCount" resultType="int">
+		 select count(*) from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		 ,(select count(*) from comment where tbKey=nNo and tbType='qna') as commentCount 
+		,nNo
+		,title
+		,content
+		,getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='qna' AND tbKey = nNo) as fileCount
+		 FROM qna
+		 WHERE 1=1
+		<if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 				AND (getUserName(regUserId) LIKE '%' || #{keyword} || '%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	AND (title LIKE '%' || #{keyword} || '%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (getUserName(regUserId) LIKE '%' || #{keyword} || '%' OR title LIKE '%' || #{keyword} || '%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='') and (endDate !=null and endDate !=''))">
+		 	
+		 	AND convert(varchar(10), regDate, 120) between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+	</select>
+	
+	<select id="getPagenatedQnaNoticeList" resultType="hashmap">
+		 select * from (
+		 select	
+		 row_number() over (order by nNo desc) as rn
+		 ,(select count(*) from comment where tbKey=nNo and tbType='qna') as commentCount 
+		,nNo
+		,title
+		,content
+		,getUserName(regUserId) as userName
+		,regDate
+		,regUserId
+		,(select count(*) from  fileManager where tbType='qna' AND tbKey = nNo) as fileCount
+		 FROM qna
+		 WHERE 1=1
+		<if test="searchName !=null and searchName !=undefined and searchName !=''">
+		 	<if test="keyword != '' and keyword!=undefined and keyword !=null">
+		 		<choose>
+		 			<when test="searchName == 'writer'">
+		 			   AND (getUserName(regUserId) LIKE '%' || #{keyword} || '%')
+		 			</when>
+		 			<when test="searchName == 'title'">
+		 			 	AND (title LIKE '%' || #{keyword} || '%')
+		 			</when>
+		 			<when test="searchName == '' or searchName ==null or searchName == undefined">
+		 				AND (getUserName(regUserId) LIKE '%' || #{keyword} || '%' OR title LIKE '%' || #{keyword}|| '%')
+		 			</when>
+		 		</choose>
+		 	</if> 
+		 </if>
+		 <if test="((startDate !=null and startDate !='') and (endDate !=null and endDate !=''))">
+		 	
+		 	AND convert(varchar(10), regDate, 120) between #{startDate} and #{endDate}
+		 
+		 </if>
+		 )a
+	  	 where rn between #{startRow} and #{endRow}
+	 	 order by regDate desc
+	</select>
+	
+	<select id="getQnaNoticeView" resultType="hashmap">
+		SELECT nNo, title,getUserName(regUserId) as userName,content,regDate,modUserId,hits,regUserId FROM qna WHERE nNo = #{nNo}
+	</select>
+	
+	<insert id="QnaNoticeSave">
+		insert into qna(title,regUserId,content,regDate,hits) values(#{title},#{regUserId},#{content},sysdate(),0)
+	</insert>
+	
+	<delete id="QnaNoticeDelete">
+		delete from qna where nNo=${nNo}
+	</delete>
+	
+	<update id="QnaNoticeEdit">
+		update qna set 
+		title=#{title},
+		content=#{contents},
+		modUserId=#{modUserId}
+		where nNo=#{nNo}
+	</update>
+	
+	<select id="replyListByNo" resultType="hashmap">
+		select * from comment where tbType='qna' and tbKey=${nNo}
+	</select>
+	
+	<delete id="replyDeleteByNo">
+		delete from comment where cNo=${cNo} and tbType='qna' and tbKey=${tbKey} 
+	</delete>
+	
+	<insert id="replyRegistByNo">
+		insert into comment(tbType,tbKey,tempKey,comment,isDelete,regUserId,regDate) values('qna',#{tbKey},0,#{comment},0,#{regUserId},sysdate())
+	</insert>
+	
+	<update id="ReplyUpdateByNo">
+		update comment set comment=#{comment},modDate=sysdate() where cNo=#{cNo} and tbKey=#{tbKey} and tbType='qna'
+	</update>
+	
+	<update id="addHitsQna">
+		update qna set hits = hits+1 where nNo = ${nNo}
+	</update>
+</mapper>

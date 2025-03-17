@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="comment">
+	<select id="getCommentList" resultType="hashmap">
+		SELECT cNo
+			, tbKey
+			, tbType
+			, dbo.getUserINfo(regUserId) as userName
+			, comment
+			, CONVERT(VARCHAR, case when modDate is null Then regDate else modDate end, 120) as lastDate
+			, CONVERT(VARCHAR, regDate, 120) as regDate
+			, CONVERT(VARCHAR, modDate, 120) as modDate
+			, reguserId
+			, dbo.getUserINfo(regUserId) as info
+		FROM comment
+		WHERE tbType = #{tbType}
+		  AND tbKey = #{tbKey}
+		  AND isDelete = 0
+		ORDER BY cNo DESC, regDate DESC
+	</select>
+	
+	<insert id="addComment">
+		INSERT INTO comment ( tbType, tbKey, tempKey, comment, isDelete, regUserId, regDate ) 
+		VALUES ( #{tbType}, #{tbKey}, 0, #{comment}, 0, #{regUserId}, getDate() )
+	</insert>
+	
+	<update id="updateComment">
+		UPDATE comment 
+		SET comment = #{comment}
+			, modDate =  getDate()
+		WHERE cNo = #{cNo}
+	</update>
+	
+	<update id="deleteComment">
+		UPDATE comment 
+		SET isDelete = 1
+		WHERE cNo = #{cNo}
+	</update>
+	
+	<select id="getDevDocParam" resultType="map">
+		SELECT a.docNo
+			, a.docVersion
+			, (SELECT productCode FROM devdoc WHERE docNo = a.docNo AND docVersion = a.docVersion) productCode
+			<if test='tbType == "manufacturingProcessDoc"'>
+				, dbo.getPlantName(a.companyCode, a.plantCode) plant
+			</if>
+		FROM ${tbType} a
+		WHERE 1=1
+		<choose>
+			<when test='tbType == "manufacturingProcessDoc"'>
+				AND dNo = #{tbKey}
+			</when>
+			<when test='tbType == "trialProductionReport"'>
+				AND rNo = #{tbKey}
+			</when>
+			<otherwise>
+				1!=1
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

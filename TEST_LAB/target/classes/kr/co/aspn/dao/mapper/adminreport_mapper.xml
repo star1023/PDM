@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="adminreport">
+	
+	<select id="userListReport" resultType="hashmap">
+		/* adminreport.userListReport 계정 리스트 검색 */
+		SELECT
+				USERID
+				,USERPWD
+				,USERNAME
+				,USERGRADE
+				,getCodeName('GRADE',USERGRADE) AS USERGRADENAME
+				,DATE_FORMAT(REGDATE,'%Y-%m-%d') AS REGDATE
+				,USERCODE
+				,EMAIL
+				,DEPTCODE
+				,getCodeName('DEPT',DEPTCODE) AS DEPTCODENAME
+				,TEAMCODE
+				,getCodeName('TEAM',TEAMCODE) AS TEAMCODENAME
+				,TITLECODE
+				,USERTYPE
+				,ISADMIN
+				,ISDELETE
+				,ISLOCK
+		FROM	userTable2
+		ORDER BY userId desc
+	</select>
+
+	<select id="userLoginLogReport" resultType="hashmap">
+		/* adminreport.userLoginLogReport 로그인 로그 검색 */
+		SELECT  
+			CASE
+				WHEN GETUSERTEAMNAME(USERID) IS NULL
+				THEN GETUSERDEPTNAME(USERID)
+				ELSE GETUSERDEPTNAME(USERID) || ' ' || GETUSERTEAMNAME(USERID)
+			END AS DEPTNAME
+			 , GETUSERNAME(USERID) AS USERNAME
+			 , USERID
+			 , USERIP
+			 , LOGINDATE
+		FROM USERLOGIN_LOG
+		WHERE LOGINDATE BETWEEN CONVERT(#{startDt},DATE) AND CONVERT(#{endDt},DATE)
+		ORDER BY LOGINDATE DESC;
+	</select>
+	
+	<select id="manufacturingProcessDocReport" resultType="hashmap">
+		/* adminreport.facturingProcessDocReport 제조공정서 전체 리스트  */
+SELECT
+			A.DOCNO
+			 , A.DNO
+			 , C.PRODUCTCODE
+			 , C.PRODUCTNAME
+			 , GETPLANTNAME(A.COMPANYCODE, A.PLANTCODE) AS PLANTNAME
+			 , A.lineCode
+			 , (SELECT lineName FROM plantLine
+			 	WHERE 1=1
+			 	AND lineCode = A.lineCode
+			 	AND companyCode = A.companyCode
+			 	AND plantCode = A.plantCode
+			 	) as lineName 
+			 , A.STATE
+			 , c.isClose 
+			 , CASE 
+			 	WHEN c.isClose IS NULL OR c.isClose = '0' THEN '0'
+			 	WHEN c.isClose = '1' THEN '1'
+			 	WHEN c.isClose = '2' THEN '2'
+			 END AS isCloseName
+			 , C.DOCVERSION
+			 , GETUSERNAME(C.REGUSERID) AS DOC_REGUSER
+			 , GETUSERNAME(A.REGUSERID) AS PROCESS_REGUSER
+			 , MNM.mNo
+			 , MNO.licensingNo
+			 , MNO.manufacturingNo
+			 , MNO.licensingNo || '-' || MNO.manufacturingNo AS LMNO
+			 , MNO.MANUFACTURINGNAME
+			 , MNO.status
+		FROM DEVDOC C INNER JOIN MANUFACTURINGPROCESSDOC A
+			ON A.DOCNO = C.DOCNO AND A.DOCVERSION = C.DOCVERSION
+			LEFT JOIN MANUFACTURINGNOMAPPING MNM ON A.DNO = MNM.dNo
+			LEFT JOIN manufacturingNo MNO ON MNM.mNo = MNO.mNo AND MNO.isDelete = 'N'
+	</select>
+</mapper>
