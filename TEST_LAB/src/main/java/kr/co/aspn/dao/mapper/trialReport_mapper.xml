@@ -87,17 +87,17 @@
 		SELECT C.cNo
 			 ,C.rNo
 			 ,C.writerUserId
-			 ,U.userName AS writerUserName
-			 ,U.deptCode As writerDeptCode
+			 ,U.USER_NAME AS writerUserName
+			 ,U.DEPT_CODE As writerDeptCode
 			 ,getUserDeptName(writerUserId) As writerDeptCodeName
-			 ,U.teamCode AS writerTeamCode
+			 ,U.TEAM_CODE AS writerTeamCode
 			 ,getUserTeamName(writerUserId) AS writerTeamCodeName
 			 ,C.createDate
 			 ,C.writeDate
 			 ,ifnull(C.writerComment,'') AS writerComment
 			 ,C.isEditing
 		FROM trialReportComment AS C
-				 LEFT JOIN userTable2 AS U ON C.writerUserId = U.userId
+				 LEFT JOIN lab_user AS U ON C.writerUserId = U.USER_ID
 		WHERE rNo = #{rNo}
 	</select>
 	
@@ -153,11 +153,11 @@
 				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
 				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
 				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
-				 LEFT JOIN userTable2 AS UT ON UT.userId = dev.regUserId
+				 LEFT JOIN lab_user AS UT ON UT.USER_ID = dev.regUserId
 		WHERE T.state = '50'
 		<if test="authCheckType != 'ALL'">
 		AND (
-			UT.teamCode = (SELECT teamCode FROM userTable2 WHERE userId = #{userId})
+			UT.teamCode = (SELECT TEAM_CODE FROM lab_user WHERE USER_ID = #{userId})
 			OR EXISTS (
 				SELECT C.rNo
 				FROM trialReportComment AS C
@@ -240,7 +240,7 @@
 				WHERE T.state = '50'
 				<if test="authCheckType != 'ALL'">
 				AND (
-					UT.teamCode = (SELECT teamCode FROM userTable2 WHERE userId = #{userId})
+					UT.teamCode = (SELECT TEAM_CODE FROM lab_user WHERE USER_ID = #{userId})
 					OR EXISTS (
 						SELECT C.rNo
 						FROM trialReportComment AS C
@@ -437,14 +437,14 @@
 			 ,T.editLock
 			 ,D.plantCode
 			 ,D.companyCode
-			 ,UT.teamCode
+			 ,UT.TEAM_CODE AS teamCode
 			 ,0 AS writedCount
 			 ,0 AS totalCount
 		FROM trialReportHeader AS T
 				 INNER JOIN manufacturingProcessDoc AS D ON T.dNo = D.dNo
 				 LEFT JOIN plantLine AS P ON P.companyCode = D.companyCode AND P.plantCode = D.plantCode AND  P.lineCode = T.line
 				 LEFT JOIN devDoc AS dev ON dev.docNo = D.docNo AND dev.docVersion = D.docVersion
-				 LEFT JOIN userTable2 AS UT ON UT.userId = dev.regUserId
+				 LEFT JOIN lab_user AS UT ON UT.USER_ID = dev.regUserId
 	</sql>
 
 	<select id="trialReportWritedStutes" resultType="map" parameterType="map">

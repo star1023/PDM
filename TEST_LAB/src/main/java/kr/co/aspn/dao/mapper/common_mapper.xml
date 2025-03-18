@@ -87,44 +87,44 @@
     <select id="searchUserId" parameterType="map" resultType="UserVO">
 	/*common.searchUserId*/
 	SELECT 
-		userId
-      ,userName
-      ,userGrade
-      ,getCodeName('GRADE',userGrade) AS userGradeName
-      ,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
-      ,userCode
-      ,email
-      ,deptCode
-      ,getCodeName('DEPT',deptCode) AS deptCodeName
-      ,teamCode
-      ,getCodeName('TEAM',teamCode) AS teamCodeName	
-      ,titleCode
-      ,userType
-      ,isAdmin
-      ,isDelete
+		USER_ID AS userId
+      ,USER_NAME AS userName
+      ,USER_GRAD AS userGrade
+      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') as regDate
+      ,USER_CODE AS userCode
+      ,EMAIL AS email
+      ,DEPT_CODE AS deptCode
+      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+      ,TEAM_CODE AS teamCode
+      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName	
+      ,TITLE_CODE AS titleCode
+      ,USER_TYPE AS userType
+      ,IS_ADMIN AS isAdmin
+      ,IS_DELETE AS isDelete
     FROM 
-    	userTable2
+    	lab_user
 	WHERE	1 = 1
 	<if test="userId != null and userId != '' ">
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
 	</if>
 	<if test="deptCode != null and deptCode != '' ">
-		AND deptCode = #{deptCode}
+		AND DEPT_CODE = #{deptCode}
 	</if>
 	<if test="teamCode != null and teamCode != '' ">
-		AND teamCode = #{teamCode}
+		AND TEAM_CODE = #{teamCode}
 	</if>	
     </select>
     
     <select id="searchUserCount" parameterType="map" resultType="int">
 	 	/*common.searchUserCount*/
 		SELECT 
-			count(userId) 
+			count(USER_ID) 
 		FROM 
-			userTable2 
+			lab_user 
 		WHERE 1 = 1	
 		<if test="keyword != null and keyword != '' ">
-			AND (userId like concat('%',#{keyword},'%') OR userName like concat('%',#{keyword},'%'))
+			AND (USER_ID like concat('%',#{keyword},'%') OR USER_NAME like concat('%',#{keyword},'%'))
 		</if>
     </select>
     
@@ -133,27 +133,27 @@
 		SELECT		t.*
 			FROM	
 					(
-						SELECT	row_number() over (order by userId desc) as rnum
-						  ,userId
-					      ,userPwd
-					      ,userName
-					      ,userGrade
-					      ,getCodeName('GRADE',userGrade) AS userGradeName
-					      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
-					      ,userCode
-					      ,email
-					      ,deptCode
-					      ,getCodeName('DEPT',deptCode) AS deptCodeName
-					      ,teamCode
-					      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
-					      ,titleCode
-					      ,userType
-					      ,isAdmin	
-					      ,isDelete		
-						FROM	userTable2	
+						SELECT	row_number() over (order by USER_ID desc) as rnum
+						  ,USER_ID AS userId
+					      ,USER_PWD AS userPwd
+					      ,USER_NAME AS userName
+					      ,USER_GRAD AS userGrade
+					      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+					      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS regDate
+					      ,USER_CODE AS userCode
+					      ,EMAIL AS email
+					      ,DEPT_CODE AS deptCode
+					      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+					      ,TEAM_CODE AS teamCode
+					      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName					      
+					      ,TITLE_CODE AS titleCode
+					      ,USER_TYPE AS userType
+					      ,IS_ADMIN AS isAdmin	
+					      ,IS_DELETE AS isDelete		
+						FROM	lab_user	
 						WHERE 1=1
 						<if test="keyword != null and keyword != '' ">
-							AND (userId like concat('%',#{keyword},'%') OR userName like concat('%',#{keyword},'%'))
+							AND (USER_ID like concat('%',#{keyword},'%') OR USER_NAME like concat('%',#{keyword},'%'))
 						</if>
 					) t WHERE rnum between #{startRow} and #{endRow}
 			ORDER BY userId desc
@@ -161,29 +161,29 @@
     
     <select id="searchUserList2" parameterType="map" resultType="map">
 	 	/*common.searchUserList2*/
-		SELECT	userId
-	      ,userPwd
-	      ,userName
-	      ,userGrade
-	      ,getCodeName('GRADE',userGrade) AS userGradeName
-	      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
-	      ,userCode
-	      ,email
-	      ,deptCode
-	      ,getCodeName('DEPT',deptCode) AS deptCodeName
-	      ,teamCode
-	      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
-	      ,titleCode
-	      ,userType
-	      ,isAdmin	
-	      ,isDelete		
-		FROM	userTable2	
+		SELECT	USER_ID AS userId
+	      ,USER_PWD AS userPwd
+	      ,USER_NAME AS userName
+	      ,USER_GRAD AS userGrade
+	      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+	      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS regDate
+	      ,USER_CODE AS userCode
+	      ,EMAIL AS email
+	      ,DEPT_CODE AS deptCode
+	      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+	      ,TEAM_CODE AS teamCode
+	      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName					      
+	      ,TITLE_CODE AS titleCode
+	      ,USER_TYPE AS userType
+	      ,IS_ADMIN AS isAdmin	
+	      ,IS_DELETE AS isDelete		
+		FROM	lab_user	
 		WHERE 1=1
 		<if test="searchUser != null and searchUser != '' ">
-			AND (userId like concat('%',#{keyword},'%') OR userName like concat('%',#{keyword},'%'))
+			AND (USER_ID like concat('%',#{keyword},'%') OR USER_NAME like concat('%',#{keyword},'%'))
 		</if>
-			AND isDelete = 'N'
-		ORDER BY userId desc
+			AND IS_DELETE = 'N'
+		ORDER BY USER_ID desc
     </select>
     
     <select id="notificationCount" parameterType="map" resultType="int">
@@ -250,17 +250,17 @@
     
     <select id="userInfo" parameterType="map" resultType="UserVO">
 	 	/*common.userInfo*/
-		SELECT	userId
-	      ,userName
-	      ,email	      		
-		FROM	userTable2	
+		SELECT	USER_ID AS userId
+	      ,USER_NAME AS userName
+	      ,EMAIL AS email	      		
+		FROM	lab_user	
 		WHERE 1=1
-			AND userId IN
+			AND USER_ID IN
         <foreach collection="mailing" item="userId" index="index"  open="(" close=")" separator=",">
             #{userId}
         </foreach>
-			AND isDelete = 'N'
-		ORDER BY userId desc
+			AND IS_DELETE = 'N'
+		ORDER BY USER_ID desc
     </select>
     
     <insert id="insertPrintLog" parameterType="map">
@@ -291,7 +291,7 @@
 		WHERE 1 = 1
 			<choose>
 			<when test='grade != null and grade == "2" '>
-			AND userId in (SELECT userId FROM userTable2 WHERE deptCode = #{deptCode} AND isDelete = 'N')
+			AND userId in (SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{deptCode} AND IS_DELETE = 'N')
 			</when>
 			<when test='deptCode != null and deptCode == "dept10" '>
 			</when>
@@ -312,7 +312,7 @@
 	 	WHERE 1 = 1
 	 		<choose>
 			<when test='grade != null and grade == "2" '>
-			AND userId in (SELECT userId FROM userTable2 WHERE deptCode = #{deptCode} AND isDelete = 'N')
+			AND userId in (SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{deptCode} AND isDelete = 'N')
 			</when>
 			<when test='deptCode != null and deptCode == "dept10" '>
 			</when>

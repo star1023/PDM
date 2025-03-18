@@ -248,15 +248,15 @@
 	</update>
 	
 	<update id="batchUserLock">
-		UPDATE userTable2 SET isLock = 'Y'
-		FROM userTable2 a JOIN (
+		UPDATE lab_user SET IS_LOCK = 'Y'
+		FROM lab_user a JOIN (
 			SELECT ISNULL(b.lastLoginDate, sysdate()-100) lastLoginDate
 				, a.*
-			FROM userTable2 a
+			FROM lab_user a
 			LEFT OUTER JOIN (
 				SELECT userId, CONVERT(DATE, MAX(loginDate)) lastLoginDate FROM userLogin_log GROUP BY userId
 			) b ON a.userid = b.userId
-		) b ON a.userId = b.userId
+		) b ON a.USER_ID = b.userId
 		WHERE DATEDIFF(b.lastLoginDate, sysdate()) > 90
 	</update>
 	

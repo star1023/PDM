@@ -4,83 +4,85 @@
 	<select id="selectUser" parameterType="UserVo" resultType="UserVo">
 	/*	user.selectUser 사용자 정보 조회 */
 	SELECT 
-		userId
-      ,userName
-      ,userGrade
-      ,getCodeName('GRADE',userGrade) AS userGradeName
-      ,regDate
-      ,userCode
-      ,email
-      ,deptCode
-      ,getCodeName('DEPT',deptCode) AS deptCodeName
-      ,teamCode
-      ,getCodeName('TEAM',teamCode) AS teamCodeName	
-      ,titleCode
-      ,userType
-      ,isAdmin
-      ,isDelete
-      ,theme
-      ,contentMode
-      ,widthMode
-      ,mailCheck1
-      ,mailCheck2
-      ,mailCheck3
-      ,isLock
-      ,roleCode
+	  USER_ID AS userId
+      ,USER_NAME AS userName
+      ,USER_GRAD AS userGrade
+      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+      ,REG_DATE AS regDate
+      ,USER_CODE AS userCode
+      ,EMAIL AS email
+      ,DEPT_CODE AS deptCode
+      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+      ,TEAM_CODE AS teamCode
+      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName	
+      ,TITLE_CODE AS titleCode
+      ,USER_TYPE AS userType
+      ,IS_ADMIN AS isAdmin
+      ,IS_DELETE AS isDelete
+      ,THEME AS theme
+      ,CONTENT_MODE AS contentMode
+      ,WIDTH_MODE AS widthMode
+      ,MAIL_CHECK1 AS mailCheck1
+      ,MAIL_CHECK2 AS mailCheck2
+      ,MAIL_CHECK3 AS mailCheck3
+      ,IS_LOCK AS isLock
+      ,ROLE_CODE AS roleCode
     FROM 
-    	userTable2
+    	lab_user
 	WHERE	1 = 1
-	    AND isDelete != 'Y'         
-		AND userId = #{userId, jdbcType=VARCHAR}
+	    AND IS_DELETE != 'Y'         
+		AND USER_ID = #{userId, jdbcType=VARCHAR}
     </select>
     
     <select id="loginCheck" parameterType="UserVo" resultType="UserVo">
 	/*	user.loginCheck 로그인 체크 */
 	SELECT 
-		userId
-      ,userName
-      ,userGrade
-      ,getCodeName('GRADE',userGrade) AS userGradeName
-      ,regDate
-      ,userCode
-      ,email
-      ,deptCode
-      ,getCodeName('DEPT',deptCode) AS deptCodeName
-      ,teamCode
-      ,getCodeName('TEAM',teamCode) AS teamCodeName	
-      ,titleCode
-      ,userType
-      ,isAdmin
-      ,isDelete
-      ,theme
-      ,contentMode
-      ,widthMode
-      ,mailCheck1
-      ,mailCheck2
-      ,mailCheck3
+		USER_ID AS userId
+		,USER_NAME AS userName
+	    ,USER_GRAD AS userGrade
+	    ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+	    ,REG_DATE AS regDate
+	    ,USER_CODE AS userCode
+	    ,EMAIL AS email
+	    ,DEPT_CODE AS deptCode
+	    ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+	    ,TEAM_CODE AS teamCode
+	    ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName	
+	    ,TITLE_CODE AS titleCode
+	    ,USER_TYPE AS userType
+	    ,IS_ADMIN AS isAdmin
+	    ,IS_DELETE AS isDelete
+	    ,THEME AS theme
+	    ,CONTENT_MODE AS contentMode
+	    ,WIDTH_MODE AS widthMode
+	    ,MAIL_CHECK1 AS mailCheck1
+	    ,MAIL_CHECK2 AS mailCheck2
+	    ,MAIL_CHECK3 AS mailCheck3
+	    ,IS_LOCK AS isLock
+	    ,ROLE_CODE AS roleCode
     FROM 
-    	userTable2
+    	lab_user
 	WHERE	1 = 1
-		AND userId = #{userId}
-		AND userPw = #{userEncPwd}
+		AND USER_ID = #{userId}
+		AND USER_PWD = #{userEncPwd}
     </select>
     
     <select id="userCount" parameterType="UserManageVO" resultType="int">
 	/* user.userCount 리스트 카운트 */
 			SELECT	COUNT(*)
-			FROM	userTable2	
+			FROM	lab_user	
 			WHERE 1=1
 			<if test="searchValue != null and searchValue != '' ">
-				AND (userName like  concat('%',#{searchValue},'%') OR userId like  concat('%',#{searchValue},'%')  OR email like  concat('%',#{searchValue},'%') )
+				AND (USER_NAME like  concat('%',#{searchValue},'%') OR USER_ID like  concat('%',#{searchValue},'%')  OR EMAIL like  concat('%',#{searchValue},'%') )
 			</if>
 			<if test="deptCode != null and deptCode != '' ">
-				AND deptCode = #{deptCode}
+				AND DEPT_CODE = #{deptCode}
 			</if>
 			<if test="teamCode != null and teamCode != '' ">
-				AND teamCode = #{teamCode}
+				AND TEAM_CODE = #{teamCode}
 			</if>
 			<if test="userGrade != null and userGrade != '' ">
-				AND userGrade = #{userGrade}
+				AND USER_GRAD = #{userGrade}
 			</if>
 	</select>
 	
@@ -89,141 +91,141 @@
 			SELECT		t.*
 			FROM	
 					(
-						SELECT	row_number() over (order by userId desc) as rnum
-						  ,userId
-					      ,userPwd
-					      ,userName
-					      ,userGrade
-					      ,getCodeName('GRADE',userGrade) AS userGradeName
-					      ,DATE_FORMAT(regDate,'%Y-%m-%d') AS regDate
-					      ,userCode
-					      ,email
-					      ,deptCode
-					      ,getCodeName('DEPT',deptCode) AS deptCodeName
-					      ,teamCode
-					      ,getCodeName('TEAM',teamCode) AS teamCodeName					      
-					      ,titleCode
-					      ,userType
-					      ,isAdmin	
-					      ,isDelete
-					      ,isLock
-						FROM	userTable2	
+						SELECT	row_number() over (order by USER_ID desc) as rnum
+						  ,USER_ID AS userId
+					      ,USER_PWD AS userPwd
+					      ,USER_NAME AS userName
+					      ,USER_GRAD AS userGrade
+					      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+					      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS regDate
+					      ,USER_CODE AS userCode
+					      ,EMAIL AS email
+					      ,DEPT_CODE AS deptCode
+					      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+					      ,TEAM_CODE AS teamCode
+					      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName					      
+					      ,TITLE_CODE AS titleCode
+					      ,USER_TYPE AS userType
+					      ,IS_ADMIN AS isAdmin	
+					      ,IS_DELETE AS isDelete
+					      ,IS_LOCK AS isLock
+						FROM	lab_user	
 						WHERE 1=1
 						<if test="searchValue != null and searchValue != '' ">
-							AND (userName like  concat('%',#{searchValue},'%') OR userId like  concat('%',#{searchValue},'%')  OR email like  concat('%',#{searchValue},'%') )
+							AND (USER_NAME like  concat('%',#{searchValue},'%') OR USER_ID like  concat('%',#{searchValue},'%')  OR EMAIL like  concat('%',#{searchValue},'%') )
 						</if>
 						<if test="deptCode != null and deptCode != '' ">
-							AND deptCode = #{deptCode}
+							AND DEPT_CODE = #{deptCode}
 						</if>
 						<if test="teamCode != null and teamCode != '' ">
-							AND teamCode = #{teamCode}
+							AND TEAM_CODE = #{teamCode}
 						</if>
 						<if test="userGrade != null and userGrade != '' ">
-							AND userGrade = #{userGrade}
+							AND USER_GRAD = #{userGrade}
 						</if>
 					) t WHERE rnum between #{startRow} and #{endRow}
 		<![CDATA[
-			ORDER BY userId desc
+			ORDER BY USER_ID desc
 		]]>
 	</select>
 	<insert id="insert" parameterType="UserManageVO">
 		/* user.insert 사용자 등록  */
-		INSERT INTO USERTABLE2(
-				userId
-			,	userName
-			,	userGrade
-			,	email
-			,	deptCode
-			,	teamCode
-			,	regDate
-			,	isDelete
-			,   isAdmin
-			,mailCheck1
-		    ,mailCheck2
-		    ,mailCheck3
+		INSERT INTO lab_user(
+			USER_ID
+			,USER_NAME
+			,USER_GRAD
+			,EMAIL
+			,DEPT_CODE
+			,TEAM_CODE
+			,REG_DATE
+			,IS_DELETE
+			,  IS_ADMIN
+			,MAIL_CHECK1
+		    ,MAIL_CHECK2
+		    ,MAIL_CHECK3
 		)	VALUES (
-				#{userId}
-			,	#{userName}
-			,	#{userGrade}
-			,  	#{email} 
-			,	#{deptCode}
-			,	#{teamCode}
-			, 	sysdate()
-			, 	'N'
-			,	#{isAdmin}
-			, 	'Y'
-			, 	'Y'
-			, 	'Y'
+			#{userId}
+			,#{userName}
+			,#{userGrade}
+			,#{email} 
+			,#{deptCode}
+			,#{teamCode}
+			,sysdate()
+			,'N'
+			,#{isAdmin}
+			,'Y'
+			,'Y'
+			,'Y'
 		)
 	</insert>
 	
 	<select id="checkId" parameterType="string" resultType="int">
 	   /*user.checkId 아이디체크  */
-    	SELECT COUNT(USERID) FROM USERTABLE2 WHERE USERID = #{value}
+    	SELECT COUNT(USER_ID) FROM lab_user WHERE USER_ID = #{value}
     </select>
     
     <select id="getUserData" parameterType="UserManageVO" resultType="UserManageVO">
 	/*	user.getUserData 사용자 정보 조회 */
 	SELECT 
-		userId
-      ,userPwd
-      ,userName
-      ,userGrade
-      ,regDate
-      ,userCode
-      ,email
-      ,deptCode
-      ,teamCode
-      ,titleCode
-      ,userType
-      ,isAdmin
-      ,isDelete
+		USER_ID AS userId
+      ,USER_PWD AS userPwd
+      ,USER_NAME AS userName
+      ,USER_GRAD AS userGrade
+      ,REG_DATE AS regDate
+      ,USER_CODE AS userCode
+      ,EMAIL AS email
+      ,DEPT_CODE AS deptCode
+      ,TEAM_CODE AS teamCode
+      ,TITLE_CODE AS titleCode
+      ,USER_TYPE AS userType
+      ,IS_ADMIN AS isAdmin
+      ,IS_DELETE AS isDelete
     FROM 
-    	userTable2
+    	lab_user
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </select>
     
     <update id="update" parameterType="UserManageVO">
 	/*	user.update 사용자 정보 조회 */
-	UPDATE userTable2 
+	UPDATE lab_user 
 	SET 
-      userName =  #{userName}
-      ,userGrade =  #{userGrade}
-      ,email = #{email}
-      ,deptCode =  #{deptCode}
-      ,teamCode =  #{teamCode}
-      ,isAdmin	=  #{isAdmin}
+      USER_NAME =  #{userName}
+      ,USER_GRAD =  #{userGrade}
+      ,EMAIL = #{email}
+      ,DEPT_CODE =  #{deptCode}
+      ,TEAM_CODE =  #{teamCode}
+      ,IS_ADMIN	=  #{isAdmin}
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </update>
     
     <update id="delete" parameterType="UserManageVO">
 	/*	user.delete 사용자 정보 조회 */
-	UPDATE userTable2 
+	UPDATE lab_user 
 	SET 
-     isDelete	=  'Y'
-     , userGrade = ''
+     IS_DELETE	=  'Y'
+     , USER_GRAD = ''
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </update>
     
     <update id="restore" parameterType="UserManageVO">
 	/*	user.restore 사용자 정보 조회 */
-	UPDATE userTable2 
+	UPDATE lab_user 
 	SET 
-     isDelete	=  'N'
+     IS_DELETE	=  'N'
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </update>
     
     <update id="unlock" parameterType="UserManageVO">
 	/*	user.unlock 사용자 잠금해제  */
-	UPDATE userTable2 
+	UPDATE lab_user 
 	SET 
-     isLock	=  'N'
+     IS_LOCK	=  'N'
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </update>
     
     <insert id="insertLog" parameterType="map">
@@ -255,63 +257,65 @@
 		)
 	</insert>
 	<select id="searchUserList" resultType="hashmap">
-		SELECT	userId, userName, getUserDeptName(userId) AS deptCodeName, getUserTeamName(userId) AS teamCodeName
-			FROM	userTable2
-			WHERE	userName like concat('%',#{keyword},'%')
+		SELECT	
+		USER_ID AS userId
+		,USER_NAME AS userName
+		,getUserDeptName(USER_ID) AS deptCodeName
+		,getUserTeamName(USER_ID) AS teamCodeName
+			FROM	lab_user
+			WHERE	USER_NAME like concat('%',#{keyword},'%')
 			<if test="userGrade != null and userGrade !='' ">
-				and userGrade = '${userGrade}'
+				and USER_GRAD = '${userGrade}'
 			</if>
-			and isDelete !='Y'
+			and IS_DELETE !='Y'
 	</select>
 	
 	
 	<update id="setPersonalization" parameterType="map">
 	/*	user.setPersonalization 사용자 개인화 데이터 업데이트 */
-	UPDATE userTable2 
+	UPDATE lab_user 
 	SET 
     	${type} = #{value}
 	WHERE	1 = 1
-		AND userId = #{userId}
+		AND USER_ID = #{userId}
     </update>
     <select id="userListBom" resultType="UserVo">
-    	SELECT * FROM userTable2 
-    	WHERE userGrade = '3' 
-    	  AND isDelete != 'Y'
+    	SELECT * FROM lab_user 
+    	WHERE USER_GRAD = '3' 
+    	  AND IS_DELETE != 'Y'
     </select>
     <select id="marketingUserList" resultType="hashmap">
-    	<!-- select * from userTable2 where teamCode = 8 -->
-    	select * from userTable2 where deptCode = 'dept8'
+    	select * from lab_user where DEPT_CODE = 'dept8'
     </select>
     
     <select id="qualityPlanningUserList" resultType="hashmap">
-    	<!-- select * from userTable2 where teamCode = 8 -->
-    	select * from userTable2 where deptCode='dept7' and teamCode='6'
+    	select * from lab_user where DEPT_CODE='dept7' and TEAM_CODE='6'
     </select>
     
     <select id="researchUserList" resultType="hashmap">
-    	select * from userTable2 where userGrade='4'
+    	select * from lab_user where USER_GRAD='4'
     </select>
     
     <select id="sendMailList" resultType="map" parameterType="map">
-		SELECT	userId
-			, userName
-			, getUserDeptName(userId) AS deptCodeName
-			, getUserTeamName(userId) AS teamCodeName
-			, getCodeName('GRADE',userGrade) AS userGradeName
-			, email
-			FROM	userTable2
+		SELECT	USER_ID AS userId
+			, USER_NAME AS userName
+			, getUserDeptName(USER_ID) AS deptCodeName
+			, getUserTeamName(USER_ID) AS teamCodeName
+			, getCodeName('GRADE',USER_GRAD) AS userGradeName
+			, EMAIL
+			FROM	lab_user
 			WHERE	1 = 1 
 			<if test="deptCode != null and deptCode !='' ">
-				AND deptCode = #{deptCode}
+				AND DEPT_CODE = #{deptCode}
 			</if> 
 			<if test="teamCode != null and teamCode !='' ">
-				AND teamCode = #{teamCode}
+				AND TEAM_CODE = #{teamCode}
 			</if> 
 			<if test="userGrade != null and userGrade !='' ">
-				AND userGrade = #{userGrade}
+				AND USER_GRAD = #{userGrade}
 			</if>
 			<if test="isAdmin != null and isAdmin !='' ">
-				AND isAdmin = #{isAdmin}
+				AND IS_ADMIN = #{isAdmin}
 			</if>
 	</select>
 	
@@ -352,14 +356,14 @@
 	
 	<select id="selectDocumentOwner" parameterType="UserVo" resultType="UserVo">
 		/* user.selectDocumentOwner */
-		SELECT * FROM userTable2
+		SELECT * FROM lab_user
 		WHERE 1=1
 		<choose>
 			<when test='tbType == "manufacturingProcessDoc"'>
-				AND userId = (SELECT regUserId FROM manufacturingProcessDoc WHERE dNo = #{tbKey})
+				AND USER_ID = (SELECT regUserId FROM manufacturingProcessDoc WHERE dNo = #{tbKey})
 			</when>
 			<when test='tbType == "trialProductionReport"'>
-				AND userId = (SELECT createUser FROM trialProductionReport WHERE rNo = #{tbKey})
+				AND USER_ID = (SELECT createUser FROM trialProductionReport WHERE rNo = #{tbKey})
 			</when>
 			<otherwise>
 				1!=1

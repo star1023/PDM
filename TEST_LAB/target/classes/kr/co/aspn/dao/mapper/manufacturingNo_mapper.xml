@@ -883,9 +883,9 @@
 		, pDoc.plantCode
 		, pDoc.stlal
 		, pDoc.state
-		, userTb.deptCode
-		, userTb.userGrade
-		, userTb.teamCode
+		, userTb.DEPT_CODE AS deptCode
+		, userTb.USER_GRAD AS userGrade
+		, userTb.TEAM_CODE AS teamCode
 		, mNo.versionNo
 		, mNo.status
 		, pDoc.qns
@@ -893,7 +893,7 @@
 	FROM manufacturingNoMapping mNoMapping
 		, manufacturingProcessDoc pDoc
 		, devDoc doc
-		, userTable2 userTb
+		, lab_user userTb
 		, manufacturingNo mNo
 	WHERE 1 = 1
 		AND mNoMapping.mNoSeq = #{seq}
@@ -902,13 +902,13 @@
 		AND doc.docNo = pDoc.docNo
 		AND doc.docVersion = pDoc.docVersion
 		AND doc.regUserId = userTb.userId
-		AND userTb.teamCode like 
+		AND userTb.TEAM_CODE like 
 			(
-				SELECT CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN '%%'
-							WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN '%%'
-							WHEN isAdmin = 'Y' THEN '%%'
-							ELSE teamCode
-						END FROM userTable2 WHERE userId = #{loginUserId} )
+				SELECT CASE WHEN USER_GRAD='3' OR USER_GRAD='6' OR USER_GRAD='20' THEN '%%'
+							WHEN TEAM_CODE='6' OR TEAM_CODE='8' OR TEAM_CODE='10' THEN '%%'
+							WHEN IS_ADMIN = 'Y' THEN '%%'
+							ELSE TEAM_CODE
+						END FROM lab_user WHERE USER_ID = #{loginUserId} )
 		<if test="versionNo != null and versionNo != '' ">
 		AND mNo.versionNo = #{versionNo}
 		</if>
@@ -1218,13 +1218,13 @@
 	<select id="selectDevDocRegUserId" parameterType = "map" resultType="String">
 	/** manufacturingNo.selectDevDocRegUserId */
 		SELECT distinct(devD.regUserId)
-		FROM devDoc devD, manufacturingProcessDoc mPD, manufacturingNoMapping mNM, userTable2 userTb
+		FROM devDoc devD, manufacturingProcessDoc mPD, manufacturingNoMapping mNM, lab_user userTb
 		WHERE devD.docNo = mPD.docNo and devD.docVersion = mPD.docVersion AND mPD.dNo = mNM.dNo
-		AND devD.regUserId = userTb.userId AND mNM.mNoSeq = ${seq}
+		AND devD.regUserId = userTb.USER_ID AND mNM.mNoSeq = ${seq}
 	</select>
 	
 	<select id="checkIsAdmin" parameterType = "map" resultType="String">
-		SELECT isAdmin FROM userTable2 WHERE userid = #{loginUserId}
+		SELECT IS_ADMIN AS isAdmin FROM lab_user WHERE USER_ID = #{loginUserId}
 	</select>
 	
 	<select id="selectManufacturingNoVersionList" resultType = "map" parameterType="map">
@@ -1255,14 +1255,14 @@
 		, getUserName(doc.regUserId) AS userName
 		, pDoc.plantCode
 		, pDoc.stlal
-		, userTb.deptCode
-		, userTb.userGrade
-		, userTb.teamCode
+		, userTb.DEPT_CODE AS deptCode
+		, userTb.USER_GRAD AS userGrade
+		, userTb.TEAM_CODE AS teamCode
 		, mNo.versionNo
 	FROM manufacturingNoMapping mNoMapping
 		, manufacturingProcessDoc pDoc
 		, devDoc doc
-		, userTable2 userTb
+		, lab_user userTb
 		, manufacturingNo mNo
 	WHERE 1 = 1
 		AND mNoMapping.mNoSeq = #{seq}
@@ -1272,13 +1272,13 @@
 		AND doc.docVersion = pDoc.docVersion
 		AND doc.docNo = #{docNo}
 		AND doc.regUserId = userTb.userId
-		AND userTb.teamCode like 
+		AND userTb.TEAM_CODE like 
 			(
-				SELECT CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN '%%'
-							WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN '%%'
-							WHEN isAdmin = 'Y' THEN '%%'
-							ELSE teamCode
-						END FROM userTable2 WHERE userId = #{loginUserId} )
+				SELECT CASE WHEN USER_GRAD='3' OR USER_GRAD='6' OR USER_GRAD='20' THEN '%%'
+							WHEN TEAM_CODE='6' OR TEAM_CODE='8' OR TEAM_CODE='10' THEN '%%'
+							WHEN IS_ADMIN = 'Y' THEN '%%'
+							ELSE TEAM_CODE
+						END FROM lab_user WHERE USER_ID = #{loginUserId} )
 		<if test="versionNo != null and versionNo != '' ">
 		AND mNo.versionNo = #{versionNo}
 		</if>
@@ -1785,14 +1785,13 @@
 			 , pDoc.plantCode
 			 , pDoc.stlal
 			 , pDoc.state
-			 , userTb.deptCode
-			 , userTb.userGrade
-			 , userTb.teamCode
+			 , userTb.DEPT_CODE AS deptCode
+			 , userTb.USER_GRAD AS userGrade
+			 , userTb.TEAM_CODE AS teamCode
 			 , mNo.versionNo
 			 , mNo.status
 			 , pDoc.qns
 			 , pDoc.isQnsReviewTarget
-			 , userTb.teamCode
 			 , B.regDate
 			 , 0 as viewAuth
 		FROM manufacturingNoMapping mNoMapping
@@ -1800,7 +1799,7 @@
 				 inner join (SELECT docNo,MAX(docVersion) AS docVersion FROM devDoc GROUP BY docNo) mDoc ON mDoc.docNo = pDoc.docNo and mDoc.docVersion = pDoc.docVersion
 				 inner join devDoc doc on doc.docNo = pDoc.docNo and doc.docVersion = pDoc.docVersion
 				 inner join manufacturingNo mNo on mNoMapping.mNoSeq = mNo.seq
-				 left join userTable2 userTb on doc.regUserId = userTb.userId
+				 left join lab_user userTb on doc.regUserId = userTb.USER_ID
 				 left join (
 					SELECT MATNR, WERKS, STLAL, max(regDate) as regDate
 					FROM devDocBomHeader
@@ -1812,21 +1811,21 @@
 
 	<select id="getAuthTeamCode" parameterType="string" resultType="string">
 		SELECT
-		    CASE WHEN userGrade='3' OR userGrade='6' OR userGrade='20' THEN ''
-				 WHEN teamCode='6' OR teamCode='8' OR teamCode='10' THEN ''
-				 WHEN isAdmin = 'Y' THEN ''
-				 ELSE teamCode
+		    CASE WHEN USER_GRAD='3' OR USER_GRAD='6' OR USER_GRAD='20' THEN ''
+				 WHEN TEAM_CODE='6' OR TEAM_CODE='8' OR TEAM_CODE='10' THEN ''
+				 WHEN IS_ADMIN = 'Y' THEN ''
+				 ELSE TEAM_CODE
 		    END
-		FROM userTable2
-		WHERE userId = #{loginUserId}
+		FROM lab_user
+		WHERE USER_ID = #{loginUserId}
 	</select>
 
 	<select id="getAuthDevDoc" parameterType="int" resultType="map">
-		SELECT ifnull(u.deptCode,'') AS deptCode,ifnull(u.teamCode,'') AS teamCode,dd.regUserId,dd.regDate,dd.modUserId,dd.modDate
+		SELECT ifnull(u.DEPT_CODE,'') AS deptCode,ifnull(u.TEAM_CODE,'') AS teamCode,dd.regUserId,dd.regDate,dd.modUserId,dd.modDate
 		FROM manufacturingNoMapping as mm inner join manufacturingProcessDoc as doc on mm.dNo = doc.dNo
 										  inner join devDoc as dd on dd.docNo = doc.docNo and dd.docVersion = doc.docVersion
 										  inner join manufacturingNo as mn on mm.mNoSeq = mn.seq
-										  left join userTable2 as u on dd.regUserId = u.userId
+										  left join lab_user as u on dd.regUserId = u.USER_ID
 		where mm.mNoSeq = #{seq}
 	</select>
 </mapper>

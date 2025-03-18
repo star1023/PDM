@@ -9,10 +9,10 @@
 		<if test="searchType != null and searchType != '' ">
 		<choose>
 			<when test='searchType.equals("C")'>
-			AND sourceUserId IN (  SELECT userId FROM userTable2 WHERE userName LIKE concat('%',#{keyword},'%'))
+			AND sourceUserId IN (  SELECT USER_ID FROM lab_user WHERE USER_NAME LIKE concat('%',#{keyword},'%'))
 			</when>
       		<when test='searchType.equals("P")'>
-      		AND targetUserId IN (  SELECT userId FROM userTable2 WHERE userName LIKE concat('%',#{keyword},'%') )
+      		AND targetUserId IN (  SELECT USER_ID FROM lab_user WHERE USER_NAME LIKE concat('%',#{keyword},'%') )
       		</when>
       	</choose>
 		</if>

@@ -294,8 +294,8 @@ public class ReportServiceImpl implements ReportService {
 		//메일발송
 		param.put("apprNo", apprNo);
 		param.put("title", title);
-		approvalService.sendArrpMail(param);
-		approvalService.sendRefMail(param);
+		//approvalService.sendArrpMail(param);
+		//approvalService.sendRefMail(param);
 		
 		/*
 		ApprovalHeaderVO apprItemHeader = approvalDao.apprHeaderInfo(param);

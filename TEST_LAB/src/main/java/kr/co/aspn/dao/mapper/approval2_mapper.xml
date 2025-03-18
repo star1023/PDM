@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="approval2">
+	<select id="searchUser" parameterType="map" resultType="hashmap">
+		SELECT 
+			USER_ID
+			, USER_PWD
+			, USER_NAME
+			, USER_GRAD
+			, REG_DATE
+			, USER_CODE
+			, EMAIL
+			, DEPT_CODE
+			, TEAM_CODE
+			, TITLE_CODE
+			, USER_TYPE
+			, IS_ADMIN
+			, IS_DELETE
+			, THEME
+			, CONTENT_MODE
+			, WIDTH_MODE
+			, MAIL_CHECK1
+			, MAIL_CHECK2
+			, MAIL_CHECK3
+			, IS_LOCK
+			, IS_OLD
+			, ROLE_CODE
+		FROM 
+			lab_user
+		WHERE 1 = 1
+			AND (USER_ID LIKE CONCAT('%',#{keyword},'%') OR USER_NAME LIKE CONCAT('%',#{keyword},'%'))
+	</select>
+	
+	<select id="selectLineSeq" resultType="int">
+		SELECT nextval('approval_line_header_seq') as seq
+	</select>
+	
+	<insert id="insertApprLine" parameterType="map">
+		INSERT 
+		INTO lab_approval_line_header(
+			LINE_IDX
+			, NAME
+			, DOC_TYPE
+			, REG_USER
+			, REG_DATE
+			, IS_DELETE
+		) VALUES (
+			#{lineIdx}
+			, #{apprLineName}
+			, #{docType}
+			, #{userId}
+			, sysdate()
+			, 'N'
+		)	
+	</insert>
+	<insert id="insertApprLineItem" parameterType="map">
+		INSERT 
+    	INTO lab_approval_line_item(
+			ITEM_IDX
+			, LINE_IDX
+			, APPR_ORDER
+			, USER_ID
+		)values
+		<foreach collection="apprLine" item="item" index="index"  separator=",">
+		( nextval('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
+		</foreach>
+	</insert>
+	
+	<select id="selectApprovalLine" parameterType="map" resultType="hashmap">
+		SELECT 
+			LINE_IDX
+			, NAME
+			, DOC_TYPE
+			, REG_USER
+			, REG_DATE
+			, IS_DELETE
+		FROM 
+			lab_approval_line_header
+		WHERE 1 = 1
+			AND DOC_TYPE = #{docType}
+			AND REG_USER = #{userId}
+			AND IS_DELETE = 'N'
+	</select>
+	
+	<select id="selectApprovalLineItem" parameterType="map" resultType="hashmap">
+		SELECT
+			la.ITEM_IDX
+			, la.LINE_IDX
+			, la.APPR_ORDER
+			, la.USER_ID
+			, lu.USER_NAME
+			, '부서명' AS DEPT_NAME
+			, '팀명' AS TEAM_NAME
+		FROM 
+			lab_approval_line_item la
+			, lab_user lu
+		WHERE 1 = 1
+			AND la.USER_ID = lu.USER_ID
+			AND la.LINE_IDX = #{lineIdx}
+		ORDER BY APPR_ORDER ASC
+	</select>
+	
+	<update id="deleteApprLine" parameterType="map">
+		UPDATE 
+			lab_approval_line_header
+		SET
+			IS_DELETE = 'Y'
+		WHERE 1 = 1
+			AND LINE_IDX = #{lineIdx}
+	</update>
+	
+	<select id="selectApprSeq" resultType="int">
+		SELECT nextval('approval_header_seq') as seq
+	</select>
+	
+	<insert id="insertApprHeader" parameterType="map">
+		INSERT 
+		INTO lab_approval_header(
+			APPR_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, TOTAL_STEP
+			, CURRENT_STEP
+			, CURRENT_USER_ID
+			, TITLE
+			, REG_USER
+			, REG_DATE
+		) values (
+			#{apprIdx}
+			, #{docIdx}
+			, #{docType}
+			, #{totalStep}
+			, #{currentStep}
+			, #{currentUser}
+			, #{title}
+			, #{userId}
+			, sysdate()
+		)	
+	</insert>
+	<insert id="insertApprItem" parameterType="map">
+		INSERT 
+    	INTO lab_approval_item(
+			ITEM_IDX
+			, APPR_IDX
+			, APPR_NO
+			, TARGET_USER_ID
+		)values
+		<foreach collection="apprLine" item="item" index="index"  separator=",">
+		( nextval('approval_item_seq'), #{apprIdx} , ${index+1}, #{item} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertReference" parameterType="map">
+		INSERT
+		INTO lab_approval_reference(
+			REF_IDX
+			, APPR_IDX
+			, TARGET_USER_ID
+		)values
+		<foreach collection="refLine" item="item" index="index"  separator=",">
+		( nextval('approval_line_reference_seq'), #{apprIdx}, #{item} )
+		</foreach>
+	</insert>
+	
+	<update id="updateStatus" parameterType="map">
+		UPDATE 
+			lab_product
+		SET
+			STATUS = #{status}
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{docIdx}
+	</update>
+	
+	<select id="selectTotalCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(APPR_IDX)
+		FROM
+			lab_approval_header
+		WHERE 1 = 1
+			AND REG_USER = #{userId}
+	</select>
+	
+	<select id="selectApprovalList" parameterType="map" resultType="hashmap">
+		SELECT 
+			tmp.*	
+			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
+					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				  END DOC_TYPE_NAME
+			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
+				   WHEN LAST_STATUS = 'A' THEN '결재중'
+				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
+				   WHEN LAST_STATUS = 'R' THEN '반려' 
+				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
+				  END LAST_STATUS_TXT
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM (
+			SELECT 
+				row_number() over (order by  APPR_IDX DESC) as rnum
+				, APPR_IDX
+				, DOC_IDX
+				, DOC_TYPE
+				, TOTAL_STEP
+				, CURRENT_STEP
+				, CURRENT_USER_ID
+				, TITLE
+				, REG_USER
+				, REG_DATE
+				, LAST_STATUS
+			FROM lab_approval_header
+			WHERE 1 = 1
+				AND REG_USER = #{userId}
+		)tmp 
+		WHERE rnum between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectMyApprTotalCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(APPR_IDX)
+		FROM
+			lab_approval_header
+		WHERE 1 = 1
+			AND CURRENT_USER_ID = #{userId}
+	</select>
+	
+	<select id="selectMyApprList" parameterType="map" resultType="hashmap">
+		SELECT 
+			tmp.*	
+			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
+					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				  END DOC_TYPE_NAME
+			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
+				   WHEN LAST_STATUS = 'A' THEN '결재중'
+				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
+				   WHEN LAST_STATUS = 'R' THEN '반려' 
+				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
+				  END LAST_STATUS_TXT
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM (
+			SELECT 
+				row_number() over (order by  APPR_IDX DESC) as rnum
+				, APPR_IDX
+				, DOC_IDX
+				, DOC_TYPE
+				, TOTAL_STEP
+				, CURRENT_STEP
+				, CURRENT_USER_ID
+				, TITLE
+				, REG_USER
+				, REG_DATE
+				, LAST_STATUS
+			FROM lab_approval_header
+			WHERE 1 = 1
+				AND CURRENT_USER_ID = #{userId}
+		)tmp 
+		WHERE rnum between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectMyRefTotalCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(REF_IDX)
+		FROM 
+			lab_approval_reference laf,
+			lab_approval_header lah
+		WHERE 1 = 1
+			AND laf.TARGET_USER_ID = #{userId}
+			and laf.APPR_IDX = lah.APPR_IDX 
+			and lah.LAST_STATUS = 'Y'	
+	</select>
+	
+	<select id="selectMyRefList" parameterType="map" resultType="hashmap">
+		SELECT 
+			tmp.*	
+			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
+					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				  END DOC_TYPE_NAME
+			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
+				   WHEN LAST_STATUS = 'A' THEN '결재중'
+				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
+				   WHEN LAST_STATUS = 'R' THEN '반려' 
+				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
+				  END LAST_STATUS_TXT
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM (
+			SELECT 
+				row_number() over (order by  laf.REF_IDX DESC) as rnum
+				, laf.REF_IDX
+				, laf.APPR_IDX
+				, laf.TARGET_USER_ID
+				, lah.DOC_IDX
+				, lah.DOC_TYPE
+				, lah.TOTAL_STEP
+				, lah.CURRENT_STEP
+				, lah.CURRENT_USER_ID
+				, lah.TITLE
+				, lah.REG_USER
+				, lah.REG_DATE
+				, lah.LAST_STATUS
+			FROM 
+				lab_approval_reference laf,
+				lab_approval_header lah
+			WHERE 1 = 1
+				AND laf.TARGET_USER_ID = #{userId}
+				and laf.APPR_IDX = lah.APPR_IDX 
+				and lah.LAST_STATUS = 'Y'
+		)tmp
+		WHERE rnum between #{startRow} AND #{endRow}		
+	</select>
+	
+	<select id="selectMyCompTotalCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(APPR_IDX)
+		FROM
+			lab_approval_header
+		WHERE 1 = 1
+			AND LAST_STATUS = 'Y'
+			AND APPR_IDX IN ( 
+				SELECT APPR_IDX FROM lab_approval_item WHERE 1 = 1 AND TARGET_USER_ID = #{userId} 
+			)
+	</select>
+	
+	<select id="selectMyCompList" parameterType="map" resultType="hashmap">
+		SELECT 
+			tmp.*	
+			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
+					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				  END DOC_TYPE_NAME
+			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
+				   WHEN LAST_STATUS = 'A' THEN '결재중'
+				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
+				   WHEN LAST_STATUS = 'R' THEN '반려' 
+				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
+				  END LAST_STATUS_TXT
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM (
+			SELECT 
+				row_number() over (order by  APPR_IDX DESC) as rnum
+				, APPR_IDX
+				, DOC_IDX
+				, DOC_TYPE
+				, TOTAL_STEP
+				, CURRENT_STEP
+				, CURRENT_USER_ID
+				, TITLE
+				, REG_USER
+				, REG_DATE
+				, LAST_STATUS
+			FROM lab_approval_header
+			WHERE 1 = 1
+				AND LAST_STATUS = 'Y'
+				AND APPR_IDX IN ( SELECT APPR_IDX FROM lab_approval_item WHERE 1 = 1 AND TARGET_USER_ID = #{userId} ) 
+		)tmp 
+		WHERE rnum between #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectApprHeaderData" parameterType="map" resultType="hashmap">
+		SELECT 
+			APPR_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, TOTAL_STEP
+			, CURRENT_STEP
+			, CURRENT_USER_ID
+			, TITLE
+			, REG_USER
+			, REG_DATE
+			, LAST_STATUS
+		FROM 
+			lab_approval_header
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}
+	</select>
+	
+	<select id="selectDocData" parameterType="map" resultType="hashmap">
+		SELECT 
+			*
+		FROM 
+		<choose>
+			<when test="docType.equals('PROD')">
+			lab_product
+			</when>
+      		<when test="docType.equals('MENU')">
+      		lab_menu
+      		</when>
+      	</choose>
+		WHERE 1 = 1
+			AND IS_DELETE = 'N'
+			<choose>
+				<when test="docType.equals('PROD')">
+				AND PRODUCT_IDX = #{docIdx}	
+				</when>
+	      		<when test="docType.equals('MENU')">
+	      		AND MENU_IDX = #{docIdx}
+	      		</when>
+	      	</choose>
+	</select>
+	
+	<update id="updateApprStatus" parameterType="map">
+		UPDATE 
+			lab_approval_header
+		SET
+			LAST_STATUS	= #{status}
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}	
+	</update>
+	
+	<update id="updateDocStatus" parameterType="map">
+		UPDATE 
+		<choose>
+			<when test="docType.equals('PROD')">
+			lab_product
+			</when>
+      		<when test="docType.equals('MENU')">
+      		lab_menu
+      		</when>
+      	</choose>
+		SET
+			STATUS = #{docStatus}
+		WHERE 1 = 1
+		<choose>
+			<when test="docType.equals('PROD')">
+			AND PRODUCT_IDX = #{docIdx}	
+			</when>
+      		<when test="docType.equals('MENU')">
+      		AND MENU_IDX = #{docIdx}
+      		</when>
+      	</choose>
+	</update>
+</mapper>

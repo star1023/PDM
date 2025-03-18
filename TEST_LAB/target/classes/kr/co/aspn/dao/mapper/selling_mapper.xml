@@ -28,7 +28,7 @@
 				AND userId = #{searchUser}
 				</when>
 	      		<when test='searchUser == null or searchUser == "" '>
-	      		AND userId in (SELECT userId FROM userTable2 WHERE teamCode = #{searchTeam} AND isDelete = 'N')
+	      		AND userId in (SELECT USER_ID FROM lab_user WHERE TEAM_CODE = #{searchTeam} AND IS_DELETE = 'N')
 	      		</when>
 	      	</choose>
 		</if>
@@ -143,7 +143,7 @@
 				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
 			FROM sellingView v
 			WHERE 1 = 1 
-				AND v.userid in( select userId FROM userTable2 where userId != #{userId} AND deptCode = #{deptCode})
+				AND v.userid in( select USER_ID FROM lab_user where USER_ID != #{userId} AND DEPT_CODE = #{deptCode})
 				AND v.year = #{year}
 			GROUP BY v.productCode, v.productName, v.userid, v.year
 		) a 
@@ -201,7 +201,7 @@
 				(SELECT totalSelling FROM sellingView WHERE productCode = v.productCode AND period= '2' )  AS downSelling
 			FROM sellingView v
 			WHERE 1 = 1 
-				AND v.userid in( select userId FROM userTable2 where userId != #{userId} AND deptCode = #{deptCode})
+				AND v.userid in( select USER_ID FROM lab_user where USER_ID != #{userId} AND DEPT_CODE = #{deptCode})
 				AND v.year = #{year}
 			GROUP BY v.productCode, v.productName, v.userid, v.year
 		) a 

@@ -137,7 +137,7 @@
 	</select>
 	
 	<select id="userInfo" parameterType="string" resultType="hashmap">
-		select userName, getCodeName('DEPT',deptCode) AS deptFullName  from userTable2  where userId = #{userId}
+		select USER_NAME, getCodeName('DEPT',DEPT_CODE) AS deptFullName  from lab_user  where USER_ID = #{userId}
 	</select>
 	
 	<select id="getUserInfo" parameterType="string" resultType="hashmap">

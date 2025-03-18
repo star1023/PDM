@@ -56,10 +56,10 @@
 			</if>
 			<if test='search.ownerType == "team"'>
 				<if test='search.teamCode == ""'>
-					AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+					AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{search.deptCode} )
 				</if>
 				<if test='search.teamCode != ""'>
-					AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+					AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE TEAM_CODE = #{search.teamCode} )
 				</if>
 			</if>
 			<if test="search.searchField != null and search.searchValue != null">
@@ -99,10 +99,10 @@
 				</if>
 				<if test='search.ownerType == "team"'>
 					<if test='search.teamCode == ""'>
-						AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+						AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{search.deptCode} )
 					</if>
 					<if test='search.teamCode != ""'>
-						AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+						AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE TEAM_CODE = #{search.teamCode} )
 					</if>
 				</if>
 				<if test="search.searchField != null and search.searchValue != null">
@@ -621,10 +621,10 @@
 			</if>
 			<if test='search.ownerType == "team"'>
 				<if test='search.teamCode == ""'>
-					AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+					AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{search.deptCode} )
 				</if>
 				<if test='search.teamCode != ""'>
-					AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+					AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE TEAM_CODE = #{search.teamCode} )
 				</if>
 			</if>
 			<if test="search.searchField != null and search.searchValue != null">
@@ -656,10 +656,10 @@
 				</if>
 				<if test='search.ownerType == "team"'>
 					<if test='search.teamCode == ""'>
-						AND regUserId IN ( SELECT userId FROM userTable2 WHERE deptCode = #{search.deptCode} )
+						AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE DEPT_CODE = #{search.deptCode} )
 					</if>
 					<if test='search.teamCode != ""'>
-						AND regUserId IN ( SELECT userId FROM userTable2 WHERE teamCode = #{search.teamCode} )
+						AND regUserId IN ( SELECT USER_ID FROM lab_user WHERE TEAM_CODE = #{search.teamCode} )
 					</if>
 				</if>
 				<if test="search.searchField != null and search.searchValue != null">

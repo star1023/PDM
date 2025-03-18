@@ -8,7 +8,7 @@
 		FROM (
 			SELECT
 				report.*
-				, (SELECT deptCode FROM usertable2 WHERE userid = report.regUserId) userDept
+				, (SELECT DEPT_CODE FROM lab_user WHERE USER_ID = report.regUserId) userDept
 			FROM report
 		) a
 		WHERE 1 = 1
@@ -62,7 +62,7 @@
 										, regularTitle
 				FROM	(
 					SELECT report.*
-						, (SELECT deptCode FROM usertable2 WHERE userid = report.regUserId) userDept
+						, (SELECT DEPT_CODE FROM lab_user WHERE USER_ID = report.regUserId) userDept
 					FROM report
 				) a 
 				WHERE 1 = 1

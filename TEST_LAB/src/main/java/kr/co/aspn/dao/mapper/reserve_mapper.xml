@@ -421,8 +421,8 @@
 		 , DATE_FORMAT(reserveDate,'%Y-%m-%d') as reserveDateFormat1
 		 , getCodeName('DEPT',b.deptCode) as deptCodeName
 		 ,getUserName(a.regUserId) as regUserName
-		from reserveMeetingRoom a inner join userTable2 b
-		on a.regUserId=b.userId
+		from reserveMeetingRoom a inner join lab_user b
+		on a.regUserId=b.USER_ID
 		 where rmrNo = #{rmrNo}
 	</select>
 	

@@ -5,25 +5,25 @@
 	<select id="userListReport" resultType="hashmap">
 		/* adminreport.userListReport 계정 리스트 검색 */
 		SELECT
-				USERID
-				,USERPWD
-				,USERNAME
-				,USERGRADE
-				,getCodeName('GRADE',USERGRADE) AS USERGRADENAME
-				,DATE_FORMAT(REGDATE,'%Y-%m-%d') AS REGDATE
-				,USERCODE
+				USER_ID AS USERID
+				,USER_PWD AS USERPWD
+				,USER_NAME AS USERNAME
+				,USER_GRAD AS USERGRADE
+				,getCodeName('GRADE',USER_GRAD) AS USERGRADENAME
+				,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REGDATE
+				,USER_CODE AS USERCODE
 				,EMAIL
-				,DEPTCODE
-				,getCodeName('DEPT',DEPTCODE) AS DEPTCODENAME
-				,TEAMCODE
-				,getCodeName('TEAM',TEAMCODE) AS TEAMCODENAME
-				,TITLECODE
-				,USERTYPE
-				,ISADMIN
-				,ISDELETE
-				,ISLOCK
-		FROM	userTable2
-		ORDER BY userId desc
+				,DEPT_CODE AS DEPTCODE
+				,getCodeName('DEPT',DEPT_CODE) AS DEPTCODENAME
+				,TEAM_CODE AS TEAMCODE
+				,getCodeName('TEAM',TEAM_CODE) AS TEAMCODENAME
+				,TITLE_CODE AS TITLECODE
+				,USER_TYPE AS USERTYPE
+				,IS_ADMIN AS ISADMIN
+				,IS_DELETE AS ISDELETE
+				,IS_LOCK AS ISLOCK
+		FROM	lab_user
+		ORDER BY USER_ID desc
 	</select>
 
 	<select id="userLoginLogReport" resultType="hashmap">

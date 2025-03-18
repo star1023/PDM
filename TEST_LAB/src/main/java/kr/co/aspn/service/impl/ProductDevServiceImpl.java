@@ -234,7 +234,7 @@ public class ProductDevServiceImpl implements ProductDevService{
 				
 				// 결재문서 관련 데이터 삭제
 				try {
-					approvalService.deleteApprList(docNo, docVersion);
+					//approvalService.deleteApprList(docNo, docVersion);
 					deleteLog += "\n\t 결재문서 삭제: 성공";
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -1241,7 +1241,7 @@ public class ProductDevServiceImpl implements ProductDevService{
 				if(!detail.getState().equals("2") && apprnoList.size()>0 ){
 					for (String apprno : apprnoList) {
 						try {
-							approvalService.deleteAppr(Integer.parseInt(apprno));
+							//approvalService.deleteAppr(Integer.parseInt(apprno));
 							insertHistory("approvalBox", apprno, "delete", "S", "디자인의뢰서["+String.valueOf(drNo)+"]삭제에 따른 결재문서 삭제", userId);
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1302,7 +1302,7 @@ public class ProductDevServiceImpl implements ProductDevService{
 				// 결재문서삭제
 				
 				try {
-					approvalService.deleteApprList(docNo, docVersion);
+					//approvalService.deleteApprList(docNo, docVersion);
 					deleteLog += "\n\t 결재문서 삭제: 성공";
 					insertHistory("approvalBox", "0", "delete", "S", "제품개발문서["+String.valueOf(ddNo)+"]상태 변경에 따른 결재문서 삭제", userId);
 				} catch (Exception e) {
