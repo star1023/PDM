@@ -83,8 +83,8 @@ public class MfgProcessDoc {
 	private MfgProcessDocProdSpecMD specMD;
 	private List<FileVO> file;
 	
-	private List<MfgProcessDocStoreMethod> storeMethod; // 23.11.02 점포용 제조공정서 제조방법 
-	private List<ImageFileForStores> imageFileStores;	// 23.11.07 점포용 제조공정서 제조순서 이미지
+	private List<MfgProcessDocStoreMethod> storeMethod; // 23.11.02 ���ъ�� ��議곌났���� ��議곕갑踰� 
+	private List<ImageFileForStores> imageFileStores;	// 23.11.07 ���ъ�� ��議곌났���� ��議곗���� �대�몄�
 	
 	public List<HashMap<String,Object>> getDispByHashMap(){
 		if(disp == null) return null;
@@ -135,7 +135,7 @@ public class MfgProcessDoc {
 		return sb.toString();
 	}
 	
-	// 점포용 제조공정서 제조방법JSON
+	// ���ъ�� ��議곌났���� ��議곕갑踰�JSON
 	public String getStoreMethodByJsonString(){
 		if(storeMethod == null) return null;
 		StringBuffer sb = new StringBuffer();
