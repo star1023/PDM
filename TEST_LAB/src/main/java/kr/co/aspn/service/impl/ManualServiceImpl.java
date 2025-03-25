@@ -111,4 +111,10 @@ public class ManualServiceImpl implements ManualService {
 		}
 	}
 
+	@Override
+	public List<Map<String, Object>> selectManualFileList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return manualDao.selectManualFileList(param);
+	}
+
 }

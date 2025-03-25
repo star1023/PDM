@@ -72,6 +72,10 @@
 							html += "		<li style=\"float:none; display:inline\">";
 							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_attachFileOpen('"+item.MANUAL_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">매뉴얼등록</button>";
 							html += "		</li>";
+						} else {
+							html += "		<li style=\"float:none; display:inline\">";
+							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewFile('"+item.MANUAL_IDX+"')\"><img src=\"/resources/images/icon_doc05.png\">매뉴얼확인</button>";
+							html += "		</li>";
 						}
 						html += "	</td>";
 						html += "</tr>"		
@@ -266,10 +270,15 @@
 	        contentType: false,
 	        cache: false,
 			success: function(data){
-				console.log(data);
+				if( result.RESULT == 'S' ) {
+					alert("조리매뉴얼 등록이 완료되었습니다.");
+					fn_loadList(1);
+				} else {
+					alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+				}
 			},
 			error: function(a,b,c){
-				
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 			}
 		});
 		closeDialogWithClean('dialog_attatch');
@@ -288,6 +297,39 @@
 	        result = false;
 	    }
 	    return result;
+	}
+	
+	function fn_viewFile(idx) {
+		var URL = "../manual/selectManualFileListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"idx" : idx
+				, "docType" : 'MANUAL'
+			},
+			dataType:"json",
+			success:function(data) {
+				var html = "";
+				if( data.length > 0 ) {
+					$("#fileDataList").html("");
+					data.forEach(function (item) {
+						var childTag = '<li>&nbsp;<a href="javascript:downloadFile(\''+item.FILE_IDX+'\')">'+item.ORG_FILE_NAME+'</a></li>'
+						$("#fileDataList").append(childTag);
+					});				
+				} else {
+					$("#fileDataList").html("");
+				}			
+			},
+			error:function(request, status, errorThrown){
+				$("#fileDataList").html("");
+			}			
+		});
+		openDialog('open3');
+	}
+	
+	function downloadFile(idx){
+		location.href = '/test/fileDownload?idx='+idx;
 	}
 </script>
 
@@ -396,10 +438,10 @@
 					<thead id="list_header">
 						<tr>
 							<th>&nbsp;</th>
-							<th>제품코드</th>
-							<th>제품명</th>
+							<th>메뉴코드</th>
+							<th>메뉴명</th>
 							<th>버젼</th>
-							<th>제품구분</th>
+							<th>메뉴구분</th>
 							<th>매뉴얼등록상태</th>
 							<th>담당자</th>
 							<th></th>
@@ -470,6 +512,41 @@
 	</div>
 </div>
 <!-- 파일 생성레이어 close-->
+
+<!-- 자재 조회레이어 start-->
+<div class="white_content" id="open3">
+	<div class="modal" style="	width: 550px;margin-left:-350px;height: 350px;margin-top:-200px;">
+		<h5 style="position:relative">
+			<span class="title">매뉴얼 상세 정보</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="closeDialog('open3')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>
+					<div class="add_file2" style="width:97.5%">
+						<span class="" >
+							<label>매뉴얼</label>
+						</span>						
+					</div>
+					<div class="file_box_pop" style=" height:120px; width:97.5%; border-top-left-radius:0px;border-top-right-radius:0px; border-top:1px solid #ddd;box-sizing:border-box;">
+						<ul id="fileDataList">									
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="btn_box_con">
+			<button class="btn_admin_gray" onclick="closeDialog('open3')"> 닫기</button>
+		</div>
+	</div>
+</div>
+<!-- 자재 생성레이어 close-->
 
 <!-- 이력내역 레이어 start-->
 <div class="white_content" id="dialog_history">

@@ -55,4 +55,6 @@ public interface UserDao {
 	public int insertAccessLogParams(HashMap<String, Object> param);
 	
 	public UserVO selectDocumentOwner(HashMap<String, Object> param);
+	
+	public int selectAccessLogSeq();
 }

@@ -77,4 +77,22 @@
 			AND MANUAL_IDX = #{idx}
 				
 	</update>
+	
+	<select id="selectManualFileList" parameterType="map" resultType="hashmap">
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME 
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+			, FILE_CONTENT
+		FROM
+			lab_file
+		WHERE 1 = 1
+			AND DOC_IDX = #{idx}
+			AND DOC_TYPE = #{docType}		
+	</select>
 </mapper>

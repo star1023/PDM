@@ -98,7 +98,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				
 				//System.err.println(paramName + " : " + pramValue);
 				
-				if(paramName.equals("dNoList"))
+				/*if(paramName.equals("dNoList"))
 					requestParam.put(paramName, pramValue);
 				
 				if(paramName.equals("docNo") || paramName.equals("tbKey") || paramName.equals("tbType") || paramName.equals("pNo")) {
@@ -107,7 +107,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				
 				if(allowKeyList.indexOf(paramName.toLowerCase()) >= 0) {
 					requestParam.put(paramName, pramValue);
-				}
+				}*/
+				
+				requestParam.put(paramName, pramValue);
 			}
 			json.putAll(requestParam);
 			

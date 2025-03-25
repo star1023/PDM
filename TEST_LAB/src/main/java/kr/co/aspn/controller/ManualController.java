@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,5 +70,12 @@ public class ManualController {
 			returnMap.put("MESSAGE",e.getMessage());
 		}
 		return returnMap;
+	}
+	
+	@RequestMapping("/selectManualFileListAjax")
+	@ResponseBody
+	public List<Map<String, Object>> selectManualFileListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		List<Map<String, Object>> list = manualService.selectManualFileList(param);
+		return list;
 	}
 }

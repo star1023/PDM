@@ -261,12 +261,12 @@
 			LOG_IDX
 			, USER_ID
 		    ,USER_IP
-		    ,loginDate
+		    ,LOGIN_DATE
 		)	VALUES (
 			nextval('login_log_seq') 
 			,	#{userId}
 			,	#{userIp}
-			, 	LOGIN_DATE()
+			, 	sysdate()
 		)
 	</insert>
 	<select id="searchUserList" resultType="hashmap">
@@ -331,6 +331,10 @@
 				AND IS_ADMIN = #{isAdmin}
 			</if>
 	</select>
+
+	<select id="selectAccessLogSeq" resultType="int">
+		SELECT nextval('useraccess_log_seq') as seq
+	</select>
 	
 	<insert id="insertAccessLog">
 		INSERT INTO lab_useraccess_log (
@@ -340,7 +344,7 @@
 			, ACCESS_DATE
 			, REG_DATE
 		) VALUES(
-			nextval('useraccess_log_seq')
+			#{idx}
 			, #{userId}
 			, #{url}
 			, #{time} 
@@ -358,8 +362,8 @@
 			, DOC_TYPE
 			, P_NO
 		) VALUES (
-			, nextval('useraccess_log_params_seq')
-			, #{seq}
+			nextval('useraccess_log_params_seq')
+			, #{idx}
 			, #{requestParams}
 			, #{docNo}
 			, #{tbKey}
