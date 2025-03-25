@@ -1160,7 +1160,7 @@
 			, PLANT
 			, PRICE
 			, UNIT
-			, (select unitName from unit where unitCode = UNIT) as UNIT_NAME
+			, (select UNIT_NAME from lab_unit where UNIT_CODE = UNIT) as UNIT_NAME
 			, EXTRA_UNIT
 			, TYPE
 			, IS_SAMPLE
