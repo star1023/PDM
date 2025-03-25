@@ -28,7 +28,7 @@
 
 	<select id="userLoginLogReport" resultType="hashmap">
 		/* adminreport.userLoginLogReport 로그인 로그 검색 */
-		SELECT  
+		<!-- SELECT  
 			CASE
 				WHEN GETUSERTEAMNAME(USERID) IS NULL
 				THEN GETUSERDEPTNAME(USERID)
@@ -41,6 +41,20 @@
 		FROM USERLOGIN_LOG
 		WHERE LOGINDATE BETWEEN CONVERT(#{startDt},DATE) AND CONVERT(#{endDt},DATE)
 		ORDER BY LOGINDATE DESC;
+		-->
+		SELECT  
+			CASE
+				WHEN GETUSERTEAMNAME(USER_ID) IS NULL
+				THEN GETUSERDEPTNAME(USER_ID)
+				ELSE GETUSERDEPTNAME(USER_ID) || ' ' || GETUSERTEAMNAME(USER_ID)
+			END AS DEPTNAME
+			 , GETUSERNAME(USER_ID) AS USERNAME
+			 , USER_ID AS USERID
+			 , USER_IP AS USERIP
+			 , LOGIN_DATE AS LOGINDATE
+		FROM lab_login_log
+		WHERE LOGIN_DATE BETWEEN CONVERT(#{startDt},DATE) AND CONVERT(#{endDt},DATE)
+		ORDER BY LOGIN_DATE DESC;
 	</select>
 	
 	<select id="manufacturingProcessDocReport" resultType="hashmap">

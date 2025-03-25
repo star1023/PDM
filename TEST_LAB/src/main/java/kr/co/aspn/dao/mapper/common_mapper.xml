@@ -54,9 +54,9 @@
     <select id="unit" resultType="UnitVO">
 	 /*common.unit*/
 		SELECT 
-			unitCode
-			,unitName
-	  	FROM unit
+			UNIT_CODE AS unitCode
+			, UNIT_NAME AS unitName
+	  	FROM lab_unit
     </select>
     
     <select id="codeList" parameterType="CodeItemVO" resultType="CodeItemVO">

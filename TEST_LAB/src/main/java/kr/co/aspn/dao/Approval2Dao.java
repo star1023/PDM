@@ -53,5 +53,15 @@ public interface Approval2Dao {
 
 	Map<String, String> selectDocData(Map<String, Object> param);
 
-	
+	List<Map<String, String>> selectApprItemList(Map<String, Object> param);
+
+	List<Map<String, String>> selectReferenceList(Map<String, Object> param);
+
+	void approvalSubmitItem(Map<String, Object> param) throws Exception;
+
+	Map<String, Object> selectNextApprItem(Map<String, Object> param);
+
+	void updateApprUser(Map<String, Object> map) throws Exception;
+
+	Map<String, String> selectApprItem(Map<String, Object> param);
 }

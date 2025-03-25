@@ -21,6 +21,7 @@ import kr.co.aspn.service.MenuService;
 import kr.co.aspn.service.ProductService;
 import kr.co.aspn.util.FileUtil;
 import kr.co.aspn.util.PageNavigator;
+import kr.co.aspn.vo.FileVO;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -313,7 +314,7 @@ public class ProductServiceImpl implements ProductService {
 			
 			//개정하는 문서 버젼이 현재 보다 높은 경우에 현재 버젼 문서 상태를 변경한다.
 			if( versionNo > currentVersionNo ) {	
-				productDao.updateProduct(param);
+				productDao.updateProductIsLast(param);
 				param.put("isLast", "Y");	//개정하는 문서 버젼이 현재보다 높은 경우에 문서상태를 최신 상태(Y)로 저장한다.
 			} else {
 				param.put("isLast", "N");	//개정하는 문서 버젼이 현재보다 낮은 경우에 문서상태를 이전 상태(N)로 저장한다.
@@ -455,5 +456,168 @@ public class ProductServiceImpl implements ProductService {
 		List<Map<String, Object>> list = productDao.selectSearchProduct(param);
 		map.put("list", list);
 		return map;
+	}
+
+	@Override
+	public Map<String, Object> selectFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return productDao.selectFileData(param);
+	}
+
+	@Override
+	public void deleteFileData(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		productDao.deleteFileData(param);
+	}
+
+	@Override
+	public void updateProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file)
+			throws Exception {
+		// TODO Auto-generated method stub
+		try{
+			ArrayList<String> productType = (ArrayList<String>)listMap.get("productType");
+			ArrayList<String> fileType = (ArrayList<String>)listMap.get("fileType");
+			ArrayList<String> fileTypeText = (ArrayList<String>)listMap.get("fileTypeText");
+			ArrayList<String> docType = (ArrayList<String>)listMap.get("docType");
+			ArrayList<String> docTypeText = (ArrayList<String>)listMap.get("docTypeText");
+			ArrayList<String> rowIdArr = (ArrayList<String>)listMap.get("rowIdArr");
+			ArrayList<String> itemTypeArr = (ArrayList<String>)listMap.get("itemTypeArr");
+			ArrayList<String> itemMatIdxArr = (ArrayList<String>)listMap.get("itemMatIdxArr");
+			ArrayList<String> itemSapCodeArr = (ArrayList<String>)listMap.get("itemSapCodeArr");
+			ArrayList<String> itemNameArr = (ArrayList<String>)listMap.get("itemNameArr");
+			ArrayList<String> itemStandardArr = (ArrayList<String>)listMap.get("itemStandardArr");
+			ArrayList<String> itemKeepExpArr = (ArrayList<String>)listMap.get("itemKeepExpArr");
+			ArrayList<String> itemUnitPriceArr = (ArrayList<String>)listMap.get("itemUnitPriceArr");
+			ArrayList<String> itemDescArr = (ArrayList<String>)listMap.get("itemDescArr");
+			
+			int productIdx = Integer.parseInt((String)param.get("idx")); 	//key value 조회
+			param.put("productIdx", productIdx);
+			if( param.get("currentStatus") != null && "COND_APPR".equals(param.get("currentStatus")) ) {
+				param.put("status", "APPR");
+			}
+			
+			
+			if( productType != null && productType.size() > 0 ) {
+				for( int i = 0 ; i < productType.size() ; i++ ) {
+					param.put("productType"+(i+1), productType.get(i));
+				}
+			}
+			
+			//제품 수정
+			productDao.updateProductData(param);
+			
+			//원료 리스트 삭제
+			HashMap<String,Object> map = new HashMap<String,Object>(); 
+			map.put("productIdx", productIdx);
+			productDao.deleteProductMaterial(map);
+			
+			//원료 리스트 등록
+			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
+			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+				HashMap<String,String> matMap = new HashMap<String,String>();
+				matMap.put("itemType", itemTypeArr.get(i));
+				matMap.put("matIdx", itemMatIdxArr.get(i));
+				matMap.put("sapCode", itemSapCodeArr.get(i));
+				matMap.put("name", itemNameArr.get(i));
+				try{
+					matMap.put("standard", itemStandardArr.get(i));
+				} catch(Exception e) {
+					matMap.put("standard", "");
+				}
+				try{
+					matMap.put("keepExp", itemKeepExpArr.get(i));
+				} catch(Exception e) {
+					matMap.put("keepExp", "");
+				}
+				try{
+					matMap.put("unitPrice", itemUnitPriceArr.get(i));
+				} catch(Exception e) {
+					matMap.put("unitPrice", "");
+				}
+				try{
+					matMap.put("desc", itemDescArr.get(i));
+				} catch(Exception e) {
+					matMap.put("desc", "");
+				}
+				matList.add(matMap);
+			}
+			param.put("matList", matList);
+			productDao.insertProductMaterial(param);
+			
+			//첨부파일 유형 삭제
+			map = new HashMap<String,Object>(); 
+			map.put("productIdx", productIdx);
+			map.put("docType", "PROD");
+			productDao.deleteFileType(map);
+			
+			//첨부파일 유형 저장
+			List<HashMap<String, Object>> docTypeList = new ArrayList<HashMap<String, Object>>();
+			for( int i = 0 ; i < docType.size() ; i++ ) {
+				HashMap<String, Object> paramMap = new HashMap<String, Object>();
+				paramMap.put("docIdx", productIdx);
+				paramMap.put("docType", "PROD");
+				paramMap.put("fileType", docType.get(i));
+				paramMap.put("fileTypeText", docTypeText.get(i));
+				docTypeList.add(paramMap);
+			}		
+			testDao.insertFileType(docTypeList);
+			
+			//history 저장
+			Map<String, Object> historyParam = new HashMap<String, Object>();
+			historyParam.put("docIdx", productIdx);
+			historyParam.put("docType", "PROD");
+			historyParam.put("historyType", "U");
+			historyParam.put("historyData", param.toString());
+			historyParam.put("userId", param.get("userId"));
+			testDao.insertHistory(historyParam);
+			
+			//파일 DB 저장
+			if( file != null && file.length > 0 ) {
+				Calendar cal = Calendar.getInstance();
+		        Date day = cal.getTime();    //시간을 꺼낸다.
+		        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
+		        String toDay = sdf.format(day);
+				String path = config.getProperty("upload.file.path.product");
+				path += "/"+toDay; 
+				int idx = 0;
+				for( MultipartFile multipartFile : file ) {
+					System.err.println("=================================");
+					System.err.println("isEmpty : "+multipartFile.isEmpty());
+					System.err.println("name : " + multipartFile.getName());
+					System.err.println("originalFilename : " + multipartFile.getOriginalFilename());		
+					System.err.println("size : " + multipartFile.getSize());				
+					System.err.println("=================================");
+					try {
+						if( !multipartFile.isEmpty() ) {
+							String fileIdx = FileUtil.getUUID();
+							String result = FileUtil.upload3(multipartFile,path,fileIdx);
+							String content = FileUtil.getPdfContents(path, result);
+							Map<String,Object> fileMap = new HashMap<String,Object>();
+							fileMap.put("fileIdx", fileIdx);
+							fileMap.put("docIdx", productIdx);
+							fileMap.put("docType", "PROD");
+							fileMap.put("fileType", fileType.get(idx));
+							fileMap.put("orgFileName", multipartFile.getOriginalFilename());
+							fileMap.put("filePath", path);
+							fileMap.put("changeFileName", result);
+							fileMap.put("content", content);
+							System.err.println(fileMap);
+							//파일정보 저장
+							testDao.insertFileInfo(fileMap);
+							idx++;
+						}
+					} catch( Exception e ) {
+						//throw e;
+					}					
+				}
+			}
+			
+			if( param.get("currentStatus") != null && "COND_APPR".equals(param.get("currentStatus")) ) {
+				//다음 결재자에게 메일을 보낸다.
+			}
+		} catch( Exception e ) {
+			e.printStackTrace();
+			throw e;
+		}
 	}	
 }

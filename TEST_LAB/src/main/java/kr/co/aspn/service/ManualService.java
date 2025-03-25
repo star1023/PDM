@@ -6,4 +6,6 @@ public interface ManualService {
 
 	Map<String, Object> selectManualList(Map<String, Object> param) throws Exception;
 
+	void uploadManual(Map<String, Object> param) throws Exception;
+
 }

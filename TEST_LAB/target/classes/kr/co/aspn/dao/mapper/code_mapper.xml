@@ -3,37 +3,37 @@
 <mapper namespace="code">
 	<select id="groupList" parameterType="CodeGroupVO" resultType="CodeGroupVO">
 	/*code.groupList*/
-	SELECT groupCode
-		,groupName
-		,description
-		,isDelete
-		,regUserId
-		,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate
-		,modUserId
-		,DATE_FORMAT(modDate,'%Y-%m-%d') as modDate 
-	FROM codeGroup
-	WHERE isDelete = 'N'
+	SELECT GROUP_CODE AS groupCode
+		,GROUP_NAME AS groupName
+		,DESCRIPTION AS description
+		,IS_DELETE AS isDelete
+		,REG_USER_ID AS regUserId
+		,DATE_FORMAT(REG_DATE,'%Y-%m-%d') as regDate
+		,UPDATE_USER_ID AS modUserId
+		,DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') as modDate 
+	FROM lab_code_group
+	WHERE IS_DELETE = 'N'
     </select>
     
     <select id="groupCount" parameterType="CodeGroupVO" resultType="int">
     /*code.groupCount*/
-	  	SELECT	COUNT(groupCode) CNT
-	  	FROM 	codeGroup
+	  	SELECT	COUNT(GROUP_CODE) CNT
+	  	FROM 	lab_code_group
 	  	WHERE 	1=1
-	  	AND groupCode = #{groupCode}
+	  	AND GROUP_CODE = #{groupCode}
 	</select>
 
 	<insert id="groupInsert" parameterType="CodeGroupVO">
 	/*code.groupInsert*/
 		INSERT
-			INTO codeGroup
+			INTO lab_code_group
 		(
-			groupCode
-			, groupName
-			, description
-			, isDelete
-			, regUserId
-			, regDate
+			GROUP_CODE
+			, GROUP_NAME
+			, DESCRIPTION
+			, IS_DELETE
+			, REG_USER_ID
+			, REG_DATE
 		) VALUES (
 			#{groupCode}
 			, #{groupName}
@@ -46,81 +46,81 @@
 	
 	<update id="groupUpdate" parameterType="CodeGroupVO">
 	/*code.groupUpdate*/
-		UPDATE codeGroup
+		UPDATE lab_code_group
 		SET
-			groupName = #{groupName}
-			,description = #{description}
-			,modUserId = ''
-			,modDate = sysdate()
-		WHERE groupCode = #{groupCode}
+			GROUP_NAME = #{groupName}
+			,DESCRIPTION = #{description}
+			,UPDATE_USER_ID = ''
+			,UPDATE_DATE = sysdate()
+		WHERE GROUP_CODE = #{groupCode}
 	</update>
 	
 	<update id="groupDelete" parameterType="CodeGroupVO">
 	/*code.groupDelete*/
-		UPDATE codeGroup
+		UPDATE lab_code_group
 		SET
-			isDelete = 'Y'
-			,modUserId = ''
-			,modDate = sysdate()
-		WHERE groupCode = #{groupCode}
+			IS_DELETE = 'Y'
+			,UPDATE_USER_ID = ''
+			,UPDATE_DATE = sysdate()
+		WHERE GROUP_CODE = #{groupCode}
 	</update>
 	
 	<select id="groupItemCount" parameterType="CodeGroupVO" resultType="int">
 	/*code.groupItemCount*/
-	  	SELECT COUNT(groupCode) CNT
-	    FROM codeItem
+	  	SELECT COUNT(GROUP_CODE) CNT
+	    FROM lab_code_item
 	    WHERE 	1=1
-	  	AND groupCode = #{groupCode}
-	  	AND isDelete = 'N'
+	  	AND GROUP_CODE = #{groupCode}
+	  	AND IS_DELETE = 'N'
 	</select>
 	
 	<select id="itemList" parameterType="CodeItemVO" resultType="CodeItemVO">
 	/*code.itemList*/
-	SELECT groupCode
-      	,itemCode
-      	,itemName
-      	,description
-      	,orderNo
-     	,isDelete
-      	,regUserId
-      	,DATE_FORMAT(regDate,'%Y-%m-%d') as regDate 
-      	,modUserId
-      	,DATE_FORMAT(modDate,'%Y-%m-%d') as modDate
-	FROM codeItem
-	WHERE groupCode = #{groupCode}
-	AND isDelete = 'N'
-	ORDER BY orderNo ASC
+	SELECT GROUP_CODE AS groupCode
+      	,ITEM_CODE AS itemCode
+      	,ITEM_NAME AS itemName
+      	,DESCRIPTION AS description
+      	,ORDER_NO AS orderNo
+     	,IS_DELETE AS isDelete
+      	,REG_USER_ID AS regUserId
+      	,DATE_FORMAT(REG_DATE,'%Y-%m-%d') as regDate 
+      	,UPDATE_USER_ID AS modUserId
+      	,DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') as modDate
+	FROM lab_code_item
+	WHERE GROUP_CODE = #{groupCode}
+	AND IS_DELETE = 'N'
+	ORDER BY ORDER_NO ASC
     </select>
 	
 	<select id="itemCount" parameterType="CodeItemVO" resultType="int">
 	/*code.itemCount*/
-	  	SELECT COUNT(itemCode) CNT
-	    FROM codeItem
+	  	SELECT COUNT(ITEM_CODE) CNT
+	    FROM lab_code_item
 	    WHERE 	1=1
-	  	AND groupCode = #{groupCode}
-	  	AND itemCode = #{itemCode}
+	  	AND GROUP_CODE = #{groupCode}
+	  	AND ITEM_CODE = #{itemCode}
 	  	<!-- AND isDelete = 'N' -->
 	</select>
 	
 	<insert id="itemInsert" parameterType="CodeItemVO">
 	/*code.itemInsert*/
 		INSERT
-			INTO codeItem
+			INTO lab_code_item
 		(
-			groupCode
-			, itemCode
-			, itemName
-			, description
-			, orderNo
-			, isDelete
-			, regUserId
-			, regDate
+			GROUP_CODE
+			, ITEM_CODE
+			, ITEM_NAME
+			, DESCRIPTION
+			, ORDER_NO
+			, IS_DELETE
+			, REG_USER_ID
+			, REG_DATE
 		) VALUES (
 			#{groupCode}
 			, #{itemCode}
 			, #{itemName}
 			, #{description}
-			, (SELECT ifnull(max(a.orderNo),0)+1 FROM codeItem a WHERE a.groupCode = #{groupCode})
+			, (SELECT ifnull(max(a.ORDER_NO),0)+1 FROM lab_code_item a WHERE a.GROUP_CODE = #{groupCode})
 			, 'N'
 			, ''
 			, sysdate()
@@ -129,75 +129,75 @@
 	
 	<update id="itemUpdate" parameterType="CodeItemVO">
 	/*code.itemUpdate*/
-		UPDATE codeItem
+		UPDATE lab_code_item
 		SET
-			itemName = #{itemName}
-			,description = #{description}
-			,modUserId = ''
-			,modDate = sysdate()
-		WHERE groupCode = #{groupCode}
-		AND itemCode = #{itemCode}
+			ITEM_NAME = #{itemName}
+			,DESCRIPTION = #{description}
+			,UPDATE_USER_ID = ''
+			,UPDATE_DATE = sysdate()
+		WHERE GROUP_CODE = #{groupCode}
+		AND ITEM_CODE = #{itemCode}
 	</update>
 	
 	<update id="itemOrderUpdate" parameterType="CodeItemVO">
 	/*code.itemOrderUpdate*/
-		UPDATE codeItem
+		UPDATE lab_code_item
 		SET
-			orderNo = (orderNo-1)
-		WHERE groupCode = #{groupCode}
-		AND orderNo > (SELECT tmp.orderNo FROM (SELECT a.orderNo as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode}) AS tmp )
-		AND isDelete = 'N'
+			ORDER_NO = (ORDER_NO-1)
+		WHERE GROUP_CODE = #{groupCode}
+		AND ORDER_NO > (SELECT tmp.orderNo FROM (SELECT a.ORDER_NO as orderNo FROM lab_code_item a WHERE a.GROUP_CODE = #{groupCode} AND a.ITEM_CODE = #{itemCode}) AS tmp )
+		AND IS_DELETE = 'N'
 	</update>
 	
 	<update id="itemDelete" parameterType="CodeItemVO">
 	/*code.itemDelete*/
-		UPDATE codeItem
+		UPDATE lab_code_item
 		SET
-			isDelete = 'Y'
-			,modUserId = ''
-			,modDate = sysdate()
-		WHERE groupCode = #{groupCode}
-		AND itemCode = #{itemCode}
+			IS_DELETE = 'Y'
+			,UPDATE_USER_ID = ''
+			,UPDATE_DATE = sysdate()
+		WHERE GROUP_CODE = #{groupCode}
+		AND ITEM_CODE = #{itemCode}
 	</update>
 	
 	<update id="itemOrderUpDown" parameterType="CodeItemVO">
 	/*code.itemOrderUpDown*/
-		UPDATE codeItem
+		UPDATE lab_code_item
 		SET
 		<choose>
 			<when test="mode.equals('UP')">
-			orderNo = (orderNo+1)
+			ORDER_NO = (ORDER_NO+1)
 			</when>
       		<when test="mode.equals('DOWN')">
-      		orderNo = (orderNo-1)
+      		ORDER_NO = (ORDER_NO-1)
       		</when>	
       	</choose>
-		WHERE groupCode = #{groupCode}
+		WHERE GROUP_CODE = #{groupCode}
 		<choose>
 			<when test="mode.equals('UP')">
-			AND orderNo = (SELECT tmp.orderNo FROM (SELECT a.orderNo-1 as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode} AND a.isDelete = 'N') tmp)
+			AND ORDER_NO = (SELECT tmp.orderNo FROM (SELECT a.ORDER_NO-1 as orderNo FROM lab_code_item a WHERE a.GROUP_CODE = #{groupCode} AND a.ITEM_CODE = #{itemCode} AND a.IS_DELETE = 'N') tmp)
       		</when>
       		<when test="mode.equals('DOWN')">
-      		AND orderNo = (SELECT tmp.orderNo FROM (SELECT a.orderNo+1 as orderNo FROM codeItem a WHERE a.groupCode = #{groupCode} AND a.itemCode = #{itemCode} AND a.isDelete = 'N') tmp)
+      		AND ORDER_NO = (SELECT tmp.orderNo FROM (SELECT a.ORDER_NO+1 as orderNo FROM lab_code_item a WHERE a.GROUP_CODE = #{groupCode} AND a.ITEM_CODE = #{itemCode} AND a.IS_DELETE = 'N') tmp)
       		</when>
 		</choose>
-		AND isDelete = 'N'
+		AND IS_DELETE = 'N'
 	</update>
 	
 	<update id="itemOrderUpdateAjax" parameterType="CodeItemVO">
 	/*code.itemOrderUpdateAjax*/
-		UPDATE codeItem
+		UPDATE lab_code_item
 		SET
 		<choose>
 			<when test="mode.equals('UP')">
-			orderNo = (orderNo-1)
+			ORDER_NO = (ORDER_NO-1)
 			</when>
       		<when test="mode.equals('DOWN')">
-      		orderNo = (orderNo+1)
+      		ORDER_NO = (ORDER_NO+1)
       		</when>	
       	</choose>
-		WHERE groupCode = #{groupCode}
-		AND itemCode = #{itemCode}
-		AND isDelete = 'N'
+		WHERE GROUP_CODE = #{groupCode}
+		AND ITEM_CODE = #{itemCode}
+		AND IS_DELETE = 'N'
 	</update>
 </mapper>

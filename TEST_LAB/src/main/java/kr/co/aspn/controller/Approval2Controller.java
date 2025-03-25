@@ -37,6 +37,9 @@ public class Approval2Controller {
 	@Autowired
 	Approval2Service approvalService;
 	
+	@Autowired
+	ProductService productService;
+	
 	@RequestMapping("/searchUserAjax")
 	@ResponseBody
 	public List<Map<String, Object>> searchUserAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
@@ -220,5 +223,85 @@ public class Approval2Controller {
 			returnMap.put("MESSAGE",e.getMessage());
 		}
 		return returnMap;
+	}
+	
+	@RequestMapping("/productPopup")
+	public String productPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> productData = productService.selectProductData(param);
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("productData", productData);
+		model.addAttribute("paramVO", param);
+		//lab_product_materisl 테이블 조회
+		model.addAttribute("productMaterialData", productService.selectProductMaterial(param));
+		return "/approval2/productPopup";
+	}
+
+	@RequestMapping("/approvalSubmitAjax")
+	@ResponseBody
+	public Map<String, String> approvalSubmitAjax(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		Map<String, String> returnMap = new HashMap<String, String>();
+		try {
+			System.err.println(param);
+			param.put("userId", AuthUtil.getAuth(request).getUserId());
+			
+			returnMap = approvalService.approvalSubmit(param);
+			
+		} catch( Exception e ) {
+			e.printStackTrace();
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/approvalCondSubmitAjax")
+	@ResponseBody
+	public Map<String, String> approvalCondSubmitAjax(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		Map<String, String> returnMap = new HashMap<String, String>();
+		try {
+			System.err.println(param);
+			param.put("userId", AuthUtil.getAuth(request).getUserId());
+			
+			returnMap = approvalService.approvalCondSubmit(param);
+			
+		} catch( Exception e ) {
+			e.printStackTrace();
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/approvalRejectAjax")
+	@ResponseBody
+	public Map<String, String> approvalRejectAjax(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		Map<String, String> returnMap = new HashMap<String, String>();
+		try {
+			System.err.println(param);
+			param.put("userId", AuthUtil.getAuth(request).getUserId());
+			
+			returnMap = approvalService.approvalReject(param);
+			
+		} catch( Exception e ) {
+			e.printStackTrace();
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/selectApprItemAjax")
+	@ResponseBody
+	public Map<String, String> selectApprItemAjax(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		return approvalService.selectApprItem(param);
 	}
 }

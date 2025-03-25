@@ -33,18 +33,69 @@
 		return $.param(PARAM);
 	}
 	
-	function approvalInfo( apprIdx, docType, docIdx ) {
+	function fn_approvalInfo( apprIdx, docType, docIdx ) {
+		var url = "";
+		var mode = "";
+		if( $("#listType").val() == 'myList' ) {
+			if( docType == 'PROD' ) {
+				url = "/approval2/productPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();
+				mode = "width=1100, height=600, left=100, top=10, scrollbars=yes";
+			} else if( docType == 'MENU' ) {
+				url = "/approval2/menuPopup?apprIdx="+apprIdx+"&docIdx="+docIdx;
+			}
+		} else if( $("#listType").val() == 'myApprList' ) {
+			if( docType == 'PROD' ) {
+				url = "/approval2/productPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();
+				mode = "width=1100, height=600, left=100, top=10, scrollbars=yes";
+			} else if( docType == 'MENU' ) {
+				url = "";
+			}
+		} else if( $("#listType").val() == 'myRefList' ) {
+			if( docType == 'PROD' ) {
+				url = "";
+			} else if( docType == 'MENU' ) {
+				url = "";
+			}
+		} else if( $("#listType").val() == 'myCompList' ) {
+			if( docType == 'PROD' ) {
+				url = "";
+			} else if( docType == 'MENU' ) {
+				url = "";
+			}
+		}
 		
+		window.open(url, "ApprovalPopup", mode );
 	}
 	
 	function loadCount() {
-		$("#myCount").html("내가 올린 결재문서 (0건)");
-		$("#apprCount").html("결재진행중 문서 (0건)");
-		$("#refCount").html("참조 문서 (0건)");
+		$("#myCount").html("내가 올린 결재문서");
+		$("#apprCount").html("결재진행중 문서");
+		$("#refCount").html("참조 문서");
 		$("#compCount").html("결재완료 문서");
 	}
 
 	function loadMyList( pageNo ) {
+		var colgroup = "";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"13%\">";
+		colgroup += "<col />";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"15%\">";
+		colgroup += "<col width=\"8%\">";
+		var thead = "";
+		thead += "<tr>";
+		thead += "<th>결재번호</th>";
+		thead += "<th>문서구분</th>";
+		thead += "<th>결재진행단계</th>";
+		thead += "<th>결재문서명</th>";
+		thead += "<th>현재결재</th>";
+		thead += "<th>상신일</th>";
+		thead += "<th>결재설정</th>";
+		thead += "</tr>";
+		$("#colgroup").html(colgroup);
+		$("#thead").html(thead);
+		$("#list").html("");
 		$("#listType").val("myList");
 		var viewCount = $("#viewCount").selectedValues()[0];
 		if( viewCount == '' ) {
@@ -82,7 +133,7 @@
 						}  else if( item.LAST_STATUS == 'Y' ) {
 							html += "		<td><span class=\"app02\">"+item.LAST_STATUS_TXT+"</span></td>";
 						}
-						html += "	<td>"+item.TITLE+"</td>";
+						html += "	<td><a href=\"#\" onclick=\"fn_approvalInfo('"+item.APPR_IDX+"', '"+item.DOC_TYPE+"', '"+item.DOC_IDX+"'); return false;\">"+item.TITLE+"</a></td>";
 						html += "	<td>"+item.CURRENT_USER_NAME+"</td>";
 						html += "	<td>"+item.REG_DATE_TXT+"</td>";
 						html += "	<td>";
@@ -116,6 +167,25 @@
 	}
 	
 	function loadMyApprList( pageNo ) {
+		var colgroup = "";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"13%\">";
+		colgroup += "<col />";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"15%\">";
+		var thead = "";
+		thead += "<tr>";
+		thead += "<th>결재번호</th>";
+		thead += "<th>문서구분</th>";
+		thead += "<th>결재진행단계</th>";
+		thead += "<th>결재문서명</th>";
+		thead += "<th>상신자</th>";
+		thead += "<th>상신일</th>";
+		thead += "</tr>";
+		$("#colgroup").html(colgroup);
+		$("#thead").html(thead);
+		$("#list").html("");
 		$("#listType").val("myApprList");
 		var viewCount = $("#viewCount").selectedValues()[0];
 		if( viewCount == '' ) {
@@ -143,7 +213,7 @@
 						html += "	<td>"+item.APPR_IDX+"</td>";
 						html += "	<td>"+item.DOC_TYPE_NAME+"</td>";
 						if( item.LAST_STATUS == 'N' ) {
-							html += "		<td><span class=\"app01\">"+item.LAST_STATUS_TXT+"</span></td>";
+							html += "		<td><span class=\"app01\">"+item.LAST_STATUS_TXT+" ("+item.CURRENT_STEP+"/"+item.TOTAL_STEP+")</span></td>";
 						} else if( item.LAST_STATUS == 'A' ) {
 							html += "		<td><span class=\"app01\">"+item.LAST_STATUS_TXT+" ("+item.CURRENT_STEP+"/"+item.TOTAL_STEP+")</span></td>";
 						} else if( item.LAST_STATUS == 'R' ) {
@@ -153,23 +223,14 @@
 						}  else if( item.LAST_STATUS == 'Y' ) {
 							html += "		<td><span class=\"app02\">"+item.LAST_STATUS_TXT+"</span></td>";
 						}
-						html += "	<td>"+item.TITLE+"</td>";
-						html += "	<td>"+item.CURRENT_USER_NAME+"</td>";
+						html += "	<td><a href=\"#\" onclick=\"fn_approvalInfo('"+item.APPR_IDX+"', '"+item.DOC_TYPE+"', '"+item.DOC_IDX+"'); return false;\">"+item.TITLE+"</a></td>";
+						html += "	<td>"+item.REG_USER_NAME+"</td>";
 						html += "	<td>"+item.REG_DATE_TXT+"</td>";
-						html += "	<td>";
-						html += "		<ul class=\"list_ul\">";
-						if( item.LAST_STATUS == 'N' ) {
-							html += "			<li><button class=\"btn_doc\" onClick=\"cancelAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"')\"><img src=\"/resources/images/icon_doc06.png\"> 상신취소</button></li>";
-						} else if( item.LAST_STATUS == 'C' ) {
-							html += "			<li><button type=\"button\" class=\"btn_doc\" onClick=\"reAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"');\"><img src=\"/resources/images/icon_doc03.png\"> 재상신</button></li>";
-						}
-						html += "		</ul>";
-						html += "	</td>";
 						html += "</tr>";
 					});					
 				} else {
 					$("#list").html(html);
-					html += "<tr><td align='center' colspan='7'>데이터가 없습니다.</td></tr>";
+					html += "<tr><td align='center' colspan='6'>데이터가 없습니다.</td></tr>";
 				}
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
@@ -178,7 +239,7 @@
 			error:function(request, status, errorThrown){
 				var html = "";
 				$("#list").html(html);
-				html += "<tr><td align='center' colspan='7'>오류가 발생하였습니다.</td></tr>";
+				html += "<tr><td align='center' colspan='6'>오류가 발생하였습니다.</td></tr>";
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
 				$('#pageNo').val(data.navi.pageNo);
@@ -187,6 +248,23 @@
 	}	
 	
 	function loadMyRefList( pageNo ) {
+		var colgroup = "";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col />";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"15%\">";
+		var thead = "";
+		thead += "<tr>";
+		thead += "<th>결재번호</th>";
+		thead += "<th>문서구분</th>";
+		thead += "<th>문서명</th>";
+		thead += "<th>상신자</th>";
+		thead += "<th>상신일</th>";
+		thead += "</tr>";
+		$("#colgroup").html(colgroup);
+		$("#thead").html(thead);
+		$("#list").html("");
 		$("#listType").val("myRefList");
 		var viewCount = $("#viewCount").selectedValues()[0];
 		if( viewCount == '' ) {
@@ -213,34 +291,14 @@
 						html += "<tr>";
 						html += "	<td>"+item.APPR_IDX+"</td>";
 						html += "	<td>"+item.DOC_TYPE_NAME+"</td>";
-						if( item.LAST_STATUS == 'N' ) {
-							html += "		<td><span class=\"app01\">"+item.LAST_STATUS_TXT+"</span></td>";
-						} else if( item.LAST_STATUS == 'A' ) {
-							html += "		<td><span class=\"app01\">"+item.LAST_STATUS_TXT+" ("+item.CURRENT_STEP+"/"+item.TOTAL_STEP+")</span></td>";
-						} else if( item.LAST_STATUS == 'R' ) {
-							html += "		<td><span class=\"app03\">"+item.LAST_STATUS_TXT+"</span></td>";
-						} else if( item.LAST_STATUS == 'C' ) {
-							html += "		<td><span class=\"app03\">"+item.LAST_STATUS_TXT+"</span></td>";
-						}  else if( item.LAST_STATUS == 'Y' ) {
-							html += "		<td><span class=\"app02\">"+item.LAST_STATUS_TXT+"</span></td>";
-						}
-						html += "	<td>"+item.TITLE+"</td>";
-						html += "	<td>"+item.CURRENT_USER_NAME+"</td>";
+						html += "	<td><a href=\"#\" onclick=\"fn_approvalInfo('"+item.APPR_IDX+"', '"+item.DOC_TYPE+"', '"+item.DOC_IDX+"'); return false;\">"+item.TITLE+"</a></td>";
+						html += "	<td>"+item.REG_USER_NAME+"</td>";
 						html += "	<td>"+item.REG_DATE_TXT+"</td>";
-						html += "	<td>";
-						html += "		<ul class=\"list_ul\">";
-						if( item.LAST_STATUS == 'N' ) {
-							html += "			<li><button class=\"btn_doc\" onClick=\"cancelAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"')\"><img src=\"/resources/images/icon_doc06.png\"> 상신취소</button></li>";
-						} else if( item.LAST_STATUS == 'C' ) {
-							html += "			<li><button type=\"button\" class=\"btn_doc\" onClick=\"reAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"');\"><img src=\"/resources/images/icon_doc03.png\"> 재상신</button></li>";
-						}
-						html += "		</ul>";
-						html += "	</td>";
 						html += "</tr>";
 					});					
 				} else {
 					$("#list").html(html);
-					html += "<tr><td align='center' colspan='7'>데이터가 없습니다.</td></tr>";
+					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
 				}
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
@@ -249,7 +307,7 @@
 			error:function(request, status, errorThrown){
 				var html = "";
 				$("#list").html(html);
-				html += "<tr><td align='center' colspan='7'>오류가 발생하였습니다.</td></tr>";
+				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
 				$('#pageNo').val(data.navi.pageNo);
@@ -258,6 +316,25 @@
 	}
 	
 	function loadMyCompList( pageNo ) {
+		var colgroup = "";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"13%\">";
+		colgroup += "<col />";
+		colgroup += "<col width=\"10%\">";
+		colgroup += "<col width=\"15%\">";
+		var thead = "";
+		thead += "<tr>";
+		thead += "<th>결재번호</th>";
+		thead += "<th>문서구분</th>";
+		thead += "<th>결재진행단계</th>";
+		thead += "<th>결재문서명</th>";
+		thead += "<th>현재결재</th>";
+		thead += "<th>상신일</th>";
+		thead += "</tr>";
+		$("#colgroup").html(colgroup);
+		$("#thead").html(thead);
+		$("#list").html("");
 		$("#listType").val("myCompList");
 		var viewCount = $("#viewCount").selectedValues()[0];
 		if( viewCount == '' ) {
@@ -295,23 +372,14 @@
 						}  else if( item.LAST_STATUS == 'Y' ) {
 							html += "		<td><span class=\"app02\">"+item.LAST_STATUS_TXT+"</span></td>";
 						}
-						html += "	<td>"+item.TITLE+"</td>";
-						html += "	<td>"+item.CURRENT_USER_NAME+"</td>";
+						html += "	<td><a href=\"#\" onclick=\"fn_approvalInfo('"+item.APPR_IDX+"', '"+item.DOC_TYPE+"', '"+item.DOC_IDX+"'); return false;\">"+item.TITLE+"</a></td>";
+						html += "	<td>"+item.REG_USER_NAME+"</td>";
 						html += "	<td>"+item.REG_DATE_TXT+"</td>";
-						html += "	<td>";
-						html += "		<ul class=\"list_ul\">";
-						if( item.LAST_STATUS == 'N' ) {
-							html += "			<li><button class=\"btn_doc\" onClick=\"cancelAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"')\"><img src=\"/resources/images/icon_doc06.png\"> 상신취소</button></li>";
-						} else if( item.LAST_STATUS == 'C' ) {
-							html += "			<li><button type=\"button\" class=\"btn_doc\" onClick=\"reAppr('"+item.APPR_IDX+"','"+item.DOC_TYPE+"','"+item.DOC_IDX+"');\"><img src=\"/resources/images/icon_doc03.png\"> 재상신</button></li>";
-						}
-						html += "		</ul>";
-						html += "	</td>";
 						html += "</tr>";
 					});					
 				} else {
 					$("#list").html(html);
-					html += "<tr><td align='center' colspan='7'>데이터가 없습니다.</td></tr>";
+					html += "<tr><td align='center' colspan='6'>데이터가 없습니다.</td></tr>";
 				}
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
@@ -320,7 +388,7 @@
 			error:function(request, status, errorThrown){
 				var html = "";
 				$("#list").html(html);
-				html += "<tr><td align='center' colspan='7'>오류가 발생하였습니다.</td></tr>";
+				html += "<tr><td align='center' colspan='6'>오류가 발생하였습니다.</td></tr>";
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
 				$('#pageNo').val(data.navi.pageNo);
@@ -510,7 +578,7 @@
 			</div>
 			<div class="main_tbl">
 				<table class="tbl01">
-					<colgroup>
+					<colgroup id="colgroup">
 						<col width="10%">
 						<col width="10%">
 						<col width="13%">
@@ -519,7 +587,7 @@
 						<col width="15%">
 						<col width="8%">
 					</colgroup>
-					<thead>
+					<thead id="thead">
 						<tr>
 							<th>결재번호</th>
 							<th>문서구분</th>

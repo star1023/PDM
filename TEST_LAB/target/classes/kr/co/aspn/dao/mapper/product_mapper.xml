@@ -63,7 +63,7 @@
 	<select id="selectMaterialList" parameterType="map" resultType="hashmap">
 		SELECT 
 			tmp.*
-			, (SELECT unitName FROM unit WHERE 1 = 1 AND unitCode = UNIT) as UNIT_NAME			
+			, (SELECT UNIT_NAME FROM lab_unit WHERE 1 = 1 AND UNIT_CODE = UNIT) as UNIT_NAME			
 		FROM (
 			SELECT 
 				row_number() over (order by  MATERIAL_IDX DESC) as rnum
@@ -237,6 +237,7 @@
 				WHEN lp.STATUS = 'REG' THEN '등록'
 				WHEN lp.STATUS = 'APPR' THEN '결재중'
 				WHEN lp.STATUS = 'COMP' THEN '완료'
+				WHEN lp.STATUS = 'COND_APPR' THEN '부분승인'
 				END	AS STATUS_TXT
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
@@ -310,6 +311,9 @@
 			, IS_LAST
 			, REG_USER
 			, DOC_OWNER
+			, CONTENTS
+			, STATUS
+			, SAP_CODE
 		FROM 
 			lab_product
 		WHERE 1 = 1 
@@ -344,6 +348,7 @@
 		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
 			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
 			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			WHEN lh.HISTORY_TYPE  = 'U' then '수정'
 			END HISTORY_TYPE_TXT 
 		, lp.VERSION_NO
 		, lp.NAME 
@@ -360,7 +365,7 @@
 	ORDER BY lh.REG_DATE ASC
 	</select>
 	
-	<update id="updateProduct" parameterType="map">
+	<update id="updateProductIsLast" parameterType="map">
 		UPDATE 
 			lab_product
 		SET
@@ -549,6 +554,7 @@
 				WHEN lp.STATUS = 'REG' THEN '등록'
 				WHEN lp.STATUS = 'APPR' THEN '결재중'
 				WHEN lp.STATUS = 'COMP' THEN '완료'
+				WHEN lp.STATUS = 'COND_APPR' THEN '부분승인'
 				END	AS STATUS_TXT
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
@@ -602,4 +608,66 @@
 		WHERE 1 = 1
 			AND FILE_IDX = #{tempFileIdx}		
 	</insert>
+	
+	<select id="selectFileData" parameterType="map" resultType="hashmap">
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+			, FILE_CONTENT
+		FROM 
+			lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</select>
+	
+	<delete id="deleteFileData" parameterType="map">
+		DELETE
+		FROM lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</delete>
+	
+	<update id="updateProductData" parameterType="map">
+		UPDATE 
+			lab_product
+		SET
+			NAME = #{productName}
+			, TITLE = #{title}
+			, TOTAL_WEIGHT = #{weight}
+			, STANDARD = #{standard}
+			, KEEP_CONDITION = #{keepCondition}
+			, EXPIRATION_DATE = #{expireDate}
+			, IS_NEW_MATERIAL = #{newMat}
+			, PRODUCT_TYPE1 = #{productType1}
+			, PRODUCT_TYPE2 = #{productType2}
+			, PRODUCT_TYPE3 = #{productType3}
+			, CONTENTS = #{contents}
+			, SAP_CODE = #{productSapCode}
+			<if test="status != null and status != '' ">
+			, STATUS = #{status}
+			</if>
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</update>
+	
+	<delete id="deleteProductMaterial" parameterType="map">
+		DELETE
+		FROM lab_product_materal
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</delete>
+	
+	<delete id="deleteFileType" parameterType="map">
+		DELETE
+		FROM lab_file_type
+		WHERE 1 = 1
+			AND DOC_IDX = #{productIdx}
+			AND DOC_TYPE = #{docType}
+	</delete>
 </mapper>

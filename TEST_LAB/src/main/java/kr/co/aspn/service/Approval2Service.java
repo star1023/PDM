@@ -29,4 +29,18 @@ public interface Approval2Service {
 
 	Map<String, String> reAppr(Map<String, Object> param) throws Exception;
 
+	Map<String, String> selectApprHeaderData(Map<String, Object> param);
+
+	List<Map<String, String>> selectApprItemList(Map<String, Object> param);
+
+	List<Map<String, String>> selectReferenceList(Map<String, Object> param);
+
+	Map<String, String> approvalSubmit(Map<String, Object> param) throws Exception;
+
+	Map<String, String> approvalCondSubmit(Map<String, Object> param) throws Exception;
+	
+	Map<String, String> approvalReject(Map<String, Object> param) throws Exception;
+
+	Map<String, String> selectApprItem(Map<String, Object> param);	
+
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.aspn.dao.Approval2Dao;
+import kr.co.aspn.dao.ProductDao;
 import kr.co.aspn.service.Approval2Service;
 import kr.co.aspn.util.PageNavigator;
 
@@ -22,6 +23,9 @@ public class Approval2ServiceImpl implements Approval2Service {
 	
 	@Autowired
 	Approval2Dao approvalDao;
+	
+	@Autowired
+	ProductDao productDao;
 	
 	@Override
 	public List<Map<String, Object>> searchUser(Map<String, Object> param) {
@@ -242,5 +246,195 @@ public class Approval2ServiceImpl implements Approval2Service {
 		}
 		return returnMap;
 	}
+
+	@Override
+	public Map<String, String> selectApprHeaderData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return approvalDao.selectApprHeaderData(param);
+	}
+
+	@Override
+	public List<Map<String, String>> selectApprItemList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return approvalDao.selectApprItemList(param);
+	}
+
+	@Override
+	public List<Map<String, String>> selectReferenceList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return approvalDao.selectReferenceList(param);
+	}
+
+	@Override
+	public Map<String, String> approvalSubmit(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		Map<String, String> returnMap = new HashMap<String, String>();
+		//1.현재 문서 상태 확인
+		Map<String, String> docData = null;
+		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
+			docData = productDao.selectProductData(param);
+		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
+			
+		}
+		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
+		System.err.println("docData : "+docData);
+		if( docData.get("STATUS") != null && ("APPR".equals(docData.get("STATUS")) || "COND_APPR".equals(docData.get("STATUS")) )  ) {
+			Map<String, String> apprHeader = approvalDao.selectApprHeaderData(param);
+			System.err.println("apprHeader : "+apprHeader);
+			//결재상태가 상신, 결재중인 경우에만 결재가 가능하다.
+			if( apprHeader.get("LAST_STATUS") != null && ("N".equals(apprHeader.get("LAST_STATUS")) || "A".equals(apprHeader.get("LAST_STATUS"))) ) {
+				//2.정상적인 문서의 경우 결재처리한다. approval item 데이터를 업데이트한다.
+				approvalDao.approvalSubmitItem(param);
+				//3.전체 결재가 완료 된 경우 문서의 결재 상태를 변경한다.				
+				Map<String, Object> itemData = approvalDao.selectNextApprItem(param);	//다음 결재 데이터를 조회한다.
+				System.err.println("itemData : "+itemData);
+				Map<String, Object> map = new HashMap<String, Object>();
+				if( itemData != null && !"".equals((String)itemData.get("TARGET_USER_ID")) ) {
+				//if( Integer.parseInt((String)param.get("totalStep")) == Integer.parseInt((String)param.get("currentStep")) ) {					
+					map = new HashMap<String, Object>();
+					map.put("apprIdx", (String)param.get("apprIdx"));				//문서 ID
+					map.put("currentUser", (String)itemData.get("TARGET_USER_ID"));	//결재자 ID
+					map.put("currentStep", itemData.get("APPR_NO"));				//결재 순서
+					map.put("lastStatus", "A");										//결재 상태(A:결재중)
+					approvalDao.updateApprUser(map);
+					//다음 결재자에게 메일/알림을 보낸다.					
+				} else {
+					map.put("apprIdx", (String)param.get("apprIdx"));	//결재 ID
+					map.put("status", "Y");								//결재문서 승인처리
+					approvalDao.updateApprStatus(map);
+					map = new HashMap<String, Object>();
+					map.put("docIdx", (String)param.get("docIdx"));		//문서 ID
+					map.put("docType", (String)param.get("docType"));	//문서 유형
+					map.put("docStatus", "COMP");						//완료
+					approvalDao.updateDocStatus(map);
+					//완료 메일/알림을 상신자에게 보낸다.
+					//참조자들에게 메일/알림을 보낸다.
+				}
+				returnMap.put("RESULT", "S");
+			} else {
+				returnMap.put("RESULT", "F");
+				returnMap.put("MESSAGE","결재승인 할 수 없는 문서입니다.");
+			}
+			returnMap.put("RESULT", "S");
+		} else {
+			returnMap.put("RESULT", "F");
+			returnMap.put("MESSAGE","상신취소 되었거나 결재승인 할 수 없는 문서입니다.");
+		}
 	
+		return returnMap;
+	}
+
+	@Override
+	public Map<String, String> approvalCondSubmit(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		Map<String, String> returnMap = new HashMap<String, String>();
+		//1.현재 문서 상태 확인
+		Map<String, String> docData = null;
+		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
+			docData = productDao.selectProductData(param);
+		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
+			
+		}
+		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
+		System.err.println("docData : "+docData);
+		if( docData.get("STATUS") != null && ("APPR".equals(docData.get("STATUS")) || "COND_APPR".equals(docData.get("STATUS")) )  ) {
+			Map<String, String> apprHeader = approvalDao.selectApprHeaderData(param);
+			System.err.println("apprHeader : "+apprHeader);
+			//결재상태가 상신, 결재중인 경우에만 결재가 가능하다.
+			if( apprHeader.get("LAST_STATUS") != null && ("N".equals(apprHeader.get("LAST_STATUS")) || "A".equals(apprHeader.get("LAST_STATUS"))) ) {
+				//2.정상적인 문서의 경우 결재처리한다. approval item 데이터를 업데이트한다.
+				approvalDao.approvalSubmitItem(param);
+				//3.전체 결재가 완료 된 경우 문서의 결재 상태를 변경한다.				
+				Map<String, Object> itemData = approvalDao.selectNextApprItem(param);	//다음 결재 데이터를 조회한다.
+				System.err.println("itemData : "+itemData);
+				Map<String, Object> map = new HashMap<String, Object>();
+				if( itemData != null && !"".equals((String)itemData.get("TARGET_USER_ID")) ) {
+				//if( Integer.parseInt((String)param.get("totalStep")) == Integer.parseInt((String)param.get("currentStep")) ) {					
+					map = new HashMap<String, Object>();
+					map.put("apprIdx", (String)param.get("apprIdx"));				//문서 ID
+					map.put("currentUser", (String)itemData.get("TARGET_USER_ID"));	//결재자 ID
+					map.put("currentStep", itemData.get("APPR_NO"));				//결재 순서
+					map.put("lastStatus", "A");										//결재 상태(A:결재중)
+					approvalDao.updateApprUser(map);
+					map = new HashMap<String, Object>();
+					map.put("docIdx", (String)param.get("docIdx"));		//문서 ID
+					map.put("docType", (String)param.get("docType"));	//문서 유형
+					map.put("docStatus", "COND_APPR");					//부분승인 처리
+					approvalDao.updateDocStatus(map);
+					//다음 결재자에게 메일/알림을 보낸다.					
+				} else {
+					map.put("apprIdx", (String)param.get("apprIdx"));	//결재 ID
+					map.put("status", "Y");								//결재문서 승인처리
+					approvalDao.updateApprStatus(map);
+					map = new HashMap<String, Object>();
+					map.put("docIdx", (String)param.get("docIdx"));		//문서 ID
+					map.put("docType", (String)param.get("docType"));	//문서 유형
+					map.put("docStatus", "COMP");						//완료
+					approvalDao.updateDocStatus(map);
+					//완료 메일/알림을 상신자에게 보낸다.
+					//참조자들에게 메일/알림을 보낸다.
+				}
+				returnMap.put("RESULT", "S");
+			} else {
+				returnMap.put("RESULT", "F");
+				returnMap.put("MESSAGE","결재승인 할 수 없는 문서입니다.");
+			}
+			returnMap.put("RESULT", "S");
+		} else {
+			returnMap.put("RESULT", "F");
+			returnMap.put("MESSAGE","상신취소 되었거나 결재승인 할 수 없는 문서입니다.");
+		}
+	
+		return returnMap;
+	}
+	
+	@Override
+	public Map<String, String> approvalReject(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		Map<String, String> returnMap = new HashMap<String, String>();
+		//1.현재 문서 상태 확인
+		Map<String, String> docData = null;
+		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
+			docData = productDao.selectProductData(param);
+		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
+			
+		}
+		
+		//문서 상태가 승인중, 부분승인인 경우에만 반려가 가능하다.
+		System.err.println("docData : "+docData);
+		if( docData.get("STATUS") != null && ("APPR".equals(docData.get("STATUS")) || "COND_APPR".equals(docData.get("STATUS")) )  ) {
+			Map<String, String> apprHeader = approvalDao.selectApprHeaderData(param);
+			System.err.println("apprHeader : "+apprHeader);
+			//결재상태가 상신, 결재중인 경우에만 반려가 가능하다.
+			if( apprHeader.get("LAST_STATUS") != null && ("N".equals(apprHeader.get("LAST_STATUS")) || "A".equals(apprHeader.get("LAST_STATUS"))) ) {
+				//2.정상적인 문서의 경우 반려처리한다. approval item 데이터를 업데이트한다.
+				approvalDao.approvalSubmitItem(param);
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("apprIdx", param.get("apprIdx"));		//문서 ID
+				map.put("status", param.get("apprStatus"));	//문서 유형
+				approvalDao.updateApprStatus(map);
+				//3.결재 header를 반려로 업데이트한다.
+				map = new HashMap<String, Object>();
+				map.put("docIdx", (String)param.get("docIdx"));		//문서 ID
+				map.put("docType", (String)param.get("docType"));	//문서 유형
+				map.put("docStatus", "RET");						//반려
+				approvalDao.updateDocStatus(map);
+				
+				returnMap.put("RESULT", "S");
+			} else {
+				returnMap.put("RESULT", "F");
+				returnMap.put("MESSAGE","반려 할 수 없는 문서입니다.");
+			}
+		} else {
+			returnMap.put("RESULT", "F");
+			returnMap.put("MESSAGE","상신취소 되었거나 반려 할 수 없는 문서입니다.");
+		}
+		return returnMap;
+	}
+
+	@Override
+	public Map<String, String> selectApprItem(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return approvalDao.selectApprItem(param);
+	}	
 }
