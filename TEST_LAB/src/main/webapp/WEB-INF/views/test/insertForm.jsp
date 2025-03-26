@@ -817,7 +817,7 @@ function selectNewCode() {
 					<dd style="width: 80%" class="ppp">
 						<div style="float: left; display: inline-block;">
 							<span class="file_load" id="fileSpan">
-								<input id="attatch_common_text" class="form-control form_point_color01" type="text" placeholder="파일을 선택해주세요." style="width:145px;/* width:308px;  */float:left; cursor: pointer; color: black;" onclick="callAddFileEvent()" readonly="readonly">
+								<input id="attatch_common_text" class="form-control form_point_color01" type="text" placeholder="파일을 선택해주세요." style="width:308px;float:left; cursor: pointer; color: black;" onclick="callAddFileEvent()" readonly="readonly">
 								<!-- <label class="btn-default" for="attatch_common" style="float:left; margin-left: 5px; width: 57px">파일 선택</label> -->
 								<input id="attatch_common" type="file" style="display:none;" onchange="setFileName(this)">
 							</span>

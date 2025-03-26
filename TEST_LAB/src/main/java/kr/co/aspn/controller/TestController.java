@@ -597,6 +597,7 @@ public class TestController {
 	@ResponseBody
 	public Map<String, Object> selectErpMaterialListAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		System.err.println(param);
 		return testService.selectErpMaterialList(param);
 	}
 	
