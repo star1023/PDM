@@ -481,8 +481,9 @@ var selectedArr = new Array();
 		}
 		var element = e.target
 		
-		var userSapCode = e.target.value;
-		console.log(userSapCode);
+		//var userSapCode = e.target.value;
+		var userMatCode = e.target.value;
+		console.log(userMatCode);
 		var rowId = $(element).parent().parent().attr('id');
 		var URL = '/product/checkMaterialAjax';
 		if( type == 'mat' ) {
@@ -493,7 +494,8 @@ var selectedArr = new Array();
 			type: 'post',
 			dataType: 'json',
 			data: {
-				sapCode: userSapCode
+				matCode: userMatCode
+				, sapCode: userSapCode
 			},
 			success: function(data){
 				var materailList = data;
@@ -596,11 +598,12 @@ var selectedArr = new Array();
 				
 				jsonData.list.forEach(function(item){
 					
-					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+item.SAP_CODE+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
+					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+nvl(item.MATERIAL_CODE,'')+'\', \''+nvl(item.SAP_CODE,'')+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
 					//parentRowId, itemImNo, itemSAPCode, itemName, itemUnitPrice
 					row += '<td></td>';
-					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';
-					row += '<Td>'+item.SAP_CODE+'</Td>';
+					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';\
+					row += '<Td>'+nvl(item.MATERIAL_CODE,'')+'</Td>';
+					row += '<Td>'+nvl(item.SAP_CODE,'')+'</Td>';
 					row += '<Td  class="tgnl">'+item.NAME+'</Td>';
 					row += '<Td>'+nvl(item.KEEP_CONDITION,'')+'</Td>';
 					row += '<Td>'+nvl(item.WIDTH,'')+'/'+nvl(item.LENGTH,'')+'/'+nvl(item.HEIGHT,'')+'</Td>';
@@ -642,12 +645,12 @@ var selectedArr = new Array();
 	function fn_closeMatRayer(){
 		$('#searchMatValue').val('')
 		$('#matLayerBody').empty();
-		$('#matLayerBody').append('<tr><td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
+		$('#matLayerBody').append('<tr><td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
 		$('#matCount').text(0);
 		closeDialog('dialog_material');
 	}
 	
-	function setMaterialPopupData(parentRowId, itemMatIdx, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
+	function setMaterialPopupData(parentRowId, itemMatIdx, itemMatCode, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
 		var varMatIdx = nvl2(itemMatIdx,'0');
 		var varKeep = nvl2(itemKeep,'');
 		var varExp = nvl2(itemExp,'');
@@ -666,6 +669,7 @@ var selectedArr = new Array();
 			}
 		}
 		$('#'+parentRowId + ' input[name$=itemMatIdx]').val(varMatIdx);
+		$('#'+parentRowId + ' input[name$=itemMatCode]').val(itemMatCode);
 		$('#'+parentRowId + ' input[name$=itemSapCode]').val(itemSAPCode);
 		$('#'+parentRowId + ' input[name$=itemName]').val(itemName);
 		$('#'+parentRowId + ' input[name$=itemStandard]').val(nvl2(itemStandard,''));
@@ -775,6 +779,7 @@ var selectedArr = new Array();
 			var rowIdArr = new Array();
 			var itemTypeArr = new Array();
 			var itemMatIdxArr = new Array();
+			var itemMatCodeArr = new Array();
 			var itemSapCodeArr = new Array();
 			var itemNameArr = new Array();
 			var itemStandardArr = new Array();
@@ -787,6 +792,7 @@ var selectedArr = new Array();
 					var rowId = $(contRow).attr('id');
 					var itemType = $('#'+ rowId + ' input[name=itemType]').val();
 					var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+					var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
 					var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
 					var itemName = $('#'+ rowId + ' input[name=itemName]').val();
 					var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
@@ -796,6 +802,7 @@ var selectedArr = new Array();
 					rowIdArr.push(rowId);
 					itemTypeArr.push(itemType);
 					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
 					itemSapCodeArr.push(itemSapCode);
 					itemNameArr.push(itemName);
 					itemStandardArr.push(itemStandard);
@@ -804,11 +811,12 @@ var selectedArr = new Array();
 					itemDescArr.push(itemDesc);
 				});
 			}
-			
+
 			$('tr[id^=matRow]').toArray().forEach(function(contRow){
 				var rowId = $(contRow).attr('id');
 				var itemType = $('#'+ rowId + ' input[name=itemType]').val();
 				var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+				var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
 				var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
 				var itemName = $('#'+ rowId + ' input[name=itemName]').val();
 				var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
@@ -819,6 +827,7 @@ var selectedArr = new Array();
 					rowIdArr.push(rowId);
 					itemTypeArr.push(itemType);
 					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
 					itemSapCodeArr.push(itemSapCode);
 					itemNameArr.push(itemName);
 					itemStandardArr.push(itemStandard);
@@ -831,6 +840,7 @@ var selectedArr = new Array();
 			formData.append("rowIdArr", rowIdArr);
 			formData.append("itemTypeArr", itemTypeArr);
 			formData.append("itemMatIdxArr", itemMatIdxArr);
+			formData.append("itemMatCodeArr", itemMatCodeArr);
 			formData.append("itemSapCodeArr", itemSapCodeArr);
 			formData.append("itemNameArr", itemNameArr);
 			formData.append("itemStandardArr", itemStandardArr);
@@ -1041,6 +1051,7 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="20">
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -1051,6 +1062,7 @@ var selectedArr = new Array();
 						<tr>
 							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1069,8 +1081,11 @@ var selectedArr = new Array();
 							</td>
 							<td>
 								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
 								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+							</td>
+							<td>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
 							</td>
 							<td>
 								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
@@ -1102,6 +1117,7 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="20">
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -1112,6 +1128,7 @@ var selectedArr = new Array();
 						<tr>
 							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1130,8 +1147,11 @@ var selectedArr = new Array();
 							</td>
 							<td>
 								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'mat')"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'mat')"/>
 								<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+							</td>
+							<td>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}"/>								
 							</td>
 							<td>
 								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
@@ -1229,8 +1249,11 @@ var selectedArr = new Array();
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1249,8 +1272,11 @@ var selectedArr = new Array();
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1453,7 +1479,8 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="40px">
 						<col width="10%">
-						<col width="20%">
+						<col width="10%">
+						<col width="15%">
 						<col width="8%">
 						<col width="8%">
 						<col width="8%">
@@ -1464,7 +1491,8 @@ var selectedArr = new Array();
 					<thead>
 						<tr>
 							<th></th>
-							<th>SAP코드</th>
+							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>상품명</th>
 							<th>보관기준</th>
 							<th>사이즈</th>
@@ -1477,14 +1505,14 @@ var selectedArr = new Array();
 					<tbody id="matLayerBody">
 						<input type="hidden" id="matLayerPage" value="0"/>
 						<Tr>
-							<td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td>
+							<td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td>
 						</Tr>
 					</tbody>
 				</table>
 				<!-- 뒤에 추가 리스트가 있을때는 클래스명 02로 숫자변경 -->
 				<div id="matNextPrevDiv" class="page_navi  mt10">
-					<button class="btn_code_left01" onclick="searchMaterial('prevPage')"></button>
-					<button class="btn_code_right02" onclick="searchMaterial('nextPage')"></button>
+					<button class="btn_code_left01" onclick="searchMaterial('prevPage','')"></button>
+					<button class="btn_code_right02" onclick="searchMaterial('nextPage','')"></button>
 				</div>
 			</div>
 		</div>

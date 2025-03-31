@@ -88,8 +88,9 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	@Transactional
-	public void insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception {
+	public int insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception {
 		// TODO Auto-generated method stub
+		int productIdx;
 		try{
 			ArrayList<String> productType = (ArrayList<String>)listMap.get("productType");
 			ArrayList<String> fileType = (ArrayList<String>)listMap.get("fileType");
@@ -100,6 +101,7 @@ public class ProductServiceImpl implements ProductService {
 			ArrayList<String> rowIdArr = (ArrayList<String>)listMap.get("rowIdArr");
 			ArrayList<String> itemTypeArr = (ArrayList<String>)listMap.get("itemTypeArr");
 			ArrayList<String> itemMatIdxArr = (ArrayList<String>)listMap.get("itemMatIdxArr");
+			ArrayList<String> itemMatCodeArr = (ArrayList<String>)listMap.get("itemMatCodeArr");
 			ArrayList<String> itemSapCodeArr = (ArrayList<String>)listMap.get("itemSapCodeArr");
 			ArrayList<String> itemNameArr = (ArrayList<String>)listMap.get("itemNameArr");
 			ArrayList<String> itemStandardArr = (ArrayList<String>)listMap.get("itemStandardArr");
@@ -107,7 +109,7 @@ public class ProductServiceImpl implements ProductService {
 			ArrayList<String> itemUnitPriceArr = (ArrayList<String>)listMap.get("itemUnitPriceArr");
 			ArrayList<String> itemDescArr = (ArrayList<String>)listMap.get("itemDescArr");
 			
-			int productIdx = productDao.selectProductSeq(); 	//key value 조회
+			productIdx = productDao.selectProductSeq(); 	//key value 조회
 			param.put("idx", productIdx);
 			param.put("status", "REG");
 			
@@ -120,14 +122,33 @@ public class ProductServiceImpl implements ProductService {
 			//제품 등록
 			productDao.insertProduct(param);
 			
+			System.err.println(itemMatIdxArr);
+			System.err.println(itemMatCodeArr);
+			System.err.println(itemSapCodeArr);
+			System.err.println(itemNameArr);
+			System.err.println(itemStandardArr);
+			System.err.println(itemKeepExpArr);
+			System.err.println(itemUnitPriceArr);
+			System.err.println(itemDescArr);
+			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
 			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
-				matMap.put("sapCode", itemSapCodeArr.get(i));
 				matMap.put("name", itemNameArr.get(i));
+				
+				try{
+					matMap.put("matCode", itemMatCodeArr.get(i));
+				} catch(Exception e) {
+					matMap.put("matCode", "");
+				}				
+				try{
+					matMap.put("sapCode", itemSapCodeArr.get(i));
+				} catch(Exception e) {
+					matMap.put("sapCode", "");
+				}				
 				try{
 					matMap.put("standard", itemStandardArr.get(i));
 				} catch(Exception e) {
@@ -175,16 +196,18 @@ public class ProductServiceImpl implements ProductService {
 			testDao.insertHistory(historyParam);
 			
 			//문서 복사 시 기존 첨부파일을 유지하는 경우 기존 파일 데이터를 복사합니다.
-			if( tempFile.size() > 0 ) {
-				for( int i = 0 ; i < tempFile.size() ; i++ ) {
-					HashMap<String, Object> paramMap = new HashMap<String, Object>();
-					String tempFileIdx = tempFile.get(i);
-					String fileIdx = FileUtil.getUUID();
-					paramMap.put("fileIdx", fileIdx);
-					paramMap.put("tempFileIdx", tempFileIdx);
-					paramMap.put("docIdx", productIdx);
-					paramMap.put("docType", "PROD");
-					productDao.insertFileCopy(paramMap);
+			if( tempFile != null ) {
+				if( tempFile.size() > 0 ) {
+					for( int i = 0 ; i < tempFile.size() ; i++ ) {
+						HashMap<String, Object> paramMap = new HashMap<String, Object>();
+						String tempFileIdx = tempFile.get(i);
+						String fileIdx = FileUtil.getUUID();
+						paramMap.put("fileIdx", fileIdx);
+						paramMap.put("tempFileIdx", tempFileIdx);
+						paramMap.put("docIdx", productIdx);
+						paramMap.put("docType", "PROD");
+						productDao.insertFileCopy(paramMap);
+					}
 				}
 			}
 			
@@ -228,7 +251,9 @@ public class ProductServiceImpl implements ProductService {
 					}					
 				}
 			}
+			 return productIdx;
 		} catch( Exception e ) {
+			e.printStackTrace();
 			throw e;
 		}
 	}
@@ -290,9 +315,10 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	@Transactional
-	public void insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap,
+	public int insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap,
 			MultipartFile[] file) throws Exception {
 		// TODO Auto-generated method stub
+		int productIdx;
 		try {
 			ArrayList<String> productType = (ArrayList<String>)listMap.get("productType");
 			ArrayList<String> fileType = (ArrayList<String>)listMap.get("fileType");
@@ -320,7 +346,7 @@ public class ProductServiceImpl implements ProductService {
 				param.put("isLast", "N");	//개정하는 문서 버젼이 현재보다 낮은 경우에 문서상태를 이전 상태(N)로 저장한다.
 			}
 			
-			int productIdx = productDao.selectProductSeq(); 	//key value 조회
+			productIdx = productDao.selectProductSeq(); 	//key value 조회
 			param.put("idx", productIdx);
 			param.put("status", "REG");
 			
@@ -429,6 +455,7 @@ public class ProductServiceImpl implements ProductService {
 		} catch( Exception e ) {
 			throw e;
 		}
+		return productIdx;
 	}
 
 	@Override

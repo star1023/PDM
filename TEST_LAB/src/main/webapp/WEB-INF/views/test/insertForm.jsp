@@ -306,15 +306,15 @@ function initDialog(){
 
 //입력확인
 function goInsert(){
-	if( !chkNull($("#name").val()) || $("#name").val() == "[임시]" ) {
+	if( !chkNull($("#name").val()) ) {
 		alert("원료명을 입력하여 주세요.");
 		$("#name").focus();
 		return;
-	} else if( !chkNull($("#sapCode").val()) ) {
-		alert("SAP 코드를 입력하여 주세요.");
-		$("#sapCode").focus();
+	} /*else if( !chkNull($("#matCode").val()) ) {
+		alert("원료코드를 입력하여 주세요.");
+		$("#matCode").focus();
 		return;
-	} /*else if( $("#company").selectedValues()[0] == '' ) {
+	}*/ /*else if( $("#company").selectedValues()[0] == '' ) {
 		alert("회사를 선택하여 주세요.");
 		$("#company").focus();
 		return;
@@ -337,82 +337,92 @@ function goInsert(){
 		alert("첨부파일을 등록해주세요.");		
 		return;
 	} else {
-		var URL = "../test/selectMaterialDataCountAjax";
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data:{
-				"sapCode":$("#sapCode").val()
-			},
-			dataType:"json",
-			success:function(result) {
-				if( result.COUNT > 0 ) {
-					alert("이미 존재하는 코드입니다.");
-				    return;
-				} else {
-					URL = "../test/insertMaterialAjax";
-					var formData = new FormData();
-					formData.append("name",$("#name").val());
-					formData.append("sapCode",$("#sapCode").val());
-					formData.append("company",$("#company").selectedValues()[0]);
-					formData.append("plant",$("#plant").selectedValues()[0]);
-					formData.append("price",$("#price").val());
-					formData.append("unit",$("#unit").selectedValues()[0]);
-					formData.append("materialType",selectedArr.reverse());
-					formData.append("versionNo","1");
-					formData.append("isLast","Y");
-					formData.append("isSample",$("#isSample").val());
-					formData.append("keepCondition",$("#keepCondition").val());
-					formData.append("width",$("#width").val());
-					formData.append("length",$("#length").val());
-					formData.append("height",$("#height").val());
-					formData.append("weight",$("#weight").val());
-					formData.append("standard",$("#standard").val());
-					formData.append("origin",$("#origin").val());
-					formData.append("expireDate",$("#expireDate").val());
+		var count = 0;
+		if( chkNull($("#sapCode").val()) ) {
+			var URL = "../test/selectMaterialDataCountAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				//동기 방식 사용 설정
+				async : false,
+				data:{
+					"sapCode":$("#sapCode").val()
+				},
+				dataType:"json",
+				success:function(result) {
+					console.log(result);
+					count = result.COUNT;
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
+		
+		console.log(count);
+		if( count > 0 ) {
+			alert("이미 등록 된 ERP코드입니다.");
+		    return;
+		} else {
+			var URL = "../test/insertMaterialAjax";
+			var formData = new FormData();
+			formData.append("name",$("#name").val());
+			//formData.append("matCode",$("#matCode").val());
+			formData.append("sapCode",$("#sapCode").val());
+			//formData.append("company",$("#company").selectedValues()[0]);
+			//formData.append("plant",$("#plant").selectedValues()[0]);
+			formData.append("price",$("#price").val());
+			formData.append("unit",$("#unit").selectedValues()[0]);
+			formData.append("materialType",selectedArr.reverse());
+			formData.append("versionNo","1");
+			formData.append("isLast","Y");
+			formData.append("isSample",$("#isSample").val());
+			formData.append("keepCondition",$("#keepCondition").val());
+			formData.append("width",$("#width").val());
+			formData.append("length",$("#length").val());
+			formData.append("height",$("#height").val());
+			formData.append("weight",$("#weight").val());
+			formData.append("standard",$("#standard").val());
+			formData.append("origin",$("#origin").val());
+			formData.append("expireDate",$("#expireDate").val());
 
-					for (var i = 0; i < attatchFileArr.length; i++) {
-						formData.append('file', attatchFileArr[i])
+			for (var i = 0; i < attatchFileArr.length; i++) {
+				formData.append('file', attatchFileArr[i])
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileType', attatchFileTypeArr[i].fileType)			
+			}
+			
+			$('select[name=docTypeTemp] option:selected').each(function(index){
+				formData.append('docType', $(this).attr('value'));
+				formData.append('docTypeText', $(this).text());
+			});
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data: formData,
+				processData: false,
+		        contentType: false,
+		        cache: false,
+				dataType:"json",
+				success:function(result) {
+					if( result.RESULT == 'S' ) {
+						alert($("#name").val()+"("+result.MATERIAL_CODE+")"+"가 정상적으로 생성되었습니다.");
+						fn_goList();
+					} else {
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
 					}
-					
-					for (var i = 0; i < attatchFileTypeArr.length; i++) {
-						formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
-					}
-					
-					for (var i = 0; i < attatchFileTypeArr.length; i++) {
-						formData.append('fileType', attatchFileTypeArr[i].fileType)			
-					}
-					
-					$('select[name=docTypeTemp] option:selected').each(function(index){
-						formData.append('docType', $(this).attr('value'));
-						formData.append('docTypeText', $(this).text());
-					});
-					$.ajax({
-						type:"POST",
-						url:URL,
-						data: formData,
-						processData: false,
-				        contentType: false,
-				        cache: false,
-						dataType:"json",
-						success:function(result) {
-							if( result.RESULT == 'S' ) {
-								alert($("#name").val()+"("+$("#sapCode").val()+")"+"가 정상적으로 생성되었습니다.");
-								fn_goList();
-							} else {
-								alert("오류가 발생하였습니다.\n"+result.MESSAGE);
-							}
-						},
-						error:function(request, status, errorThrown){
-							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-						}			
-					});
-				}
-			},
-			error:function(request, status, errorThrown){
-				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-			}			
-		});
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
 	}
 }
 
@@ -530,9 +540,11 @@ function fn_setMaterialPopupData(SAP_CODE, NAME, KEEP_CONDITION, WIDTH, LENGTH, 
 	$("#standard").val(STANDARD);
 	$("#origin").val(ORIGIN);
 	$("#expireDate").val(EXPIRATION_DATE);
+	$("#name").prop("readonly",true);
 	fn_closeMatRayer();
 }
 
+/*
 function selectNewCode() {
 	console.log("새 코드를 조회한다.");
 	var URL = "../test/selectNewCodeAjax";
@@ -543,7 +555,7 @@ function selectNewCode() {
 		dataType:"json",
 		async:false,
 		success:function(data) {
-			$("#sapCode").val("E"+data);
+			$("#matCode").val("E"+data);
 			$("#isSample").val("Y");
 		},
 		error:function(request, status, errorThrown){
@@ -551,6 +563,7 @@ function selectNewCode() {
 		}			
 	});
 }
+*/
 </script>
 
 <div class="wrap_in" id="fixNextTag">
@@ -573,13 +586,20 @@ function selectNewCode() {
 			<div class="title"><!--span class="txt">연구개발시스템 공지사항</span--></div>
 			<div class="list_detail">
 				<ul style="border-top:none;">
-					<li  class="pt10">
-						<dt>SAP 코드</dt>
+					<!--li  class="pt10">
+						<dt>원료 코드</dt>
+						<dd>
+							<input type="hidden"  name="isSample" id="isSample" value="N"/>
+							<input type="text"  style="width:200px; float: left" class="req" name="matCode" id="matCode" placeholder="코드를 생성 하세요." readonly/>
+							<button class="btn_small_search ml5" onclick="selectNewCode()" style="float: left">생성</button>
+						</dd>
+					</li-->
+					<li class="pt10">
+						<dt>ERP 코드</dt>
 						<dd>
 							<input type="hidden"  name="isSample" id="isSample" value="N"/>
 							<input type="text"  style="width:200px; float: left" class="req" name="sapCode" id="sapCode" placeholder="코드를 조회/생성 하세요." readonly/>
 							<button class="btn_small_search ml5" onclick="openDialog('dialog_material')" style="float: left">조회</button>
-							<button class="btn_small_search ml5" onclick="selectNewCode()" style="float: left">생성</button>
 						</dd>
 					</li>
 					<li>

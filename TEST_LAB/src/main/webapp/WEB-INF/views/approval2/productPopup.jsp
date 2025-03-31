@@ -263,7 +263,7 @@ function getTextareaHTML(note) {
 									<tr>
 										<th style="border-left: none;">결재요청의견</th>
 										<td colspan="3">
-											${apprHeader.COMMNET}
+											${apprHeader.COMMENT}
 										</td>
 									</tr>
 									<tr>
@@ -449,6 +449,7 @@ function getTextareaHTML(note) {
 			<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
 				<colgroup>
 					<col width="140">
+					<col width="140">
 					<col width="250">
 					<col width="150">
 					<col width="200">
@@ -458,6 +459,7 @@ function getTextareaHTML(note) {
 				<thead>
 					<tr>
 						<th>원료코드</th>
+						<th>ERP코드</th>
 						<th>원료명</th>
 						<th>규격</th>
 						<th>보관방법 및 유통기한</th>
@@ -470,7 +472,10 @@ function getTextareaHTML(note) {
 				<c:if test="${productMaterialData.MATERIAL_TYPE == 'Y' }">
 					<tr>
 						<td>
-							<div class=""><a href="#" onClick="fn_view('${productMaterialData.MATERIAL_IDX}')">${productMaterialData.SAP_CODE}</a></div>
+							<div class=""><a href="#" onClick="fn_view('${productMaterialData.MATERIAL_IDX}')">${productMaterialData.MATERIAL_CODE}</a></div>
+						</td>
+						<td>
+							${productMaterialData.SAP_CODE}
 						</td>
 						<td>
 							${productMaterialData.NAME}
@@ -500,6 +505,7 @@ function getTextareaHTML(note) {
 		<div class="main_tbl">				
 			<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
 				<colgroup>
+					<col width="140">					
 					<col width="140">
 					<col width="250">
 					<col width="150">
@@ -510,6 +516,7 @@ function getTextareaHTML(note) {
 				<thead>
 					<tr>
 						<th>원료코드</th>
+						<th>ERP코드</th>
 						<th>원료명</th>
 						<th>규격</th>
 						<th>보관방법 및 유통기한</th>
@@ -522,7 +529,10 @@ function getTextareaHTML(note) {
 				<c:if test="${productMaterialData.MATERIAL_TYPE == 'N' }">
 					<tr>
 						<td>
-							<div class=""><a href="#" onClick="fn_erpview('${productMaterialData.SAP_CODE}')">${productMaterialData.SAP_CODE}</a></div>
+							<div class=""><a href="#" onClick="fn_erpview('${productMaterialData.SAP_CODE}')">${productMaterialData.MATERIAL_CODE}</a></div>
+						</td>
+						<td>
+							${productMaterialData.SAP_CODE}
 						</td>
 						<td>
 							${productMaterialData.NAME}

@@ -508,14 +508,22 @@ public class TestController {
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, String> returnMap = new HashMap<String, String>();
 		try {
+			
+			Calendar cal = Calendar.getInstance();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
+			String selectCode = testService.selectmaterialCode();
+			String matCode = "E"+sdf.format(cal.getTime())+""+selectCode;
+			
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
+			param.put("matCode", matCode);
 			System.err.println(param);
 			System.err.println(fileType);
 			System.err.println(fileTypeText);
 			System.err.println(docType);
 			System.err.println(docTypeText);
 			testService.insertMaterial(param, materialType, fileType, fileTypeText, docType, docTypeText, file);
+			returnMap.put("MATERIAL_CODE", matCode);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");

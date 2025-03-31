@@ -282,11 +282,13 @@
 			return;
 		} else {
 			var formData = new FormData();
-			formData.append("docIdx",${productData.data.PRODUCT_IDX});
+			formData.append("docIdx",'${productData.data.PRODUCT_IDX}');
 			formData.append("apprComment", $("#apprComment").val());
 			formData.append("apprLine", $("#apprLine").selectedValues());
 			formData.append("refLine", $("#refLine").selectedValues());
+			formData.append("title", '${productData.data.TITLE}');
 			formData.append("docType", "PROD");
+			formData.append("status", "N");
 			var URL = "../approval2/insertApprAjax";
 			$.ajax({
 				type:"POST",
@@ -341,7 +343,7 @@
 				return;
 			} else {
 				var formData = new FormData();
-				formData.append("title", ${productData.data.TITLE});
+				formData.append("title", '${productData.data.TITLE}');
 				formData.append("apprLineName", $("#apprLineName").val());
 				formData.append("apprLine", $("#apprLine").selectedValues());
 				formData.append("docType", "PROD");
@@ -476,7 +478,7 @@
 							<th style="border-left: none;">제목</th>
 							<td colspan="3">${productData.data.TITLE}</td>
 						</tr>
-						<c:if test="${productData.STATUS == 'REG' }">
+						<c:if test="${productData.data.STATUS == 'REG' }">
 						<tr>
 							<th style="border-left: none;">결재라인</th>
 							<td colspan="3">
@@ -561,6 +563,7 @@
 				<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
 					<colgroup>
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -570,6 +573,7 @@
 					<thead>
 						<tr>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -582,7 +586,10 @@
 					<c:if test="${productMaterialData.MATERIAL_TYPE == 'Y' }">
 						<tr>
 							<td>
-								<div class=""><a href="#" onClick="fn_view('${productMaterialData.MATERIAL_IDX}')">${productMaterialData.SAP_CODE}</a></div>
+								<div class=""><a href="#" onClick="fn_view('${productMaterialData.MATERIAL_IDX}')">${productMaterialData.MATERIAL_CODE}</a></div>
+							</td>
+							<td>
+								${productMaterialData.SAP_CODE}
 							</td>
 							<td>
 								${productMaterialData.NAME}
@@ -616,6 +623,7 @@
 				<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
 					<colgroup>
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -625,6 +633,7 @@
 					<thead>
 						<tr>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -637,7 +646,10 @@
 					<c:if test="${productMaterialData.MATERIAL_TYPE == 'N' }">
 						<tr>
 							<td>
-								<div class=""><a href="#" onClick="fn_erpview('${productMaterialData.SAP_CODE}')">${productMaterialData.SAP_CODE}</a></div>
+								<div class=""><a href="#" onClick="fn_erpview('${productMaterialData.SAP_CODE}')">${productMaterialData.MATERIAL_CODE}</a></div>
+							</td>
+							<td>
+								<a href="#" onClick="fn_erpview('${productMaterialData.SAP_CODE}')">${productMaterialData.SAP_CODE}</a>
 							</td>
 							<td>
 								${productMaterialData.NAME}
@@ -886,7 +898,7 @@
 <!-- 자재조회 레이어 close-->
 
 <!-- 결재 상신 레이어  start-->
- <div class="white_content" id="approval_dialog">
+<div class="white_content" id="approval_dialog">
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />

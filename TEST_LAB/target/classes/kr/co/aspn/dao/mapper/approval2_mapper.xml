@@ -126,6 +126,7 @@
 			, REG_USER
 			, REG_DATE
 			, COMMENT
+			, LAST_STATUS
 		) values (
 			#{apprIdx}
 			, #{docIdx}
@@ -137,6 +138,7 @@
 			, #{userId}
 			, sysdate()
 			, #{apprComment}
+			, #{status}
 		)	
 	</insert>
 	<insert id="insertApprItem" parameterType="map">

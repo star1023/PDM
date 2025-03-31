@@ -18,7 +18,7 @@ public interface ProductService {
 
 	Map<String, Object> selectProductDataCount(Map<String, Object> param);
 
-	void insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+	int insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	Map<String, Object> selectProductList(Map<String, Object> param)  throws Exception;
 
@@ -28,7 +28,7 @@ public interface ProductService {
 
 	List<Map<String, String>> selectHistory(Map<String, Object> param);
 
-	void insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+	int insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	List<Map<String, String>> checkErpMaterial(Map<String, Object> param);
 

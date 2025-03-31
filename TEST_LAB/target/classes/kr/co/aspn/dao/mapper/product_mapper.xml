@@ -3,13 +3,16 @@
 <mapper namespace="product">
 	
 	<select id="selectProductCode" resultType="String">
+	/* product.product */
 		SELECT 
 			LPAD(nextval('product_code_seq'), '3' , '0') as code
 	</select>
 	
 	<select id="checkMaterial" parameterType="map" resultType="hashmap">
+	/* product.checkMaterial */
 		SELECT 
 			MATERIAL_IDX,
+			MATERIAL_CODE,
 			SAP_CODE,
 			NAME,
 			COMPANY_CODE,
@@ -40,27 +43,33 @@
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
 			AND IS_SAMPLE = 'Y'
+			<if test="matCode != null and matCode != '' ">
+			AND MATERIAL_CODE LIKE CONCAT('%',#{matCode},'%')
+			</if>
+			<if test="sapCode != null and sapCode != '' ">
 			AND SAP_CODE LIKE CONCAT('%',#{sapCode},'%')
+			</if>
 	</select>
 	
 	<sql id="whereMaterialList">
 		<if test="searchValue != null and searchValue != '' ">
-			AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
+			AND MATERIAL_CODE LIKE CONCAT('%',#{searchValue},'%')
 		</if>
 	</sql>
 	
 	<select id="selectMaterialCount" parameterType="map" resultType="int">
+	/* product.selectMaterialCount */
 		SELECT 
 			count(MATERIAL_IDX) as cnt
 		FROM lab_material
 		WHERE 1 = 1
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
-			AND IS_SAMPLE = 'Y'
-			<include refid="menu.whereMaterialList" />
+			<include refid="product.whereMaterialList" />
 	</select>
 	
 	<select id="selectMaterialList" parameterType="map" resultType="hashmap">
+	/* product.selectMaterialList */
 		SELECT 
 			tmp.*
 			, (SELECT UNIT_NAME FROM lab_unit WHERE 1 = 1 AND UNIT_CODE = UNIT) as UNIT_NAME			
@@ -68,6 +77,7 @@
 			SELECT 
 				row_number() over (order by  MATERIAL_IDX DESC) as rnum
 				, MATERIAL_IDX,
+				MATERIAL_CODE,
 				SAP_CODE,
 				NAME,
 				COMPANY_CODE,
@@ -97,13 +107,13 @@
 			WHERE 1 = 1
 				AND IS_DELETE = 'N'
 				AND IS_LAST = 'Y'
-				AND IS_SAMPLE = 'Y'
-				<include refid="menu.whereMaterialList" />
+				<include refid="product.whereMaterialList" />
 		)tmp 
 		WHERE rnum between #{startRow} AND #{endRow}
 	</select>
 	
 	<select id="selectProductDataCount" parameterType="map" resultType="int">
+	/* product.selectProductDataCount */
 		SELECT 
 			count(PRODUCT_IDX)
 		FROM lab_product
@@ -114,10 +124,12 @@
 	</select>
 	
 	<select id="selectProductSeq" resultType="int">
+	/* product.selectProductSeq */
 		SELECT nextval('product_seq') as seq
 	</select>
 	
 	<insert id="insertProduct" parameterType="map">
+	/* product.insertProduct */
 		INSERT INTO lab_product(
 			PRODUCT_IDX
 			, DOC_NO
@@ -178,11 +190,13 @@
 	</insert>
 	
 	<insert id="insertProductMaterial" parameterType="map">
+	/* product.insertProductMaterial */
 		INSERT 
     	INTO lab_product_materal(
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
 			, MATERIAL_IDX
+			, MATERIAL_CODE
 			, SAP_CODE
 			, NAME
 			, UNIT_PRICE
@@ -192,7 +206,7 @@
 			, MATERIAL_TYPE
 		)values
 		<foreach collection="matList" item="item" index="index"  separator=",">
-		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.matCode}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
 		</foreach>
 	</insert>
 	
@@ -222,6 +236,7 @@
 	</sql>
 	
 	<select id="selectProductCount" parameterType="map" resultType="int">
+	/* product.selectProductCount */
 		SELECT 
 			count(PRODUCT_IDX) as cnt
 		FROM lab_product
@@ -231,6 +246,7 @@
 			<include refid="menu.whereProductList" />
 	</select>
 	<select id="selectProductList" parameterType="map" resultType="hashmap">
+	/* product.selectProductList */
 		SELECT 
 			lp.*
 			, CASE 
@@ -287,6 +303,7 @@
 	</select>
 	
 	<select id="selectProductData" parameterType="map" resultType="hashmap">
+	/* product.selectProductData */
 		SELECT 
 			PRODUCT_IDX
 			, DOC_NO
@@ -321,10 +338,12 @@
 	</select>
 	
 	<select id="selectProductMaterial" parameterType="map" resultType="hashmap">
+	/* product.selectProductMaterial */
 		SELECT
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
-			, MATERIAL_IDX			
+			, MATERIAL_IDX
+			, MATERIAL_CODE			
 			, SAP_CODE
 			, NAME
 			, SAP_PRICE
@@ -342,6 +361,7 @@
 	</select>
 	
 	<select id="selectHistory" parameterType="map" resultType="hashmap">
+	/* product.selectHistory */
 	SELECT 
 		lh.DOC_IDX
 		, lh.HISTORY_TYPE
@@ -366,6 +386,7 @@
 	</select>
 	
 	<update id="updateProductIsLast" parameterType="map">
+	/* product.updateProductIsLast */
 		UPDATE 
 			lab_product
 		SET
@@ -375,6 +396,7 @@
 	</update>
 	
 	<insert id="insertNewVersionProduct" parameterType="map">
+	/* product.insertNewVersionProduct */
 		INSERT INTO lab_product(
 			PRODUCT_IDX
 			, DOC_NO
@@ -435,6 +457,7 @@
 	</insert>
 	
 	<select id="checkErpMaterial" parameterType="map" resultType="hashmap">
+	/* product.checkErpMaterial */
 		SELECT 
 			SAP_CODE
 			, NAME
@@ -478,6 +501,7 @@
 	</select>
 	
 	<select id="selectErpMaterialData" parameterType="map" resultType="hashmap">
+	/* product.selectErpMaterialData */
 		SELECT 
 			SAP_CODE
 			, NAME
@@ -522,6 +546,7 @@
 	</select>
 	
 	<select id="insertNewVersionCheck" parameterType="map" resultType="int">
+	/* product.insertNewVersionCheck */
 		SELECT
 			count(PRODUCT_IDX) as cnt
 		FROM 
@@ -548,6 +573,7 @@
 	</sql>
 	
 	<select id="selectSearchProduct" parameterType="map" resultType="hashmap">
+	/* product.selectSearchProduct */
 		SELECT 
 			lp.*
 			, CASE 
@@ -582,6 +608,7 @@
 	</select>
 	
 	<insert id="insertFileCopy" parameterType="map">
+	/* product.insertFileCopy */
 		INSERT 
     	INTO lab_file(
 			FILE_IDX
@@ -610,6 +637,7 @@
 	</insert>
 	
 	<select id="selectFileData" parameterType="map" resultType="hashmap">
+	/* product.selectFileData */
 		SELECT
 			FILE_IDX
 			, DOC_IDX
@@ -627,6 +655,7 @@
 	</select>
 	
 	<delete id="deleteFileData" parameterType="map">
+	/* product.deleteFileData */
 		DELETE
 		FROM lab_file
 		WHERE 1 = 1
@@ -634,6 +663,7 @@
 	</delete>
 	
 	<update id="updateProductData" parameterType="map">
+	/* product.updateProductData */
 		UPDATE 
 			lab_product
 		SET
@@ -657,6 +687,7 @@
 	</update>
 	
 	<delete id="deleteProductMaterial" parameterType="map">
+	/* product.deleteProductMaterial */
 		DELETE
 		FROM lab_product_materal
 		WHERE 1 = 1
@@ -664,6 +695,7 @@
 	</delete>
 	
 	<delete id="deleteFileType" parameterType="map">
+	/* product.deleteFileType */
 		DELETE
 		FROM lab_file_type
 		WHERE 1 = 1

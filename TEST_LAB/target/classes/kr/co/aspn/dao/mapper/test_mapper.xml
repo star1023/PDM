@@ -767,6 +767,9 @@
 			<when test="searchType.equals('searchName')">
 			AND NAME LIKE CONCAT('%',#{searchValue},'%')
 			</when>
+			<when test="searchType.equals('searchMatCode')">
+      		AND MATERIAL_CODE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
       		<when test="searchType.equals('searchSapCode')">
       		AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
       		</when>
@@ -864,7 +867,7 @@
 		, IFNULL(lf.FILE_CNT30,0) as FILE_CNT30
 		, IFNULL(lf.FILE_CNT40,0) as FILE_CNT40
 		, IFNULL(lf.FILE_CNT50,0) as FILE_CNT50
-		, (SELECT COUNT(*) FROM lab_material WHERE 1 = 1 AND SAP_CODE = lm.SAP_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> lm.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
+		, (SELECT COUNT(*) FROM lab_material WHERE 1 = 1 AND MATERIAL_CODE = lm.MATERIAL_CODE AND IS_LAST = 'N' AND VERSION_NO <![CDATA[<]]> lm.VERSION_NO AND IS_DELETE = 'N' ) as CHILD_CNT
 	from 
 	lab_material lm
 	left outer join (
@@ -970,6 +973,7 @@
 	<insert id="insertMaterial" parameterType="map">
 		INSERT INTO lab_material(
 			MATERIAL_IDX
+			, MATERIAL_CODE
 			, SAP_CODE
 			, NAME
 			, COMPANY_CODE
@@ -1003,6 +1007,7 @@
 			, EXPIRATION_DATE
 		)VALUES(
 			#{idx}
+			, #{matCode}
 			, #{sapCode}
 			, #{name}
 			, ''
@@ -1040,6 +1045,7 @@
 	<insert id="insertNewVersionMaterial" parameterType="map">
 		INSERT INTO lab_material(
 			MATERIAL_IDX
+			, MATERIAL_CODE
 			, SAP_CODE
 			, NAME
 			, COMPANY_CODE
@@ -1073,6 +1079,7 @@
 			, EXPIRATION_DATE
 		)VALUES(
 			#{idx}
+			, #{matCode}
 			, #{sapCode}
 			, #{name}
 			, ''
@@ -1154,6 +1161,7 @@
 	<select id="selectMaterialData" parameterType="map" resultType="hashmap">
 		SELECT 
 			MATERIAL_IDX
+			, MATERIAL_CODE
 			, SAP_CODE
 			, NAME
 			, COMPANY_CODE
@@ -1284,6 +1292,7 @@
 		FROM
 			lab_erp_material
 		WHERE 1 = 1 
+			AND (SAP_CODE LIKE '3%' OR SAP_CODE LIKE '4%' OR SAP_CODE LIKE '5%')
 		<include refid="test.whereErpMaterialList" />
 	</select>
 	
@@ -1332,6 +1341,7 @@
 			FROM
 				lab_erp_material
 			WHERE 1 = 1 
+				AND (SAP_CODE LIKE '3%' OR SAP_CODE LIKE '4%' OR SAP_CODE LIKE '5%')
 			<include refid="test.whereErpMaterialList" />
 		)tmp WHERE rnum between #{startRow} and #{endRow}	
 	</select>
