@@ -27,4 +27,16 @@ public class ManualDaoImpl implements ManualDao {
 		return sqlSessionTemplate.selectList("manual.selectManualList", param);
 	}
 
+	@Override
+	public void uploadManual(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("manual.uploadManual", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectManualFileList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("manual.selectManualFileList", param);
+	}
+
 }

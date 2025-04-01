@@ -246,12 +246,25 @@
 	</insert>
 	<insert id="insertLoginLog" parameterType="map">
 		/* user.insertLoginLog   */
+		<!-- 
 		INSERT INTO userLogin_log(
 			userId
 		    ,userIp
 		    ,loginDate
 		)	VALUES (
 				#{userId}
+			,	#{userIp}
+			, 	sysdate()
+		)
+		 -->
+		 INSERT INTO lab_login_log(
+			LOG_IDX
+			, USER_ID
+		    ,USER_IP
+		    ,LOGIN_DATE
+		)	VALUES (
+			nextval('login_log_seq') 
+			,	#{userId}
 			,	#{userIp}
 			, 	sysdate()
 		)
@@ -318,39 +331,44 @@
 				AND IS_ADMIN = #{isAdmin}
 			</if>
 	</select>
+
+	<select id="selectAccessLogSeq" resultType="int">
+		SELECT nextval('useraccess_log_seq') as seq
+	</select>
 	
 	<insert id="insertAccessLog">
-		INSERT INTO userAccess_log (
-			userId
-			, url
-			, time
-			, regDate
+		INSERT INTO lab_useraccess_log (
+			LOG_IDX
+			, USER_ID
+			, URL
+			, ACCESS_DATE
+			, REG_DATE
 		) VALUES(
-			#{userId}
+			#{idx}
+			, #{userId}
 			, #{url}
 			, #{time} 
 			, sysdate()
 		)
-		<selectKey keyProperty="seq" resultType="int" order="AFTER">
-			SELECT LAST_INSERT_ID()
-		</selectKey>
 	</insert>
 	
 	<insert id="insertAccessLogParams">
-		INSERT INTO userAccess_log_params (
-			parent_seq
-			, docNo
-			, tbKey
-			, tbType
-			, pNo
-			, params
+		INSERT INTO lab_useraccess_log_params (
+			LOG_IDX
+			, PARENT_IDX
+			, PARAMS
+			, DOC_NO
+			, DOC_IDX
+			, DOC_TYPE
+			, P_NO
 		) VALUES (
-			#{seq}
+			nextval('useraccess_log_params_seq')
+			, #{idx}
+			, #{requestParams}
 			, #{docNo}
 			, #{tbKey}
 			, #{tbType}
-			, #{pNo}
-			, #{requestParams}
+			, #{pNo}			
 		)
 	</insert>
 	

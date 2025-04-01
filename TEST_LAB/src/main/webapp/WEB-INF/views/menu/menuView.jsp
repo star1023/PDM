@@ -82,6 +82,11 @@
 	function fn_list() {
 		location.href = '/menu/menuList';
 	}
+	
+	function fn_versionUp(idx) {
+		location.href = '/menu/versionUpMenuForm?idx='+idx;
+	}
+	
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -93,6 +98,11 @@
 		<h2 style="position:relative">
 			<span class="title_s">Menu Complete Document</span><span class="title">메뉴 완료보고서 상세</span>
 			<div class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_circle_version" onclick="fn_versionUp('${menuData.data.MENU_IDX}')">&nbsp;</button>
+					</li>
+				</ul>
 			</div>
 		</h2>
 		<div class="group01 mt20">
@@ -151,6 +161,61 @@
 					</tbody>
 				</table>
 			</div>
+			
+			<div class="title2" style="float: left; margin-top: 30px;">
+				<span class="txt">원료</span>
+			</div>
+			<div class="main_tbl">				
+				<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
+					<colgroup>
+						<col width="140">
+						<col width="250">
+						<col width="150">
+						<col width="200">
+						<col width="8%">
+						<col />
+					</colgroup>
+					<thead>
+						<tr>
+							<th>원료코드</th>
+							<th>원료명</th>
+							<th>규격</th>
+							<th>보관방법 및 유통기한</th>
+							<th>공급가</th>
+							<th>비고</th>
+						</tr>
+					</thead>
+					<tbody>
+					<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
+					<c:if test="${menuMaterialData.MATERIAL_TYPE == 'N' }">
+						<tr>
+							<td>
+								<div class=""><a href="#" onClick="fn_erpview('${menuMaterialData.SAP_CODE}')">${menuMaterialData.SAP_CODE}</a></div>
+							</td>
+							<td>
+								${menuMaterialData.NAME}
+							</td>
+							<td>
+								${menuMaterialData.STANDARD}
+							</td>
+							<td>
+								${menuMaterialData.KEEP_EXP}
+							</td>
+							<td>
+								${menuMaterialData.UNIT_PRICE}
+							</td>
+							<td>
+								${menuMaterialData.DESCRIPTION}
+							</td>
+						</tr>
+					</c:if>	
+					</c:forEach>	
+					</tbody>
+					<tfoot>
+					</tfoot>
+				</table>
+			</div>
+			
 			<c:if test="${menuData.data.IS_NEW_MATERIAL == 'Y' }">
 			<div class="title2" style="float: left; margin-top: 30px;">
 				<span class="txt">신규원료</span>
@@ -177,6 +242,7 @@
 					</thead>
 					<tbody>
 					<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
+						<c:if test="${menuMaterialData.MATERIAL_TYPE == 'Y' }">
 						<tr>
 							<td>
 								<div class=""><a href="#" onClick="fn_view('${menuMaterialData.MATERIAL_IDX}')">${menuMaterialData.SAP_CODE}</a></div>
@@ -197,6 +263,7 @@
 								${menuMaterialData.DESCRIPTION}
 							</td>
 						</tr>
+						</c:if>
 					</c:forEach>	
 					</tbody>
 					<tfoot>

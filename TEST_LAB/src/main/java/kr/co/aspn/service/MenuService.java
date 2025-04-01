@@ -49,6 +49,8 @@ public interface MenuService {
 	int insertNewVersionCheck(Map<String, Object> param);
 
 	Map<String, Object> selectSearchProduct(Map<String, Object> param);
+	
+	Map<String, Object> selectSearchMenu(Map<String, Object> param);
 
 	List<Map<String, Object>> searchUser(Map<String, Object> param);
 

@@ -116,8 +116,13 @@
 						html += "	<td>";
 						if( item.IS_LAST == 'Y' ) {
 							html += "		<li style=\"float:none; display:inline\">";
-							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_versionUp('"+item.PRODUCT_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">개정</button>";
+							//if( item.STATUS == 'COMP' ) {
+								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_versionUp('"+item.PRODUCT_IDX+"')\"><img src=\"/resources/images/icon_doc02.png\">개정</button>";
+							//}
 							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.PRODUCT_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
+							if( item.STATUS == 'COND_APPR' ) {
+								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.PRODUCT_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
+							}
 							html += "		</li>";
 						}
 						html += "	</td>";
@@ -177,6 +182,8 @@
 						html += " 개정되었습니다.(버젼 : "+item.VERSION_NO+")";
 					} else if( item.HISTORY_TYPE == 'D' ) {
 						html += " 삭제되었습니다.";
+					} else if( item.HISTORY_TYPE == 'U' ) {
+						html += " 수정되었습니다.";
 					} 
 					html += "<br/><span>"+item.USER_NAME+"</span>&nbsp;&nbsp;<span class=\"date\">"+item.REG_DATE+"</span>";
 					html += "</li>"; 
@@ -188,6 +195,10 @@
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 			}
 		});
+	}
+	
+	function fn_update(idx, docNo) {
+		location.href = '/product/productUpdateForm?idx='+idx;
 	}
 	
 	function showChildVersion(imgElement){

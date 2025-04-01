@@ -125,6 +125,8 @@
 			, TITLE
 			, REG_USER
 			, REG_DATE
+			, COMMENT
+			, LAST_STATUS
 		) values (
 			#{apprIdx}
 			, #{docIdx}
@@ -135,6 +137,8 @@
 			, #{title}
 			, #{userId}
 			, sysdate()
+			, #{apprComment}
+			, #{status}
 		)	
 	</insert>
 	<insert id="insertApprItem" parameterType="map">
@@ -195,6 +199,7 @@
 				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
 				  END LAST_STATUS_TXT
 			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+			, DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE_TXT
 		FROM (
 			SELECT 
 				row_number() over (order by  APPR_IDX DESC) as rnum
@@ -208,6 +213,7 @@
 				, REG_USER
 				, REG_DATE
 				, LAST_STATUS
+				, UPDATE_DATE
 			FROM lab_approval_header
 			WHERE 1 = 1
 				AND REG_USER = #{userId}
@@ -217,11 +223,28 @@
 	
 	<select id="selectMyApprTotalCount" parameterType="map" resultType="int">
 		SELECT 
-			COUNT(APPR_IDX)
-		FROM
-			lab_approval_header
+			COUNT(APPR_IDX) AS CNT
+		FROM(
+			SELECT 
+				APPR_IDX
+				, DOC_IDX
+				, DOC_TYPE
+				, TOTAL_STEP
+				, CURRENT_STEP
+				, CURRENT_USER_ID
+				, TITLE
+				, REG_USER
+				, REG_DATE
+				, LAST_STATUS
+				, GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
+				, UPDATE_DATE
+			FROM 
+				lab_approval_header
+			WHERE 1 = 1
+				AND CURRENT_USER_ID = #{userId}
+			)tmp
 		WHERE 1 = 1
-			AND CURRENT_USER_ID = #{userId}
+			AND tmp.STATUS = 'APPR'
 	</select>
 	
 	<select id="selectMyApprList" parameterType="map" resultType="hashmap">
@@ -239,24 +262,45 @@
 				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
 				  END LAST_STATUS_TXT
 			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+			, DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE_TXT
 		FROM (
 			SELECT 
-				row_number() over (order by  APPR_IDX DESC) as rnum
-				, APPR_IDX
-				, DOC_IDX
-				, DOC_TYPE
-				, TOTAL_STEP
-				, CURRENT_STEP
-				, CURRENT_USER_ID
-				, TITLE
-				, REG_USER
-				, REG_DATE
-				, LAST_STATUS
-			FROM lab_approval_header
+				row_number() over (order by  itmp.APPR_IDX DESC) as rnum
+				, itmp.APPR_IDX
+				, itmp.DOC_IDX
+				, itmp.DOC_TYPE
+				, itmp.TOTAL_STEP
+				, itmp.CURRENT_STEP
+				, itmp.CURRENT_USER_ID
+				, itmp.TITLE
+				, itmp.REG_USER
+				, itmp.REG_DATE
+				, itmp.LAST_STATUS
+				, itmp.STATUS
+				, itmp.UPDATE_DATE
+			FROM(
+				SELECT 
+					APPR_IDX
+					, DOC_IDX
+					, DOC_TYPE
+					, TOTAL_STEP
+					, CURRENT_STEP
+					, CURRENT_USER_ID
+					, TITLE
+					, REG_USER
+					, REG_DATE
+					, LAST_STATUS
+					, GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
+					, UPDATE_DATE
+				FROM 
+					lab_approval_header
+				WHERE 1 = 1
+					AND CURRENT_USER_ID = #{userId}
+				)itmp
 			WHERE 1 = 1
-				AND CURRENT_USER_ID = #{userId}
+				AND itmp.STATUS = 'APPR'
 		)tmp 
-		WHERE rnum between #{startRow} AND #{endRow}
+		WHERE rnum between #{startRow} AND #{endRow}		
 	</select>
 	
 	<select id="selectMyRefTotalCount" parameterType="map" resultType="int">
@@ -286,6 +330,7 @@
 				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
 				  END LAST_STATUS_TXT
 			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+			, DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE_TXT
 		FROM (
 			SELECT 
 				row_number() over (order by  laf.REF_IDX DESC) as rnum
@@ -301,6 +346,7 @@
 				, lah.REG_USER
 				, lah.REG_DATE
 				, lah.LAST_STATUS
+				, lah.UPDATE_DATE
 			FROM 
 				lab_approval_reference laf,
 				lab_approval_header lah
@@ -339,6 +385,7 @@
 				   WHEN LAST_STATUS = 'C' THEN '상신취소' 
 				  END LAST_STATUS_TXT
 			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+			, DATE_FORMAT(UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE_TXT
 		FROM (
 			SELECT 
 				row_number() over (order by  APPR_IDX DESC) as rnum
@@ -352,6 +399,7 @@
 				, REG_USER
 				, REG_DATE
 				, LAST_STATUS
+				, UPDATE_DATE
 			FROM lab_approval_header
 			WHERE 1 = 1
 				AND LAST_STATUS = 'Y'
@@ -361,24 +409,37 @@
 	</select>
 	
 	<select id="selectApprHeaderData" parameterType="map" resultType="hashmap">
+	/*	approval2.selectApprHeaderData */
 		SELECT 
-			APPR_IDX
-			, DOC_IDX
-			, DOC_TYPE
-			, TOTAL_STEP
-			, CURRENT_STEP
-			, CURRENT_USER_ID
-			, TITLE
-			, REG_USER
-			, REG_DATE
-			, LAST_STATUS
+			lah.APPR_IDX
+			, lah.DOC_IDX
+			, lah.DOC_TYPE
+			, lah.TOTAL_STEP
+			, lah.CURRENT_STEP
+			, lah.CURRENT_USER_ID
+			, lah.TITLE
+			, lah.REG_USER
+			, lah.REG_DATE
+			, lah.LAST_STATUS
+			, lah.COMMENT
+			, lah.UPDATE_DATE
+			, lai.ITEM_IDX 
+			, lai.APPR_NO 
+			, lai.TARGET_USER_ID 
+			, lai.STATUS 
+			, lai.COMMENT 
+			, lai.REG_DATE 
 		FROM 
-			lab_approval_header
+			lab_approval_header lah
+			, lab_approval_item lai 
 		WHERE 1 = 1
-			AND APPR_IDX = #{apprIdx}
+			AND lah.APPR_IDX = #{apprIdx}
+			and lah.APPR_IDX = lai.APPR_IDX 
+			and lah.CURRENT_STEP = lai.APPR_NO 	
 	</select>
 	
 	<select id="selectDocData" parameterType="map" resultType="hashmap">
+	/*	approval2.selectDocData */
 		SELECT 
 			*
 		FROM 
@@ -403,15 +464,18 @@
 	</select>
 	
 	<update id="updateApprStatus" parameterType="map">
+	/*	approval2.updateApprStatus */
 		UPDATE 
 			lab_approval_header
 		SET
 			LAST_STATUS	= #{status}
+			, UPDATE_DATE = sysdate()
 		WHERE 1 = 1
 			AND APPR_IDX = #{apprIdx}	
 	</update>
 	
 	<update id="updateDocStatus" parameterType="map">
+	/*	approval2.updateDocStatus */
 		UPDATE 
 		<choose>
 			<when test="docType.equals('PROD')">
@@ -433,4 +497,115 @@
       		</when>
       	</choose>
 	</update>
+	
+	
+	<select id="selectApprItemList" parameterType="map" resultType="hashmap">
+	/*	approval2.selectApprItemList */
+		SELECT
+			ITEM_IDX
+			, APPR_IDX
+			, APPR_NO
+			, TARGET_USER_ID
+			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, STATUS
+			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
+				   WHEN STATUS = 'Y' THEN '결재완료'
+				   WHEN STATUS = 'R' THEN '반려'
+				   WHEN STATUS = 'C' THEN '부분승인' 
+				  END STATUS_TXT
+			, COMMENT
+			, REG_DATE
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM 
+			lab_approval_item
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}
+		ORDER BY APPR_NO ASC	
+	
+	</select>
+	
+	<select id="selectReferenceList" parameterType="map" resultType="hashmap">
+	/*	approval2.selectReferenceList */
+		SELECT
+			REF_IDX
+			, APPR_IDX
+			, TARGET_USER_ID
+			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+		FROM
+			lab_approval_reference
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}		
+	</select>
+	
+	<update id="approvalSubmitItem" parameterType="map">
+	/*	approval2.approvalSubmitItem */
+		UPDATE 
+			lab_approval_item
+		SET	
+			STATUS = #{apprStatus}
+			, COMMENT = #{comment}
+			, REG_DATE = sysdate()
+		WHERE 1 = 1
+			AND ITEM_IDX = #{itemIdx}
+			AND APPR_IDX = #{apprIdx}
+	</update>
+	
+	<select id="selectNextApprItem" parameterType="map" resultType="hashmap">
+	/*	approval2.selectNextApprItem */
+		SELECT 	
+			ITEM_IDX
+			, APPR_IDX
+			, APPR_NO
+			, TARGET_USER_ID
+			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, STATUS
+			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
+				   WHEN STATUS = 'Y' THEN '결재완료'
+				   WHEN STATUS = 'R' THEN '반려'
+				   WHEN STATUS = 'C' THEN '부분승인' 
+				  END STATUS_TXT
+			, COMMENT
+			, REG_DATE
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM 
+			lab_approval_item
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}
+			AND APPR_NO = #{currentStep}+1
+	</select>
+	
+	<update id="updateApprUser" parameterType="map">
+	/*	approval2.updateApprUser */
+		UPDATE 
+			lab_approval_header
+		SET
+			CURRENT_STEP = #{currentStep}
+			, CURRENT_USER_ID = #{currentUser}
+			, LAST_STATUS = #{lastStatus}
+		WHERE 1 = 1
+			AND APPR_IDX = #{apprIdx}
+	</update>
+	
+	<select id="selectApprItem" parameterType="map" resultType="hashmap">
+	/*	approval2.selectApprItem */
+		SELECT 	
+			ITEM_IDX
+			, APPR_IDX
+			, APPR_NO
+			, TARGET_USER_ID
+			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, STATUS
+			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
+				   WHEN STATUS = 'Y' THEN '결재완료'
+				   WHEN STATUS = 'R' THEN '반려'
+				   WHEN STATUS = 'C' THEN '부분승인' 
+				  END STATUS_TXT
+			, COMMENT
+			, REG_DATE
+			, DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS REG_DATE_TXT
+		FROM 
+			lab_approval_item
+		WHERE 1 = 1
+			AND ITEM_IDX = #{itemIdx}
+	</select>
 </mapper>

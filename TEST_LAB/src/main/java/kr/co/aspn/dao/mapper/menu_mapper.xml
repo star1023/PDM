@@ -909,6 +909,21 @@
 		</if>
 	</sql>
 	
+	<sql id="whereSearchMenuList">
+		<if test="searchValue != null and searchValue != '' ">
+			AND (NAME LIKE CONCAT('%',#{searchValue},'%') OR MENU_CODE LIKE CONCAT('%',#{searchValue},'%'))
+		</if>
+		<if test="searchCategory1 != null and searchCategory1 != '' ">
+			AND MENU_TYPE1 = #{searchCategory1}
+		</if>
+		<if test="searchCategory2 != null and searchCategory2 != '' ">
+			AND MENU_TYPE2 = #{searchCategory2}
+		</if>
+		<if test="searchCategory3 != null and searchCategory3 != '' ">
+			AND MENU_TYPE3 = #{searchCategory3}
+		</if>
+	</sql>
+	
 	<select id="selectSearchProduct" parameterType="map" resultType="hashmap">
 		SELECT 
 			lp.*
@@ -940,6 +955,39 @@
 				) tmp
 			)
 		ORDER BY DOC_NO DESC, VERSION_NO DESC, PRODUCT_IDX DESC		
+	</select>
+	
+	<select id="selectSearchMenu" parameterType="map" resultType="hashmap">
+		SELECT 
+			lm.*
+			, CASE 
+				WHEN lm.STATUS = 'REG' THEN '등록'
+				WHEN lm.STATUS = 'APPR' THEN '결재중'
+				WHEN lm.STATUS = 'COMP' THEN '완료'
+				END	AS STATUS_TXT
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE1) as CATEGORY_NAME1
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE2) as CATEGORY_NAME2
+			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lm.MENU_TYPE3) as CATEGORY_NAME3
+
+		FROM 
+			lab_menu lm
+		WHERE 1 = 1
+			AND DOC_NO in (
+				SELECT 
+					tmp.DOC_NO
+				FROM (
+					SELECT
+						row_number() over (order by  MENU_IDX DESC) as rnum
+						, DOC_NO
+					FROM lab_menu
+					WHERE 1 = 1
+						AND IS_DELETE = 'N'
+						AND IS_LAST = 'Y'
+						AND DOC_OWNER = #{userId}
+						<include refid="menu.whereSearchMenuList" />
+				) tmp
+			)
+		ORDER BY DOC_NO DESC, VERSION_NO DESC, MENU_IDX DESC		
 	</select>
 	
 	<insert id="insertFileCopy" parameterType="map">

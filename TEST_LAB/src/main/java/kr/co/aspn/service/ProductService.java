@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import kr.co.aspn.vo.FileVO;
+
 public interface ProductService {
 
 	String selectProductCode();
@@ -16,7 +18,7 @@ public interface ProductService {
 
 	Map<String, Object> selectProductDataCount(Map<String, Object> param);
 
-	void insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+	int insertProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	Map<String, Object> selectProductList(Map<String, Object> param)  throws Exception;
 
@@ -26,7 +28,7 @@ public interface ProductService {
 
 	List<Map<String, String>> selectHistory(Map<String, Object> param);
 
-	void insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+	int insertNewVersionProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	List<Map<String, String>> checkErpMaterial(Map<String, Object> param);
 
@@ -35,4 +37,10 @@ public interface ProductService {
 	int insertNewVersionCheck(Map<String, Object> param);
 
 	Map<String, Object> selectSearchProduct(Map<String, Object> param);
+
+	Map<String, Object> selectFileData(Map<String, Object> param);
+
+	void deleteFileData(Map<String, Object> param) throws Exception;
+
+	void updateProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 }

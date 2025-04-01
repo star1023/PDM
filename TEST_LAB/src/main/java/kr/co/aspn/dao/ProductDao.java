@@ -33,7 +33,7 @@ public interface ProductDao {
 
 	List<Map<String, String>> selectHistory(Map<String, Object> param);
 
-	void updateProduct(Map<String, Object> param) throws Exception;
+	void updateProductIsLast(Map<String, Object> param) throws Exception;
 
 	void insertNewVersionProduct(Map<String, Object> param) throws Exception;
 
@@ -46,4 +46,14 @@ public interface ProductDao {
 	List<Map<String, Object>> selectSearchProduct(Map<String, Object> param);
 
 	void insertFileCopy(HashMap<String, Object> paramMap) throws Exception;
+
+	Map<String, Object> selectFileData(Map<String, Object> param);
+
+	void deleteFileData(Map<String, Object> param) throws Exception;
+
+	void deleteProductMaterial(Map<String, Object> param) throws Exception;
+
+	void deleteFileType(HashMap<String, Object> map) throws Exception;
+
+	void updateProductData(Map<String, Object> param) throws Exception;
 }

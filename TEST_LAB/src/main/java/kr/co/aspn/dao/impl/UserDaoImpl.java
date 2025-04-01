@@ -161,4 +161,10 @@ private Logger logger = LoggerFactory.getLogger(UserDaoImpl.class);
 	public UserVO selectDocumentOwner(HashMap<String, Object> param) {
 		return sqlSessionTemplate.selectOne("user.selectDocumentOwner", param);
 	}
+
+	@Override
+	public int selectAccessLogSeq() {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("user.selectAccessLogSeq");
+	}
 }

@@ -337,6 +337,7 @@ public class MenuController {
 			, @RequestParam(value = "docType", required = false) List<String> docType
 			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
 			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
 			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
 			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
 			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
@@ -357,6 +358,7 @@ public class MenuController {
 			Collections.reverse(menuType);
 			System.err.println(menuType);
 			System.err.println(rowIdArr);
+			System.err.println(itemTypeArr);
 			System.err.println(itemMatIdxArr);
 			System.err.println(itemSapCodeArr);
 			System.err.println(itemNameArr);
@@ -372,6 +374,7 @@ public class MenuController {
 			listMap.put("docType", docType);
 			listMap.put("docTypeText", docTypeText);
 			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
 			listMap.put("itemMatIdxArr", itemMatIdxArr);
 			listMap.put("itemSapCodeArr", itemSapCodeArr);
 			listMap.put("itemNameArr", itemNameArr);
@@ -402,9 +405,7 @@ public class MenuController {
 		model.addAttribute("menuData", menuData);
 		Map<String, String> data = (Map<String, String>)menuData.get("data");
 		//lab_product_materisl 테이블 조회
-		if( data.get("IS_NEW_MATERIAL") != null && "Y".equals(data.get("IS_NEW_MATERIAL")) ) {
-			model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
-		}		
+		model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
 		return "/menu/menuView";
 	}
 	
@@ -416,9 +417,8 @@ public class MenuController {
 			model.addAttribute("menuData", menuData);
 			Map<String, String> data = (Map<String, String>)menuData.get("data");
 			//lab_product_materisl 테이블 조회
-			if( data.get("IS_NEW_MATERIAL") != null && "Y".equals(data.get("IS_NEW_MATERIAL")) ) {
-				model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
-			}
+			model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
+			
 			return "/menu/versionUpMenuForm";
 		} catch( Exception e ) {
 			logger.error(StringUtil.getStackTrace(e, this.getClass()));
@@ -436,6 +436,7 @@ public class MenuController {
 			, @RequestParam(value = "docType", required = false) List<String> docType
 			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
 			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
 			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
 			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
 			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
@@ -456,6 +457,9 @@ public class MenuController {
 			Collections.reverse(menuType);
 			System.err.println(menuType);
 			System.err.println(rowIdArr);
+			System.err.println("*****************");
+			System.err.println(itemTypeArr);
+			System.err.println("*****************");
 			System.err.println(itemMatIdxArr);
 			System.err.println(itemSapCodeArr);
 			System.err.println(itemNameArr);
@@ -471,6 +475,7 @@ public class MenuController {
 			listMap.put("docType", docType);
 			listMap.put("docTypeText", docTypeText);
 			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
 			listMap.put("itemMatIdxArr", itemMatIdxArr);
 			listMap.put("itemSapCodeArr", itemSapCodeArr);
 			listMap.put("itemNameArr", itemNameArr);
@@ -538,6 +543,16 @@ public class MenuController {
 		return returnMap;
 	}
 	
+	@RequestMapping("/selectSearchMenuAjax")
+	@ResponseBody
+	public Map<String, Object> selectSearchMenuAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		System.err.println(param);
+		Map<String, Object> returnMap = menuService.selectSearchMenu(param);
+		return returnMap;
+	}
+	
 	@RequestMapping("/selectProductDataAjax")
 	@ResponseBody
 	public Map<String, Object> selectProductDataAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
@@ -545,6 +560,16 @@ public class MenuController {
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 		returnMap.put("productData", menuService.selectProductData(param));
 		returnMap.put("productMaterialData", menuService.selectProductMaterial(param));
+		return returnMap;
+	}
+	
+	@RequestMapping("/selectMenuDataAjax")
+	@ResponseBody
+	public Map<String, Object> selectMenuDataAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
+		//lab_menu 테이블 조회, lab_file 테이블 조회
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		returnMap.put("menuData", menuService.selectMenuData(param));
+		returnMap.put("menuMaterialData", menuService.selectMenuMaterial(param));
 		return returnMap;
 	}
 	

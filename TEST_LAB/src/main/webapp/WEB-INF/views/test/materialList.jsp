@@ -56,9 +56,10 @@ function fn_loadList(pageNo) {
 						html += "&nbsp;";
 					}
 					html += "	</td>";
+					html += "	<td>"+nvl(item.MATERIAL_CODE,'&nbsp;')+"</td>";
 					html += "	<td>"+nvl(item.SAP_CODE,'&nbsp;')+"</td>";
 					html += "	<td><div class=\"ellipsis_txt tgnl\"><a href=\"#\" onClick=\"fn_view('"+item.MATERIAL_IDX+"')\">"+nvl(item.NAME,'&nbsp;')+"</div></td>";
-					html += "	<td>"+nvl(item.PRICE,'&nbsp;')+"</td>";
+					//html += "	<td>"+nvl(item.PRICE,'&nbsp;')+"</td>";
 					html += "	<td>"+nvl(item.UNIT_NAME,'&nbsp;')+"</td>";
 					html += "	<td><div class=\"ellipsis_txt tgnl\">";
 					if( chkNull(item.CATEGORY_NAME1) ) {
@@ -125,7 +126,8 @@ function fn_view(idx) {
 		dataType:"json",
 		async:false,
 		success:function(data) {
-			$("#nameTxt").html(data.data.NAME);
+			$("#nameTxt").html(data.data.NAME);			
+			$("#matCodeTxt").html(data.data.MATERIAL_CODE);
 			$("#sapCodeTxt").html(data.data.SAP_CODE);
 			$("#plantTxt").html(data.data.PLANT);
 			$("#priceTxt").html(data.data.PRICE);
@@ -707,6 +709,10 @@ function fn_searchClear() {
 	$("#viewCount").selectOptions("");
 	$("#viewCount_label").html("선택");
 }
+
+function paging(pageNo) {
+	fn_loadList(pageNo);
+}
 </script>
 <input type="hidden" name="pageNo" id="pageNo" value="">
 <div class="wrap_in" id="fixNextTag">
@@ -741,7 +747,8 @@ function fn_searchClear() {
 								<select name="searchType" id="searchType">
 									<option value="">선택</option>
 									<option value="searchName">원료명</option>
-									<option value="searchSapCode">원료코드</option>
+									<option value="searchMatCode">원료코드</option>
+									<option value="searchSapCode">ERP코드</option>
 								</select>
 							</div>
 							<input type="text" name="searchValue" id="searchValue" value="" style="width:180px; margin-left:5px;">
@@ -798,9 +805,10 @@ function fn_searchClear() {
 				<table class="tbl01">
 					<colgroup id="list_colgroup">
 						<col width="45px">						
-						<col width="10%">
+						<col width="9%">
+						<col width="9%">
 						<col width="15%">
-						<col width="8%">
+						<!--col width="8%"-->
 						<col width="8%">
 						<col width="20%">
 						<col width="20%">
@@ -810,8 +818,9 @@ function fn_searchClear() {
 						<tr>
 							<th>&nbsp;</th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
-							<th>단가</th>
+							<!--th>단가</th-->
 							<th>단위</th>
 							<th>원료구분</th>
 							<th>첨부문서</th>
@@ -931,7 +940,7 @@ function fn_searchClear() {
 
 <!-- 자재 조회레이어 start-->
 <div class="white_content" id="open3">
-	<div class="modal" style="	width: 700px;margin-left:-350px;height: 780px;margin-top:-400px;">
+	<div class="modal" style="	width: 700px;margin-left:-350px;height: 810px;margin-top:-400px;">
 		<h5 style="position:relative">
 			<span class="title">원료 상세 정보</span>
 			<div  class="top_btn_box">
@@ -944,10 +953,16 @@ function fn_searchClear() {
 		</h5>
 		<div class="list_detail">
 			<ul>
-				<li class="pt10">
+				<li class="">
 					<dt>원료명</dt>
 					<dd>
 						 <div id="nameTxt"></div>
+					</dd>
+				</li>
+				<li>
+					<dt>원료 코드</dt>
+					<dd>
+						<div id="matCodeTxt"></div>
 					</dd>
 				</li>
 				<li>

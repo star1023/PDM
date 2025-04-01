@@ -54,34 +54,34 @@
     <select id="unit" resultType="UnitVO">
 	 /*common.unit*/
 		SELECT 
-			unitCode
-			,unitName
-	  	FROM unit
+			UNIT_CODE AS unitCode
+			, UNIT_NAME AS unitName
+	  	FROM lab_unit
     </select>
     
     <select id="codeList" parameterType="CodeItemVO" resultType="CodeItemVO">
 	/*common.codeList*/
 	SELECT 
-      	itemCode
-      	,itemName
-	FROM codeItem
-	WHERE groupCode = #{groupCode}
+      	ITEM_CODE AS itemCode
+      	,ITEM_NAME AS itemName
+	FROM lab_code_item
+	WHERE GROUP_CODE = #{groupCode}
 	<if test="itemCode != null and itemCode != '' ">
-		AND itemCode like concat(#{itemCode},'%')
+		AND ITEM_CODE like concat(#{itemCode},'%')
 	</if>
-	AND isDelete = 'N'
-	ORDER BY orderNo ASC
+	AND IS_DELETE = 'N'
+	ORDER BY ORDER_NO ASC
     </select>
     
     <select id="codeListAjax" parameterType="CodeItemVO" resultType="map">
 	/*common.codeList*/
 	SELECT 
-      	itemCode
-      	,itemName
-	FROM codeItem
-	WHERE groupCode = #{groupCode}
-	AND isDelete = 'N'
-	ORDER BY orderNo ASC
+      	ITEM_CODE AS itemCode
+      	,ITEM_NAME AS itemName
+	FROM lab_code_item
+	WHERE GROUP_CODE = #{groupCode}
+	AND IS_DELETE = 'N'
+	ORDER BY ORDER_NO ASC
     </select>
     
     <select id="searchUserId" parameterType="map" resultType="UserVO">

@@ -3,13 +3,16 @@
 <mapper namespace="product">
 	
 	<select id="selectProductCode" resultType="String">
+	/* product.product */
 		SELECT 
 			LPAD(nextval('product_code_seq'), '3' , '0') as code
 	</select>
 	
 	<select id="checkMaterial" parameterType="map" resultType="hashmap">
+	/* product.checkMaterial */
 		SELECT 
 			MATERIAL_IDX,
+			MATERIAL_CODE,
 			SAP_CODE,
 			NAME,
 			COMPANY_CODE,
@@ -40,34 +43,41 @@
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
 			AND IS_SAMPLE = 'Y'
+			<if test="matCode != null and matCode != '' ">
+			AND MATERIAL_CODE LIKE CONCAT('%',#{matCode},'%')
+			</if>
+			<if test="sapCode != null and sapCode != '' ">
 			AND SAP_CODE LIKE CONCAT('%',#{sapCode},'%')
+			</if>
 	</select>
 	
 	<sql id="whereMaterialList">
 		<if test="searchValue != null and searchValue != '' ">
-			AND SAP_CODE LIKE CONCAT('%',#{searchValue},'%')
+			AND MATERIAL_CODE LIKE CONCAT('%',#{searchValue},'%')
 		</if>
 	</sql>
 	
 	<select id="selectMaterialCount" parameterType="map" resultType="int">
+	/* product.selectMaterialCount */
 		SELECT 
 			count(MATERIAL_IDX) as cnt
 		FROM lab_material
 		WHERE 1 = 1
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
-			AND IS_SAMPLE = 'Y'
-			<include refid="menu.whereMaterialList" />
+			<include refid="product.whereMaterialList" />
 	</select>
 	
 	<select id="selectMaterialList" parameterType="map" resultType="hashmap">
+	/* product.selectMaterialList */
 		SELECT 
 			tmp.*
-			, (SELECT unitName FROM unit WHERE 1 = 1 AND unitCode = UNIT) as UNIT_NAME			
+			, (SELECT UNIT_NAME FROM lab_unit WHERE 1 = 1 AND UNIT_CODE = UNIT) as UNIT_NAME			
 		FROM (
 			SELECT 
 				row_number() over (order by  MATERIAL_IDX DESC) as rnum
 				, MATERIAL_IDX,
+				MATERIAL_CODE,
 				SAP_CODE,
 				NAME,
 				COMPANY_CODE,
@@ -97,13 +107,13 @@
 			WHERE 1 = 1
 				AND IS_DELETE = 'N'
 				AND IS_LAST = 'Y'
-				AND IS_SAMPLE = 'Y'
-				<include refid="menu.whereMaterialList" />
+				<include refid="product.whereMaterialList" />
 		)tmp 
 		WHERE rnum between #{startRow} AND #{endRow}
 	</select>
 	
 	<select id="selectProductDataCount" parameterType="map" resultType="int">
+	/* product.selectProductDataCount */
 		SELECT 
 			count(PRODUCT_IDX)
 		FROM lab_product
@@ -114,10 +124,12 @@
 	</select>
 	
 	<select id="selectProductSeq" resultType="int">
+	/* product.selectProductSeq */
 		SELECT nextval('product_seq') as seq
 	</select>
 	
 	<insert id="insertProduct" parameterType="map">
+	/* product.insertProduct */
 		INSERT INTO lab_product(
 			PRODUCT_IDX
 			, DOC_NO
@@ -178,11 +190,13 @@
 	</insert>
 	
 	<insert id="insertProductMaterial" parameterType="map">
+	/* product.insertProductMaterial */
 		INSERT 
     	INTO lab_product_materal(
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
 			, MATERIAL_IDX
+			, MATERIAL_CODE
 			, SAP_CODE
 			, NAME
 			, UNIT_PRICE
@@ -192,7 +206,7 @@
 			, MATERIAL_TYPE
 		)values
 		<foreach collection="matList" item="item" index="index"  separator=",">
-		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.matCode}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
 		</foreach>
 	</insert>
 	
@@ -222,6 +236,7 @@
 	</sql>
 	
 	<select id="selectProductCount" parameterType="map" resultType="int">
+	/* product.selectProductCount */
 		SELECT 
 			count(PRODUCT_IDX) as cnt
 		FROM lab_product
@@ -231,12 +246,14 @@
 			<include refid="menu.whereProductList" />
 	</select>
 	<select id="selectProductList" parameterType="map" resultType="hashmap">
+	/* product.selectProductList */
 		SELECT 
 			lp.*
 			, CASE 
 				WHEN lp.STATUS = 'REG' THEN '등록'
 				WHEN lp.STATUS = 'APPR' THEN '결재중'
 				WHEN lp.STATUS = 'COMP' THEN '완료'
+				WHEN lp.STATUS = 'COND_APPR' THEN '부분승인'
 				END	AS STATUS_TXT
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
@@ -286,6 +303,7 @@
 	</select>
 	
 	<select id="selectProductData" parameterType="map" resultType="hashmap">
+	/* product.selectProductData */
 		SELECT 
 			PRODUCT_IDX
 			, DOC_NO
@@ -310,6 +328,9 @@
 			, IS_LAST
 			, REG_USER
 			, DOC_OWNER
+			, CONTENTS
+			, STATUS
+			, SAP_CODE
 		FROM 
 			lab_product
 		WHERE 1 = 1 
@@ -317,10 +338,12 @@
 	</select>
 	
 	<select id="selectProductMaterial" parameterType="map" resultType="hashmap">
+	/* product.selectProductMaterial */
 		SELECT
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
-			, MATERIAL_IDX			
+			, MATERIAL_IDX
+			, MATERIAL_CODE			
 			, SAP_CODE
 			, NAME
 			, SAP_PRICE
@@ -338,12 +361,14 @@
 	</select>
 	
 	<select id="selectHistory" parameterType="map" resultType="hashmap">
+	/* product.selectHistory */
 	SELECT 
 		lh.DOC_IDX
 		, lh.HISTORY_TYPE
 		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
 			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
 			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			WHEN lh.HISTORY_TYPE  = 'U' then '수정'
 			END HISTORY_TYPE_TXT 
 		, lp.VERSION_NO
 		, lp.NAME 
@@ -360,7 +385,8 @@
 	ORDER BY lh.REG_DATE ASC
 	</select>
 	
-	<update id="updateProduct" parameterType="map">
+	<update id="updateProductIsLast" parameterType="map">
+	/* product.updateProductIsLast */
 		UPDATE 
 			lab_product
 		SET
@@ -370,6 +396,7 @@
 	</update>
 	
 	<insert id="insertNewVersionProduct" parameterType="map">
+	/* product.insertNewVersionProduct */
 		INSERT INTO lab_product(
 			PRODUCT_IDX
 			, DOC_NO
@@ -430,6 +457,7 @@
 	</insert>
 	
 	<select id="checkErpMaterial" parameterType="map" resultType="hashmap">
+	/* product.checkErpMaterial */
 		SELECT 
 			SAP_CODE
 			, NAME
@@ -473,6 +501,7 @@
 	</select>
 	
 	<select id="selectErpMaterialData" parameterType="map" resultType="hashmap">
+	/* product.selectErpMaterialData */
 		SELECT 
 			SAP_CODE
 			, NAME
@@ -517,6 +546,7 @@
 	</select>
 	
 	<select id="insertNewVersionCheck" parameterType="map" resultType="int">
+	/* product.insertNewVersionCheck */
 		SELECT
 			count(PRODUCT_IDX) as cnt
 		FROM 
@@ -543,12 +573,14 @@
 	</sql>
 	
 	<select id="selectSearchProduct" parameterType="map" resultType="hashmap">
+	/* product.selectSearchProduct */
 		SELECT 
 			lp.*
 			, CASE 
 				WHEN lp.STATUS = 'REG' THEN '등록'
 				WHEN lp.STATUS = 'APPR' THEN '결재중'
 				WHEN lp.STATUS = 'COMP' THEN '완료'
+				WHEN lp.STATUS = 'COND_APPR' THEN '부분승인'
 				END	AS STATUS_TXT
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE1) as CATEGORY_NAME1
 			, (SELECT CATEGORY_NAME FROM lab_system_category WHERE 1 = 1 AND CATEGORY_IDX = lp.PRODUCT_TYPE2) as CATEGORY_NAME2
@@ -576,6 +608,7 @@
 	</select>
 	
 	<insert id="insertFileCopy" parameterType="map">
+	/* product.insertFileCopy */
 		INSERT 
     	INTO lab_file(
 			FILE_IDX
@@ -602,4 +635,71 @@
 		WHERE 1 = 1
 			AND FILE_IDX = #{tempFileIdx}		
 	</insert>
+	
+	<select id="selectFileData" parameterType="map" resultType="hashmap">
+	/* product.selectFileData */
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+			, FILE_CONTENT
+		FROM 
+			lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</select>
+	
+	<delete id="deleteFileData" parameterType="map">
+	/* product.deleteFileData */
+		DELETE
+		FROM lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</delete>
+	
+	<update id="updateProductData" parameterType="map">
+	/* product.updateProductData */
+		UPDATE 
+			lab_product
+		SET
+			NAME = #{productName}
+			, TITLE = #{title}
+			, TOTAL_WEIGHT = #{weight}
+			, STANDARD = #{standard}
+			, KEEP_CONDITION = #{keepCondition}
+			, EXPIRATION_DATE = #{expireDate}
+			, IS_NEW_MATERIAL = #{newMat}
+			, PRODUCT_TYPE1 = #{productType1}
+			, PRODUCT_TYPE2 = #{productType2}
+			, PRODUCT_TYPE3 = #{productType3}
+			, CONTENTS = #{contents}
+			, SAP_CODE = #{productSapCode}
+			<if test="status != null and status != '' ">
+			, STATUS = #{status}
+			</if>
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</update>
+	
+	<delete id="deleteProductMaterial" parameterType="map">
+	/* product.deleteProductMaterial */
+		DELETE
+		FROM lab_product_materal
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</delete>
+	
+	<delete id="deleteFileType" parameterType="map">
+	/* product.deleteFileType */
+		DELETE
+		FROM lab_file_type
+		WHERE 1 = 1
+			AND DOC_IDX = #{productIdx}
+			AND DOC_TYPE = #{docType}
+	</delete>
 </mapper>

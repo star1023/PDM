@@ -349,6 +349,7 @@ function goInsert(){
 		URL = "../test/insertNewVersionMaterialAjax";
 		var formData = new FormData();
 		formData.append("name",$("#name").val());
+		formData.append("matCode",$("#matCode").val());
 		formData.append("sapCode",$("#sapCode").val());
 		formData.append("company",$("#company").selectedValues()[0]);
 		formData.append("plant",$("#plant").selectedValues()[0]);
@@ -414,6 +415,119 @@ function goInsert(){
 function fn_goList() {
 	location.href = '/test/materialList';
 }
+
+function fn_closeMatRayer(){
+	$('#searchMatValue').val('')
+	$('#matLayerBody').empty();
+	$('#matLayerBody').append('<tr><td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
+	$('#matCount').text(0);
+	closeDialog('dialog_material');
+}
+
+function fn_searchErpMaterial(pageType) {
+	var pageType = pageType;
+	console.log(pageType);
+	if(!pageType)
+		$('#matLayerPage').val(1);
+	
+	if(pageType == 'nextPage'){
+		var totalCount = Number($('#matCount').text());
+		var maxPage = totalCount/10+1;
+		var nextPage = Number($('#matLayerPage').val())+1;
+		
+		if(nextPage >= maxPage) return; //nextPage = maxPage
+		
+		$('#matLayerPage').val(nextPage);
+	}
+
+	if(pageType == 'prevPage'){
+		var prevPage = Number($('#matLayerPage').val())-1;
+		if(prevPage <= 0) return; //prevPage = 1;
+		
+		$('#matLayerPage').val(prevPage);
+	}
+	
+	$('#lab_loading').show();
+	
+	$.ajax({
+		url: '/test/selectErpMaterialListAjax',
+		type: 'post',
+		dataType: 'json',
+		data: {
+			searchValue: $('#searchMatValue').val(),
+			pageNo: $('#matLayerPage').val()
+		},
+		success: function(data){
+			var jsonData = {};
+			jsonData = data;
+			$('#matLayerBody').empty();
+			$('#matLayerBody').append('<input type="hidden" id="matLayerPage" value="'+data.pageNo+'"/>');
+			
+			jsonData.list.forEach(function(item){
+				
+				var row = '<tr onClick="fn_setMaterialPopupData(\''+item.SAP_CODE+'\', \''+item.NAME+'\', \''+item.KEEP_CONDITION+'\', \''+item.WIDTH+'\', \''+item.LENGTH+'\', \''+item.HEIGHT+'\', \''+item.TOTAL_WEIGHT+'\', \''+item.STANDARD+'\', \''+item.ORIGIN+'\', \''+item.EXPIRATION_DATE+'\')">';
+				//parentRowId, itemImNo, itemSAPCode, itemName, itemUnitPrice
+				row += '<td></td>';
+				//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';
+				row += '<Td>'+item.SAP_CODE+'</Td>';
+				row += '<Td  class="tgnl">'+item.NAME+'</Td>';
+				row += '<Td>'+item.KEEP_CONDITION+'</Td>';
+				row += '<Td>'+item.WIDTH+'/'+item.LENGTH+'/'+item.HEIGHT+'</Td>';
+				row += '<Td>'+item.TOTAL_WEIGHT+'('+item.TOTAL_WEIGHT_UNIT+')'+'</Td>';
+				row += '<Td class="tgnl">'+item.STANDARD+'</Td>';
+				row += '<Td>'+item.ORIGIN +'</Td>';
+				row += '<Td>'+item.EXPIRATION_DATE+'</Td>';
+				
+				row += '</tr>';
+				$('#matLayerBody').append(row);
+			})
+			$('#matCount').text(jsonData.totalCount)
+			
+			var isFirst = $('#matLayerPage').val() == 1 ? true : false;
+			var isLast = parseInt(jsonData.totalCount/10+1) == Number($('#matLayerPage').val()) ? true : false;
+			
+			if(isFirst){
+				$('#matNextPrevDiv').children('button:first').attr('class', 'btn_code_left01');
+			} else {
+				$('#matNextPrevDiv').children('button:first').attr('class', 'btn_code_left02');
+			}
+			
+			if(isLast){
+				$('#matNextPrevDiv').children('button:last').attr('class', 'btn_code_right01');
+			} else {
+				$('#matNextPrevDiv').children('button:last').attr('class', 'btn_code_right02');
+			}
+		},
+		error: function(a,b,c){
+			//console.log(a,b,c);
+			alert('원료검색 실패[2] - 시스템 담당자에게 문의하세요');
+		},
+		complete: function(){
+			$('#lab_loading').hide();
+		}
+	});
+}
+
+function bindDialogEnter(e){
+	if(e.keyCode == 13)
+		fn_searchErpMaterial();
+}
+
+function fn_setMaterialPopupData(SAP_CODE, NAME, KEEP_CONDITION, WIDTH, LENGTH, HEIGHT, TOTAL_WEIGHT, STANDARD, ORIGIN, EXPIRATION_DATE) {
+	$("#name").val(NAME);
+	$("#sapCode").val(SAP_CODE);
+	$("#isSample").val("N");
+	$("#keepCondition").val(KEEP_CONDITION);
+	$("#width").val(WIDTH);
+	$("#length").val(LENGTH);
+	$("#height").val(HEIGHT);
+	$("#weight").val(TOTAL_WEIGHT);
+	$("#standard").val(STANDARD);
+	$("#origin").val(ORIGIN);
+	$("#expireDate").val(EXPIRATION_DATE);
+	$("#name").prop("readonly",true);
+	fn_closeMatRayer();
+}
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">원료관리&nbsp;&nbsp;
@@ -436,14 +550,21 @@ function fn_goList() {
 			<div class="list_detail">
 				<ul style="border-top:none;">
 					<li  class="pt10">
-						<dt>SAP 코드</dt>
+						<dt>원료 코드</dt>
 						<dd>
 							<input type="hidden"  name="idx" id="idx" value="${materialData.data.MATERIAL_IDX}"/>
 							<input type="hidden"  name="docNo" id="docNo" value="${materialData.data.DOC_NO}"/>
 							<input type="hidden"  name="versionNo" id="versionNo" value="${materialData.data.VERSION_NO}"/>
 							<input type="hidden"  name="isSample" id="isSample" value="${materialData.data.IS_SAMPLE}"/>
-							<input type="hidden"  name="sapCode" id="sapCode" value="${materialData.data.SAP_CODE}"/>
-							${materialData.data.SAP_CODE}
+							<input type="hidden"  name="matCode" id="matCode" value="${materialData.data.MATERIAL_CODE}"/>
+							${materialData.data.MATERIAL_CODE}
+						</dd>
+					</li>
+					<li class="">
+						<dt>ERP 코드</dt>
+						<dd>
+							<input type="text"  style="width:200px; float: left" class="req" name="sapCode" id="sapCode" value="${materialData.data.SAP_CODE}" placeholder="코드를 조회/생성 하세요." readonly/>
+							<button class="btn_small_search ml5" onclick="openDialog('dialog_material')" style="float: left">조회</button>
 						</dd>
 					</li>
 					<li>
@@ -666,3 +787,71 @@ function fn_goList() {
 	</div>
 </div>
 <!-- 파일 생성레이어 close-->
+
+<!-- SAP 코드 검색 레이어 start-->
+<!-- SAP 코드 검색 추가레이어 start-->
+<!-- 신규로 레이어창을 생성하고싶을때는  아이디값 교체-->
+<!-- 클래스 옆에 적힌 스타일 값을 인라인으로 작성해서 팝업 사이즈를 직접 조정 -->
+<div class="white_content" id="dialog_material">
+	<input id="targetID" type="hidden">
+	<input id="itemType" type="hidden">
+	<div class="modal positionCenter" style="width: 900px; height: 600px; margin-left: -455px; margin-top: -250px ">
+		<h5 style="position: relative">
+			<span class="title">원료코드 검색</span>
+			<div class="top_btn_box">
+				<ul>
+					<li><button class="btn_madal_close" onClick="fn_closeMatRayer()"></button></li>
+				</ul>
+			</div>
+		</h5>
+
+		<div id="matListDiv" class="code_box">
+			<input id="searchMatValue" type="text" class="code_input" onkeyup="bindDialogEnter(event)" style="width: 300px;" placeholder="일부단어로 검색가능">
+			<img src="/resources/images/icon_code_search.png" onclick="fn_searchErpMaterial()"/>
+			<div class="code_box2">
+				(<strong> <span id="matCount">0</span> </strong>)건
+			</div>
+			<div class="main_tbl">
+				<table class="tbl07">
+					<colgroup>
+						<col width="40px">
+						<col width="10%">
+						<col width="20%">
+						<col width="8%">
+						<col width="8%">
+						<col width="8%">
+						<col width="auto">
+						<col width="10%">
+						<col width="10%">
+					</colgroup>
+					<thead>
+						<tr>
+							<th></th>
+							<th>SAP코드</th>
+							<th>상품명</th>
+							<th>보관기준</th>
+							<th>사이즈</th>
+							<th>중량</th>
+							<th>규격</th>
+							<th>원산지</th>
+							<th>유통기한</th>
+						<tr>
+					</thead>
+					<tbody id="matLayerBody">
+						<input type="hidden" id="matLayerPage" value="0"/>
+						<Tr>
+							<td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td>
+						</Tr>
+					</tbody>
+				</table>
+				<!-- 뒤에 추가 리스트가 있을때는 클래스명 02로 숫자변경 -->
+				<div id="matNextPrevDiv" class="page_navi  mt10">
+					<button class="btn_code_left01" onclick="fn_searchErpMaterial('prevPage')"></button>
+					<button class="btn_code_right02" onclick="fn_searchErpMaterial('nextPage')"></button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- 코드검색 추가레이어 close-->
+<!-- SAP 코드 검색 레이어 close-->

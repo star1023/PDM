@@ -68,6 +68,8 @@ public interface MenuDao {
 	int insertNewVersionCheck(Map<String, Object> param);
 
 	List<Map<String, Object>> selectSearchProduct(Map<String, Object> param);
+	
+	List<Map<String, Object>> selectSearchMenu(Map<String, Object> param);
 
 	void insertFileCopy(HashMap<String, Object> paramMap) throws Exception;
 

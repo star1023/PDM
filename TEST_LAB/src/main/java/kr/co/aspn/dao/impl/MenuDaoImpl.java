@@ -201,6 +201,12 @@ public class MenuDaoImpl implements MenuDao {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("menu.selectSearchProduct", param);
 	}
+	
+	@Override
+	public List<Map<String, Object>> selectSearchMenu(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("menu.selectSearchMenu", param);
+	}
 
 	@Override
 	public void insertFileCopy(HashMap<String, Object> param) throws Exception {

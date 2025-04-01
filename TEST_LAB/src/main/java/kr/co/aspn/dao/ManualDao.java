@@ -9,4 +9,8 @@ public interface ManualDao {
 
 	List<Map<String, Object>> selectManualList(Map<String, Object> param);
 
+	void uploadManual(Map<String, Object> param) throws Exception;
+
+	List<Map<String, Object>> selectManualFileList(Map<String, Object> param);
+
 }

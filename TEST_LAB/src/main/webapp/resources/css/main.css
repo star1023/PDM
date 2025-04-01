@@ -34,7 +34,8 @@
 .my_info_box, .main_jejo_box{ width:100%; height:255px; border:1px solid #c8c8c8; box-sizing:border-box; float:left; vertical-align:top}
 .main_jejo_box{ background-color:#fafafa;font-family:'맑은고딕',Malgun Gothic; }
 .my_info_box_top{ height:115px; width:100%;box-sizing:border-box;  position:relative;}
-.main_logo_img{ background-image:url(../images/bg_main_logo.png); width:70px; height:70px; background-repeat:no-repeat; float:left; position:absolute; top:20px; left:30px;}
+/*.main_logo_img{ background-image:url(../images/bg_main_logo.png); width:70px; height:70px; background-repeat:no-repeat; float:left; position:absolute; top:20px; left:30px;}*/
+.main_logo_img{width:70px; height:70px; background-repeat:no-repeat; float:left; position:absolute; top:20px; left:30px;}
 .user_name{ display:block; font-size:24px; color:#4b5165; top:30px; left:110px;position:absolute; float:left;}
 .user_name strong{ font-size:18px; font-weight:normal; color:#878787;}
 .user_sub_info{display:block; font-size:14px; color:#4b5165; top:70px; left:110px;position:absolute; float:left;}

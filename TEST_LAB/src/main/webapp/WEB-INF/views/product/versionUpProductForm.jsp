@@ -482,8 +482,9 @@ var selectedArr = new Array();
 		}
 		var element = e.target
 		
-		var userSapCode = e.target.value;
-		console.log(userSapCode);
+		//var userSapCode = e.target.value;
+		var userMatCode = e.target.value;
+		console.log(userMatCode);
 		var rowId = $(element).parent().parent().attr('id');
 		var URL = '/product/checkMaterialAjax';
 		if( type == 'mat' ) {
@@ -494,7 +495,8 @@ var selectedArr = new Array();
 			type: 'post',
 			dataType: 'json',
 			data: {
-				sapCode: userSapCode
+				matCode: userMatCode
+				, sapCode: userSapCode
 			},
 			success: function(data){
 				var materailList = data;
@@ -597,11 +599,12 @@ var selectedArr = new Array();
 				
 				jsonData.list.forEach(function(item){
 					
-					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+item.SAP_CODE+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
+					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+nvl(item.MATERIAL_CODE,'')+'\', \''+nvl(item.SAP_CODE,'')+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
 					//parentRowId, itemImNo, itemSAPCode, itemName, itemUnitPrice
 					row += '<td></td>';
-					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';
-					row += '<Td>'+item.SAP_CODE+'</Td>';
+					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';\
+					row += '<Td>'+nvl(item.MATERIAL_CODE,'')+'</Td>';
+					row += '<Td>'+nvl(item.SAP_CODE,'')+'</Td>';
 					row += '<Td  class="tgnl">'+item.NAME+'</Td>';
 					row += '<Td>'+nvl(item.KEEP_CONDITION,'')+'</Td>';
 					row += '<Td>'+nvl(item.WIDTH,'')+'/'+nvl(item.LENGTH,'')+'/'+nvl(item.HEIGHT,'')+'</Td>';
@@ -643,12 +646,12 @@ var selectedArr = new Array();
 	function fn_closeMatRayer(){
 		$('#searchMatValue').val('')
 		$('#matLayerBody').empty();
-		$('#matLayerBody').append('<tr><td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
+		$('#matLayerBody').append('<tr><td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
 		$('#matCount').text(0);
 		closeDialog('dialog_material');
 	}
 	
-	function setMaterialPopupData(parentRowId, itemMatIdx, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
+	function setMaterialPopupData(parentRowId, itemMatIdx, itemMatCode, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
 		var varMatIdx = nvl2(itemMatIdx,'0');
 		var varKeep = nvl2(itemKeep,'');
 		var varExp = nvl2(itemExp,'');
@@ -667,6 +670,7 @@ var selectedArr = new Array();
 			}
 		}
 		$('#'+parentRowId + ' input[name$=itemMatIdx]').val(varMatIdx);
+		$('#'+parentRowId + ' input[name$=itemMatCode]').val(itemMatCode);
 		$('#'+parentRowId + ' input[name$=itemSapCode]').val(itemSAPCode);
 		$('#'+parentRowId + ' input[name$=itemName]').val(itemName);
 		$('#'+parentRowId + ' input[name$=itemStandard]').val(nvl2(itemStandard,''));
@@ -775,6 +779,7 @@ var selectedArr = new Array();
 			var rowIdArr = new Array();
 			var itemTypeArr = new Array();
 			var itemMatIdxArr = new Array();
+			var itemMatCodeArr = new Array();
 			var itemSapCodeArr = new Array();
 			var itemNameArr = new Array();
 			var itemStandardArr = new Array();
@@ -787,6 +792,7 @@ var selectedArr = new Array();
 					var rowId = $(contRow).attr('id');
 					var itemType = $('#'+ rowId + ' input[name=itemType]').val();
 					var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+					var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
 					var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
 					var itemName = $('#'+ rowId + ' input[name=itemName]').val();
 					var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
@@ -796,6 +802,7 @@ var selectedArr = new Array();
 					rowIdArr.push(rowId);
 					itemTypeArr.push(itemType);
 					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
 					itemSapCodeArr.push(itemSapCode);
 					itemNameArr.push(itemName);
 					itemStandardArr.push(itemStandard);
@@ -804,11 +811,12 @@ var selectedArr = new Array();
 					itemDescArr.push(itemDesc);
 				});
 			}
-			
+
 			$('tr[id^=matRow]').toArray().forEach(function(contRow){
 				var rowId = $(contRow).attr('id');
 				var itemType = $('#'+ rowId + ' input[name=itemType]').val();
 				var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+				var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
 				var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
 				var itemName = $('#'+ rowId + ' input[name=itemName]').val();
 				var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
@@ -819,6 +827,7 @@ var selectedArr = new Array();
 					rowIdArr.push(rowId);
 					itemTypeArr.push(itemType);
 					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
 					itemSapCodeArr.push(itemSapCode);
 					itemNameArr.push(itemName);
 					itemStandardArr.push(itemStandard);
@@ -831,6 +840,7 @@ var selectedArr = new Array();
 			formData.append("rowIdArr", rowIdArr);
 			formData.append("itemTypeArr", itemTypeArr);
 			formData.append("itemMatIdxArr", itemMatIdxArr);
+			formData.append("itemMatCodeArr", itemMatCodeArr);
 			formData.append("itemSapCodeArr", itemSapCodeArr);
 			formData.append("itemNameArr", itemNameArr);
 			formData.append("itemStandardArr", itemStandardArr);
@@ -863,8 +873,50 @@ var selectedArr = new Array();
 							dataType:"json",
 							success:function(result) {
 								if( result.RESULT == 'S' ) {
-									alert($("#productName").val()+"("+$("#productCode").val()+")"+"가 정상적으로 개정되었습니다.");
-									fn_list();
+									//alert($("#productName").val()+"("+$("#productCode").val()+")"+"가 정상적으로 개정되었습니다.");
+									//fn_list();
+									if( result.IDX > 0 ) {
+										if( $("#apprLine option").length > 0 ) {
+											var apprFormData = new FormData();
+											apprFormData.append("docIdx", result.IDX );
+											apprFormData.append("apprComment", $("#apprComment").val());
+											apprFormData.append("apprLine", $("#apprLine").selectedValues());
+											apprFormData.append("refLine", $("#refLine").selectedValues());
+											apprFormData.append("title", $("#title").val());
+											apprFormData.append("docType", "PROD");
+											apprFormData.append("status", "N");
+											var URL = "../approval2/insertApprAjax";
+											$.ajax({
+												type:"POST",
+												url:URL,
+												dataType:"json",
+												data: apprFormData,
+												processData: false,
+										        contentType: false,
+										        cache: false,
+												success:function(data) {
+													if(data.RESULT == 'S') {
+														alert("결재상신이 완료되었습니다.");
+														fn_goList();
+													} else {
+														alert("결재선 상신 오류가 발생하였습니다."+data.MESSAGE);
+														fn_goList();
+														return;
+													}
+												},
+												error:function(request, status, errorThrown){
+													alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+													fn_goList();
+												}			
+											});
+										} else {
+											alert($("#productName").val()+"("+$("#productCode").val()+")"+"가 정상적으로 개정되었습니다.");
+											fn_goList();
+										}
+									} else {
+										alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+										fn_goList();
+									}
 								} else {
 									alert("오류가 발생하였습니다.\n"+result.MESSAGE);
 								}
@@ -882,7 +934,7 @@ var selectedArr = new Array();
 		}
 	}
 
-	function fn_list() {
+	function fn_goList() {
 		location.href = '/product/productList';
 	}
 	
@@ -902,6 +954,333 @@ var selectedArr = new Array();
 	    	alert("숫자만 입력가능합니다.");	    	
 	    	return;
 	    }	    
+	}
+	
+	$(function() {
+		// 자동 완성 설정
+		jQuery('#keyword').autocomplete({
+			minLength: 1,
+		    delay: 300,
+			source: function( request, response ) {
+				jQuery.ajax({
+					async : false,
+					type : 'POST',
+					dataType: 'json',
+					url: '/approval2/searchUserAjax',
+					data: { 'keyword' : jQuery('#keyword').val() },
+					success: function( data ) {
+						console.log(data);
+						response(jQuery.map(data, function(item){
+							return {
+								label : item.USER_NAME + ' / '+item.USER_ID + ' / '+'부서명' + ' / '+'팀명',
+								value : item.USER_NAME + ' / '+item.USER_ID + ' / '+'부서명' + ' / '+'팀명',
+								userId : item.USER_ID,
+								deptName : '부서명',
+								teamName : '팀명',
+								userName : item.USER_NAME
+							};
+						}));
+					}
+				});
+			},
+			select : function(event, ui){
+				console.log(ui.item.userId);
+				console.log(ui.item.userName);
+				console.log(ui.item.deptName);
+				console.log(ui.item.teamName);
+				
+				jQuery('#deptName').val('');
+				jQuery('#deptName').val(ui.item.deptName);
+				
+				jQuery('#teamName').val('');
+				jQuery('#teamName').val(ui.item.teamName);
+				
+				jQuery('#userId').val('');
+				jQuery('#userId').val(ui.item.userId);
+				
+				jQuery('#userName').val('');
+				jQuery('#userName').val(ui.item.userName);
+			},
+			focus : function( event, ui ) {
+				return false;
+			}
+		});	
+	});
+	
+	
+	function fn_loadApprovalLine() {
+		var URL = "../approval2/selectApprovalLineAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"docType" : "PROD"
+			},
+			dataType:"json",
+			async:false,
+			success:function(data) {
+				console.log(data);
+				$("#apprLineSelect").removeOption(/./);
+				data.forEach(function(item){
+					$("#apprLineSelect").addOption(item.LINE_IDX, item.NAME, false);	
+				});
+				
+			},
+			error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
+	}
+	
+	function fn_approvalAddLine(obj) {
+		var id = $(obj).attr("id");
+		var html = "";
+		if( id == 'appr_add_btn' ) {
+			if( $("#userId").val() == '' ) {
+				alert("결재자를 선택해주세요.");
+				return;
+			}
+			if( $("#apprLine").containsOption($("#userId").val()) ) {
+				alert("이미 등록된 결재자입니다.");
+				$("#keyword").val("");
+				$("#userId").val("");
+				$("#userName").val("");
+				$("#deptName").val("");
+				$("#teamName").val("");
+				return;
+			}
+			$("#apprLine").addOption($("#userId").val(), $("#userName").val(), true);
+			var lineLength = $("#apprLineList").children().length+1;
+			html = "<li>";
+			html += "<img src='../resources/images/icon_del_file.png' name='delImg' alt='' data-apprtype='A' onclick='fn_approvalRemoveLine(this);' >";
+			html += "<span id=\"lineLength\">"+lineLength+"차 결재</span> " + $("#userName").val();
+			html += "<strong>/" + $("#userId").val() + "/" + $("#deptName").val() + "/" + $("#teamName").val() + "</strong>";
+			html += "<input type='hidden' name='userIds' data-apprtype='A' value='" + $("#userId").val() + "'/>";
+			html += "</li>";
+			$("#apprLineList").append(html);
+			$("#keyword").val("");
+			$("#userId").val("");
+			$("#userName").val("");
+			$("#deptName").val("");
+			$("#teamName").val("");
+			
+			$("#apprLineList").children("li").toArray().forEach(function(item,index) { 
+				$(item).children("span").html((index+1)+"차 결재");
+			});
+			
+		} else if( id == 'ref_add_btn' ){
+			if( $("#userId").val() == '' ) {
+				return;
+			}
+			if( $("#refLine").containsOption($("#userId").val()) ) {
+				alert("이미 등록된 참조자입니다.");
+				$("#keyword").val("");
+				$("#userId").val("");
+				$("#userName").val("");
+				$("#deptName").val("");
+				$("#teamName").val("");
+				return;
+			}
+			$("#refLine").addOption($("#userId").val(), $("#userName").val(), true);
+			html = "<li>";
+			html += "<img src='../resources/images/icon_del_file.png' name='delImg' alt='' data-apprtype='R' onclick='fn_approvalRemoveLine(this);' >";
+			html += "<span>참조</span> " + $("#userName").val();
+			html += "<strong>/" + $("#userId").val() + "/" + $("#deptName").val() + "/" + $("#teamName").val() + "</strong>";
+			html += "<input type='hidden' name='userIds' data-apprtype='R' value='" + $("#userId").val() + "'/>";
+			html += "</li>";
+			$("#refLineList").append(html);
+			$("#keyword").val("");
+			$("#userId").val("");
+			$("#userName").val("");
+			$("#deptName").val("");
+			$("#teamName").val("");
+		}
+		
+	}
+	
+	function fn_approvalRemoveLine(obj) {
+		var apprtype = $(obj).data("apprtype");
+		console.log(apprtype);
+		if( apprtype == 'A' ) {
+			console.log("결재자 삭제");
+			$("#apprLine").removeOption($(obj).parent().children("input").val());
+			$(obj).parent().remove();
+			$("#apprLineList").children("li").toArray().forEach(function(item,index) { 
+				$(item).children("span").html((index+1)+"차 결재");
+			});
+		} else if( apprtype == 'R' ) {
+			console.log("참조자 삭제");
+			$("#refLine").removeOption($(obj).parent().children("input").val());
+			$(obj).parent().remove();
+		}
+	}
+	
+	
+	function fn_apprSubmit(){
+		if( $("#apprLine option").length == 0 ) {
+			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
+			return;
+		} else {
+			//$("#apprLine").removeOption(/./); 
+			//$("#refLine").removeOption(/./); 
+			var apprTxtFull = "";
+			$("#apprLine").selectedTexts().forEach(function( item, index ){
+				console.log(item);
+				if( apprTxtFull != "" ) {
+					apprTxtFull += " > ";
+				}
+				apprTxtFull += item;
+			});
+			$("#apprTxtFull").val(apprTxtFull);
+			//apprTxtFull
+			//refTxtFull
+			var refTxtFull = "";
+			$("#refLine").selectedTexts().forEach(function( item, index ){
+				if( refTxtFull != "" ) {
+					refTxtFull += ", ";
+				}
+				refTxtFull += item;
+			});
+			$("#refTxtFull").html("&nbsp;"+refTxtFull);
+		}
+		closeDialog('approval_dialog');
+	}
+	
+	function fn_apprOpen() {
+		fn_loadApprovalLine();
+		/*
+		$("#apprLine option").each(function(){
+			console.log($(this).text());
+			console.log($(this).val());
+		});
+		*/
+		openDialog('approval_dialog')
+	}
+	function fn_apprCancel(){
+		$("#apprLine").removeOption(/./);
+		$("#refLine").removeOption(/./);
+		$("#apprTxtFull").val("");
+		$("#refTxtFull").html("");
+		$("#apprLineList").html("");
+		$("#refLineList").html("");
+		$("#keyword").val("");
+		$("#userId").val("");
+		$("#userName").val("");
+		$("#deptName").val("");
+		$("#teamName").val("");
+		closeDialog('approval_dialog');
+	}
+	
+	function fn_apprLineSave(obj){
+		//apprLineName
+		if( !chkNull($("#apprLineName").val()) ) {
+			alert("결재라인 명을 입력해주세요.");
+			$("#apprLineName").focus();
+			return;
+		} else {
+			if( $("#apprLine option").length == 0 ) {
+				alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 저장해주세요.");
+				return;
+			} else {
+				var formData = new FormData();
+				formData.append("title", '${productData.data.TITLE}');
+				formData.append("apprLineName", $("#apprLineName").val());
+				formData.append("apprLine", $("#apprLine").selectedValues());
+				formData.append("docType", "PROD");
+				
+				var URL = "../approval2/insertApprLineAjax";
+				$.ajax({
+					type:"POST",
+					url:URL,
+					dataType:"json",
+					data: formData,
+					processData: false,
+			        contentType: false,
+			        cache: false,
+					success:function(data) {
+						if(data.RESULT == 'S') {
+							alert("등록되었습니다.");
+							fn_loadApprovalLine();
+						} else {
+							alert("결재선 저장시 오류가 발생하였습니다."+data.MESSAGE);
+							return;
+						}
+					},
+					error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					}			
+				});
+			}
+		}
+	}
+	
+	function fn_apprLineSaveCancel(obj){
+		$("#apprLineName").val("");
+	}
+	
+	function fn_changeApprLine(obj) {
+		console.log($("#apprLineSelect").selectedValues()[0]);
+		if( $("#apprLineSelect").selectedValues()[0] != "" ) {
+			var URL = "../approval2/selectApprovalLineItemAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data:{
+					"lineIdx" : $("#apprLineSelect").selectedValues()[0]
+				},
+				dataType:"json",
+				async:false,
+				success:function(data) {
+					console.log(data);
+					$("#apprLine").removeOption(/./);
+					$("#apprLineList").html("");
+					data.forEach(function(item){
+						$("#apprLine").addOption(item.USER_ID, item.USER_NAME, true);
+						var lineLength = $("#apprLineList").children().length+1;
+						html = "<li>";
+						html += "<img src='../resources/images/icon_del_file.png' name='delImg' alt='' data-apprtype='A' onclick='fn_approvalRemoveLine(this);' >";
+						html += "<span id=\"lineLength\">"+lineLength+"차 결재</span> " + item.USER_NAME;
+						html += "<strong>/" + item.USER_ID + "/" + item.DEPT_NAME + "/" + item.TEAM_NAME + "</strong>";
+						html += "<input type='hidden' name='userIds' data-apprtype='A' value='" + item.USER_ID + "'/>";
+						html += "</li>";
+						$("#apprLineList").append(html);
+					});
+				},
+				error:function(request, status, errorThrown){
+						alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
+	}
+	
+	function fn_deleteApprLine(obj){
+		if( $("#apprLineSelect").selectedValues()[0] != "" ) {
+			var URL = "../approval2/deleteApprLineAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data:{
+					"lineIdx" : $("#apprLineSelect").selectedValues()[0]
+				},
+				dataType:"json",
+				async:false,
+				success:function(data) {
+					if( data.RESULT == 'S' ) {
+						alert("삭제하였습니다.");
+						fn_loadApprovalLine();
+					} else {
+						alert("오류가 발생했습니다."+data.MESSAGE);
+					}
+					
+				},
+				error:function(request, status, errorThrown){
+					console.log(request);
+					console.log(status);
+					console.log(errorThrown);
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
 	}
 </script>
 <div class="wrap_in" id="fixNextTag">
@@ -955,6 +1334,19 @@ var selectedArr = new Array();
 								<c:if test="${productData.data.SAP_CODE == '' || productData.data.SAP_CODE == null}">
 								<button class="btn_small_search ml5" onclick="openDialog('dialog_erpMaterial')" style="float: left">조회</button>
 								</c:if>
+							</td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">결재라인</th>
+							<td colspan="3">
+								<input class="" id="apprTxtFull" name="apprTxtFull" type="text" style="width: 450px; float: left" readonly>
+								<button class="btn_small_search ml5" onclick="fn_apprOpen()" style="float: left">결재</button>
+							</td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">참조자</th>
+							<td colspan="3">
+								<div id="refTxtFull" name="refTxtFull"></div>								
 							</td>
 						</tr>
 						<tr>
@@ -1038,6 +1430,7 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="20">
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -1048,6 +1441,7 @@ var selectedArr = new Array();
 						<tr>
 							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1066,8 +1460,11 @@ var selectedArr = new Array();
 							</td>
 							<td>
 								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
 								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+							</td>
+							<td>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
 							</td>
 							<td>
 								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
@@ -1099,6 +1496,7 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="20">
 						<col width="140">
+						<col width="140">
 						<col width="250">
 						<col width="150">
 						<col width="200">
@@ -1109,6 +1507,7 @@ var selectedArr = new Array();
 						<tr>
 							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1127,8 +1526,11 @@ var selectedArr = new Array();
 							</td>
 							<td>
 								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'mat')"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'mat')"/>
 								<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+							</td>
+							<td>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}"/>								
 							</td>
 							<td>
 								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
@@ -1178,7 +1580,7 @@ var selectedArr = new Array();
 			
 			<div class="main_tbl">
 				<div class="btn_box_con5">
-					<button class="btn_admin_gray" onClick="fn_list();" style="width: 120px;">목록</button>
+					<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
 				</div>
 				<div class="btn_box_con4">
 					<!-- 
@@ -1186,7 +1588,7 @@ var selectedArr = new Array();
 					<button class="btn_admin_navi">임시저장</button>
 					 -->
 					<button class="btn_admin_sky" onclick="fn_insert()">개정</button>
-					<button class="btn_admin_gray" onclick="fn_list();">취소</button>
+					<button class="btn_admin_gray" onclick="fn_goList();">취소</button>
 				</div>
 				<hr class="con_mode" />
 			</div>
@@ -1221,8 +1623,11 @@ var selectedArr = new Array();
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1241,8 +1646,11 @@ var selectedArr = new Array();
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1296,7 +1704,7 @@ var selectedArr = new Array();
 					<thead>
 						<tr>
 							<th></th>
-							<th>SAP코드</th>
+							<th>ERP코드</th>
 							<th>상품명</th>
 							<th>보관기준</th>
 							<th>사이즈</th>
@@ -1445,7 +1853,8 @@ var selectedArr = new Array();
 					<colgroup>
 						<col width="40px">
 						<col width="10%">
-						<col width="20%">
+						<col width="10%">
+						<col width="15%">
 						<col width="8%">
 						<col width="8%">
 						<col width="8%">
@@ -1456,7 +1865,8 @@ var selectedArr = new Array();
 					<thead>
 						<tr>
 							<th></th>
-							<th>SAP코드</th>
+							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>상품명</th>
 							<th>보관기준</th>
 							<th>사이즈</th>
@@ -1469,17 +1879,96 @@ var selectedArr = new Array();
 					<tbody id="matLayerBody">
 						<input type="hidden" id="matLayerPage" value="0"/>
 						<Tr>
-							<td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td>
+							<td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td>
 						</Tr>
 					</tbody>
 				</table>
 				<!-- 뒤에 추가 리스트가 있을때는 클래스명 02로 숫자변경 -->
 				<div id="matNextPrevDiv" class="page_navi  mt10">
-					<button class="btn_code_left01" onclick="searchMaterial('prevPage')"></button>
-					<button class="btn_code_right02" onclick="searchMaterial('nextPage')"></button>
+					<button class="btn_code_left01" onclick="searchMaterial('prevPage','')"></button>
+					<button class="btn_code_right02" onclick="searchMaterial('nextPage','')"></button>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 <!-- 코드검색 추가레이어 close-->
+
+<!-- 결재 상신 레이어  start-->
+<div class="white_content" id="approval_dialog">
+ 	<input type="hidden" id="deptName" />
+	<input type="hidden" id="teamName" />
+	<input type="hidden" id="userId" />
+	<input type="hidden" id="userName"/>
+ 	<select style="display:none" id=apprLine name="apprLine" multiple>
+ 	</select>
+ 	<select style="display:none" id=refLine name="refLine" multiple>
+ 	</select>
+	<div class="modal" style="	margin-left:-500px;width:1000px;height: 550px;margin-top:-300px">
+		<h5 style="position:relative">
+			<span class="title">개발완료보고서 결재 상신</span>
+			<div  class="top_btn_box">
+				<ul><li><button class="btn_madal_close" onClick="fn_apprCancel(); return false;"></button></li></ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>
+					<dt style="width:20%">결재요청의견</dt>
+					<dd style="width:80%;">
+						<div class="insert_comment">
+							<table style=" width:756px">
+								<tr>
+									<td>
+										<textarea style="width:100%; height:50px" placeholder="의견을 입력하세요" name="apprComment" id="apprComment"></textarea>
+									</td>
+									<td width="98px"></td>
+								</tr>
+							</table>
+						</div>
+					</dd>
+				</li>
+				<li class="pt5">
+					<dt style="width:20%">결재자 입력</dt>
+					<dd style="width:80%;" class="ppp">
+						<input type="text" placeholder="결재자명 2자이상 입력후 선택" style="width:198px; float:left;" class="req" id="keyword" name="keyword">
+						<button class="btn_small01 ml5" onclick="fn_approvalAddLine(this); return false;" name="appr_add_btn" id="appr_add_btn">결재자 추가</button>
+						<button class="btn_small02  ml5" onclick="fn_approvalAddLine(this); return false;" name="ref_add_btn" id="ref_add_btn">참조</button>
+						<div class="selectbox ml5" style="width:180px;">
+							<label for="apprLineSelect">---- 결재라인 불러오기 ----</label>
+							<select id="apprLineSelect" name="apprLineSelect" onchange="fn_changeApprLine(this);">
+								<option value="">---- 결재라인 불러오기 ----</option>
+							</select>
+						</div>
+						<button class="btn_small02  ml5" onclick="fn_deleteApprLine(this); return false;">선택 결재라인 삭제</button>
+					</dd>
+				</li>
+				<li  class="mt5">
+					<dt style="width:20%; background-image:none;" ></dt>
+					<dd style="width:80%;">
+						<div class="file_box_pop2" style="height:190px;">
+							<ul id="apprLineList">
+							</ul>
+						</div>
+						<div class="file_box_pop3" style="height:190px;">
+							<ul id="refLineList">
+							</ul>
+						</div>
+						<!-- 현재 추가된 결재선 저장 버튼을 누르면 안보이게 처리 start -->
+						<div class="app_line_edit">
+							저장 결재선라인 입력 :  <input type="text" name="apprLineName" id="apprLineName" class="req" style="width:280px;"/> 
+							<button class="btn_doc" onclick="fn_apprLineSave(this);  return false;"><img src="../resources/images/icon_doc11.png"> 저장</button> 
+							<button class="btn_doc" onclick="fn_apprLineSaveCancel(this); return false;"><img src="../resources/images/icon_doc04.png">취소</button>
+						</div>
+						<!-- 현재 추가된 결재선 저장 버튼 눌렀을때 보이게 처리 close -->
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="btn_box_con4" style="padding:15px 0 20px 0">
+			<button class="btn_admin_red" onclick="fn_apprSubmit(); return false;">결재등록</button> 
+			<button class="btn_admin_gray" onclick="fn_apprCancel(); return false;">결재삭제</button>
+		</div>
+	</div>
+</div>
+<!-- 결재 상신 레이어  close-->

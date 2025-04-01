@@ -4,7 +4,7 @@
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="dateUtil" uri="/WEB-INF/tld/dateUtil.tld"%>
-<title>메뉴 개발완료보고서</title>
+<title>개선완료보고서 생성</title>
 <style>
 .positionCenter{
 	position: absolute;
@@ -18,97 +18,21 @@
 <link href="../resources/css/tree.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="../resources/js/jstree.js"></script>
 <script type="text/javascript">
+var selectedArr = new Array();
 	$(document).ready(function(){
 		CreateEditor("contents");		
 		fn_loadCategory();
+		
+		if( '${productData.data.PRODUCT_TYPE3}' != '' ) {
+			selectedArr.push('${productData.data.PRODUCT_TYPE3}');
+		}
+		if( '${productData.data.PRODUCT_TYPE2}' != '' ) {
+			selectedArr.push('${productData.data.PRODUCT_TYPE2}');
+		}
+		if( '${productData.data.PRODUCT_TYPE1}' != '' ) {
+			selectedArr.push('${productData.data.PRODUCT_TYPE1}');
+		}
 	});
-	
-	var selectedArr = new Array();
-	
-	
-	function loadCode(codeId,selectBoxId) {
-		var URL = "../common/codeListAjax";
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data:{ groupCode : codeId
-			},
-			dataType:"json",
-			async:false,
-			success:function(data) {
-				var list = data.RESULT;
-				$("#"+selectBoxId).removeOption(/./);
-				$("#"+selectBoxId).addOption("", "전체", false);
-				$.each(list, function( index, value ){ //배열-> index, value
-					$("#"+selectBoxId).addOption(value.itemCode, value.itemName, false);
-				});
-			},
-			error:function(request, status, errorThrown){
-					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-			}			
-		});
-	}
-	
-	function fn_loadCategory() {
-		var URL = "../test/categoryListAjax";
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data:{
-				pId : "2"
-			},
-			dataType:"json",
-			async:false,
-			success:function(data) {
-				fn_createJSTree(data);
-			},
-			error:function(request, status, errorThrown){
-					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-			}			
-		});
-	}
-	
-	function fn_createJSTree(data) {
-		$("#jsTree").jstree(
-			{
-				'core' : {
-					'data' : data
-				},
-				"plugins" : [ "wholerow" ]
-		   	}
-		).bind("loaded.jstree",function(){
-			 $(this).jstree("open_all");
-		}).on("select_node.jstree",function(e,data){
-			selectedArr = new Array();
-			console.log(e);
-			console.log("data : "+data);
-			var selectTxtFull = "";
-			var parents = data.node.parents;
-			var selectTxt = data.node.text;
-			var selectId = data.node.id;
-			console.log("parents : "+parents);
-			console.log("selectTxt : "+selectTxt);
-			selectedArr.push(selectId);
-			selectTxtFull += selectTxt;
-			
-			$.each(parents, function( index, value ){ //배열-> index, value
-				if( value != '#' ) { 
-					console.log($.jstree.reference('#jsTree').get_node(value).text);
-					//console.log($(this).jstree(true).get_node(value).text);					
-					selectedArr.push(value);
-					//selectTxtFull = $(this).jstree(true).get_node(value).text + ">" +selectTxtFull
-					selectTxtFull = $.jstree.reference('#jsTree').get_node(value).text + ">" +selectTxtFull
-				}
-			});
-			console.log(selectedArr);
-			//$("#selectTxtFull").html(selectTxtFull);
-			$("#selectTxtFull").val(selectTxtFull);
-			closeDialog('dialog_menu');
-		});
-		//.bind("refresh.jstree",function(){
-		//	
-		//});
-	}
 	
 	function fn_closeErpMatRayer(){
 		$('#searchErpMatValue').val('')
@@ -208,37 +132,75 @@
 	}
 	
 	function fn_setMaterialPopupData(SAP_CODE, NAME, KEEP_CONDITION, WIDTH, LENGTH, HEIGHT, TOTAL_WEIGHT, STANDARD, ORIGIN, EXPIRATION_DATE) {
-		$("#menuName").val(NAME);
-		$("#menuCode").val(SAP_CODE);
-		$("#isSample").val("N");
-		$("#keepCondition").val(KEEP_CONDITION);
-		//$("#width").val(WIDTH);
-		//$("#length").val(LENGTH);
-		//$("#height").val(HEIGHT);
-		$("#weight").val(TOTAL_WEIGHT);
-		$("#standard").val(STANDARD);
-		//$("#origin").val(ORIGIN);
-		$("#expireDate").val(EXPIRATION_DATE);
+		//$("#productName").val(NAME);
+		$("#productSapCode").val(SAP_CODE);
+		//$("#isSample").val("N");
+		//$("#keepCondition").val(KEEP_CONDITION);
+		//$("#weight").val(TOTAL_WEIGHT);
+		//$("#standard").val(STANDARD);
+		//$("#expireDate").val(EXPIRATION_DATE);
 		fn_closeErpMatRayer();
 	}
 	
-	function selectNewCode() {
-		console.log("새 코드를 조회한다.");
-		var URL = "../menu/selectNewCodeAjax";
+	function fn_loadCategory() {
+		var URL = "../test/categoryListAjax";
 		$.ajax({
 			type:"POST",
 			url:URL,
-			data:{},
+			data:{
+				pId : "2"
+			},
 			dataType:"json",
 			async:false,
 			success:function(data) {
-				$("#menuCode").val("P"+data);
-				$("#isSample").val("Y");
+				fn_createJSTree(data);
 			},
 			error:function(request, status, errorThrown){
-				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 			}			
 		});
+	}
+	
+	function fn_createJSTree(data) {
+		$("#jsTree").jstree(
+			{
+				'core' : {
+					'data' : data
+				},
+				"plugins" : [ "wholerow" ]
+		   	}
+		).bind("loaded.jstree",function(){
+			 $(this).jstree("open_all");
+		}).on("select_node.jstree",function(e,data){
+			selectedArr = new Array();
+			console.log(e);
+			console.log("data : "+data);
+			var selectTxtFull = "";
+			var parents = data.node.parents;
+			var selectTxt = data.node.text;
+			var selectId = data.node.id;
+			console.log("parents : "+parents);
+			console.log("selectTxt : "+selectTxt);
+			selectedArr.push(selectId);
+			selectTxtFull += selectTxt;
+			
+			$.each(parents, function( index, value ){ //배열-> index, value
+				if( value != '#' ) { 
+					//console.log($.jstree.reference('#jsTree').get_node(value).text);
+					//console.log($(this).jstree(true).get_node(value).text);					
+					selectedArr.push(value);
+					//selectTxtFull = $(this).jstree(true).get_node(value).text + ">" +selectTxtFull
+					selectTxtFull = $.jstree.reference('#jsTree').get_node(value).text + ">" +selectTxtFull
+				}
+			});
+			console.log(selectedArr);
+			//$("#selectTxtFull").html(selectTxtFull);
+			$("#selectTxtFull").val(selectTxtFull);
+			closeDialog('dialog_product');
+		});
+		//.bind("refresh.jstree",function(){
+		//	
+		//});
 	}
 	
 	/* 파일첨부 관련 함수 START */
@@ -331,7 +293,6 @@
 		//console.log($("#attatch_file").children().length);
 	}
 	
-	
 	function uploadFiles(){
 		if( attatchTempFileArr.length == 0 ) {
 			alert("파일을 등록해주세요.");
@@ -351,7 +312,7 @@
 		$("#attatch_file").html("");
 		attatchFileTypeArr.forEach(function(object,idx){
 			var tempId = object.tempId;
-			var childTag = '<li><a href="#none" onclick="removeFile(this, \''+tempId+'\')"><img src="/resources/images/icon_del_file.png"></a>'+attatchFileArr[idx].name+'</li>'
+			var childTag = '<li><a href="#none" onclick="removeFile(this, \''+tempId+'\')"><img src="/resources/images/icon_del_file.png"></a><span>'+object.fileTypeText+'</span>&nbsp;'+attatchFileArr[idx].name+'</li>'
 			$("#attatch_file").append(childTag);
 		});
 		
@@ -361,10 +322,10 @@
 			if($(this).is(":checked")==true){
 		    	$("#docTypeTemp").addOption($(this).val(), $(this).next("label").text(), true);
 		    	//if( index != 0 ) {
-	    		if( docTypeTxt != "" ){
-	    			docTypeTxt += ", ";
-	    		}
-	    		docTypeTxt += $(this).next("label").text();
+		    		if( docTypeTxt != "" ){
+		    			docTypeTxt += ", ";
+		    		}
+		    		docTypeTxt += $(this).next("label").text();
 		    	//} else {
 		    	//	docTypeTxt += $(this).next("label").text();
 		    	//}
@@ -414,7 +375,7 @@
 	}
 	
 	function addRow(element, type){
-			
+		
 		var randomId = randomId = Math.random().toString(36).substr(2, 9);
 		var randomId2 = randomId = Math.random().toString(36).substr(2, 9);
 		var row= '';
@@ -427,6 +388,7 @@
 		$(element).parent().parent().next().children('tbody').append(row);
 		var bodyId = $(element).parent().parent().next().children('tbody').attr('id').split('_')[1];
 		$(element).parent().parent().next().children('tbody').children('tr:last').attr('id', type + 'Row_' + randomId);
+		//$(element).parent().parent().next().children('tbody').children('tr:last').attr('id', 'matRow_' + randomId);
 		$(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('input[type=checkbox]').attr('id', type+'_'+randomId);
 		$(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('label').attr('for', type+'_'+randomId);
 		if( type == 'newMat' ) {
@@ -513,32 +475,27 @@
 		});
 	}
 	
-	function checkAll(e){
-		var tbody = $(e.target).parent().parent().parent().next();
-		tbody.children('tr').children('td').children('input[type=checkbox]').toArray().forEach(function(checkbox){
-			if(e.target.checked)
-				checkbox.checked = true;
-			else 
-				checkbox.checked = false;
-		})
-	}
-	
-	function checkMaterail(e){
+	function checkMaterail(e,type){
 		if(e.keyCode != 13){
 			return;
 		}
 		var element = e.target
 		
-		var userSapCode = e.target.value;
-		console.log(userSapCode);
+		//var userSapCode = e.target.value;
+		var userMatCode = e.target.value;
+		console.log(userMatCode);
 		var rowId = $(element).parent().parent().attr('id');
-		
+		var URL = '/product/checkMaterialAjax';
+		if( type == 'mat' ) {
+			URL = '/product/checkErpMaterialAjax';
+		}
 		$.ajax({
-			url: '/menu/checkMaterialAjax',
+			url: URL,
 			type: 'post',
 			dataType: 'json',
 			data: {
-				sapCode: userSapCode
+				matCode: userMatCode
+				, sapCode: userSapCode
 			},
 			success: function(data){
 				var materailList = data;
@@ -560,22 +517,15 @@
 							varKeepExp = varExp;
 						}
 					}
-					$('#'+rowId + ' input[name$=itemMatIdx]').val(MATERIAL_IDX);
-					$('#'+rowId + ' input[name$=itemSapCode]').val(SAP_CODE);
-					$('#'+rowId + ' input[name$=itemName]').val(item.NAME);
-					$('#'+rowId + ' input[name$=itemStandard]').val(nvl2(item.STANDARD,''));
-					$('#'+rowId + ' input[name$=itemKeepExp]').val(varKeepExp);
-					$('#'+rowId + ' input[name$=itemUnitPrice]').val(item.PRICE);
 					
 					if(item.isSample == 'Y'){
 						$('#'+rowId).css('background-color', '#ffdb8c'); //#ffdb8c
 					} else {
 						$('#'+rowId).css('background-color', '#fff');
 					}
-					
 				} else {
 					// popup
-					openMaterialPopup($(element).next());
+					openMaterialPopup($(element).next(),type);
 				}
 			},
 			error: function(a,b,c){
@@ -585,23 +535,27 @@
 		})
 	}
 		
-	function openMaterialPopup(element){
+	function openMaterialPopup(element,type){
 		var parentRowId = $(element).parent().parent('tr')[0].id;
 		$('#targetID').val(parentRowId);
 		openDialog('dialog_material');
 		
 		var matCode = $(element).prev().val();
+		console.log("matCode : "+matCode);
 		$('#searchMatValue').val(matCode);
 		$('#itemType').val(itemType);
-		
-		searchMaterial();
+		$('#searchType').val(type);
+		searchMaterial('',type);
 	}
 	
-	function searchMaterial(pageType){
+	function searchMaterial(pageType,type){
 		var pageType = pageType;
-		
+		var searchType = type;
 		if(!pageType)
-			$('#matLayerPage').val(1)
+			$('#matLayerPage').val(1);
+		
+		if(!searchType)
+			searchType = $('#searchType').val();
 			
 		if(pageType == 'nextPage'){
 			var totalCount = Number($('#matCount').text());
@@ -622,8 +576,14 @@
 			
 		$('#lab_loading').show();
 		console.log("searchMatValue  :  "+$('#searchMatValue').val());
+		
+		var URL = '/product/selectMaterialAjax';
+		if( searchType == 'mat' ) {
+			URL = '/test/selectErpMaterialListAjax';
+		}
+		
 		$.ajax({
-			url: '/menu/selectMaterialAjax',
+			url: URL,
 			type: 'post',
 			dataType: 'json',
 			data: {
@@ -638,11 +598,12 @@
 				
 				jsonData.list.forEach(function(item){
 					
-					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+item.SAP_CODE+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
+					var row = '<tr onClick="setMaterialPopupData(\''+$('#targetID').val()+'\', \''+item.MATERIAL_IDX+'\', \''+nvl(item.MATERIAL_CODE,'')+'\', \''+nvl(item.SAP_CODE,'')+'\', \''+item.NAME+'\', \''+item.PRICE+'\', \''+item.UNIT+'\', \''+item.STANDARD+'\', \''+item.KEEP_CONDITION+'\', \''+item.EXPIRATION_DATE+'\')">';
 					//parentRowId, itemImNo, itemSAPCode, itemName, itemUnitPrice
 					row += '<td></td>';
-					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';
-					row += '<Td>'+item.SAP_CODE+'</Td>';
+					//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';\
+					row += '<Td>'+nvl(item.MATERIAL_CODE,'')+'</Td>';
+					row += '<Td>'+nvl(item.SAP_CODE,'')+'</Td>';
 					row += '<Td  class="tgnl">'+item.NAME+'</Td>';
 					row += '<Td>'+nvl(item.KEEP_CONDITION,'')+'</Td>';
 					row += '<Td>'+nvl(item.WIDTH,'')+'/'+nvl(item.LENGTH,'')+'/'+nvl(item.HEIGHT,'')+'</Td>';
@@ -684,14 +645,17 @@
 	function fn_closeMatRayer(){
 		$('#searchMatValue').val('')
 		$('#matLayerBody').empty();
-		$('#matLayerBody').append('<tr><td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
+		$('#matLayerBody').append('<tr><td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td></tr>');
 		$('#matCount').text(0);
 		closeDialog('dialog_material');
 	}
 	
-	function setMaterialPopupData(parentRowId, itemMatIdx, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
+	function setMaterialPopupData(parentRowId, itemMatIdx, itemMatCode, itemSAPCode, itemName, itemUnitPrice, itemUnit, itemStandard, itemKeep, itemExp){
+		var varMatIdx = nvl2(itemMatIdx,'0');
 		var varKeep = nvl2(itemKeep,'');
 		var varExp = nvl2(itemExp,'');
+		var varPrice = nvl2(itemUnitPrice,'');
+
 		var varKeepExp = "";
 		if( varKeep != '' && varExp != '' ) {
 			varKeepExp = varKeep+" / "+varExp;
@@ -704,13 +668,14 @@
 				varKeepExp = varExp;
 			}
 		}
-		$('#'+parentRowId + ' input[name$=itemMatIdx]').val(itemMatIdx);
+		$('#'+parentRowId + ' input[name$=itemMatIdx]').val(varMatIdx);
+		$('#'+parentRowId + ' input[name$=itemMatCode]').val(itemMatCode);
 		$('#'+parentRowId + ' input[name$=itemSapCode]').val(itemSAPCode);
 		$('#'+parentRowId + ' input[name$=itemName]').val(itemName);
 		$('#'+parentRowId + ' input[name$=itemStandard]').val(nvl2(itemStandard,''));
 
 		$('#'+parentRowId + ' input[name$=itemKeepExp]').val(varKeepExp);
-		$('#'+parentRowId + ' input[name$=itemUnitPrice]').val(itemUnitPrice);
+		$('#'+parentRowId + ' input[name$=itemUnitPrice]').val(varPrice);
 				
 		fn_closeMatRayer();
 	}
@@ -728,29 +693,24 @@
 	}
 	
 	//입력확인
-	function fn_insert(){
+	function fn_update(){
 		var contents = editor.getData();
-		console.log("newMat value before insert:", $('input[name=newMat]:checked').val());
 		if( !chkNull($("#title").val()) ) {
 			alert("제목을 입력해 주세요.");
 			$("#title").focus();
 			return;
-		} else if( !chkNull($("#menuCode").val()) ) {
-			alert("메뉴 코드를 입력해 주세요.");
-			$("#menuCode").focus();
-			return;
-		} else if( !chkNull($("#menuName").val()) ) {
-			alert("메뉴명을 입력해 주세요.");
-			$("#menuName").focus();
+		} else if( !chkNull($("#productName").val()) ) {
+			alert("제품명을 입력해 주세요.");
+			$("#productName").focus();
 			return;
 		} else if( !chkNull($("#selectTxtFull").val()) ) {
-			alert("메뉴유형을 선택해 주세요.");
+			alert("제품유형을 선택해 주세요.");
 			return;
 		} else if( selectedArr.length == 0 ) {
-			alert("메뉴유형을 선택하여 주세요.");		
+			alert("제품유형을 선택하여 주세요.");		
 			return;
-		} else if( attatchFileArr.length == 0 ) {
-			alert("메뉴파일을 등록해주세요.");		
+		} else if( $("#temp_attatch_file").children("li").length == 0 && attatchFileArr.length == 0 ) {
+			alert("첨부파일을 등록해주세요.");		
 			return;
 		} else if( !chkNull(contents) ) {
 			alert("기안문을 작성해주세요.");		
@@ -781,408 +741,195 @@
 				}
 			}			
 			//기존 데이터 확인
-			var URL = "../menu/selectMenuDataCountAjax";
+			var formData = new FormData();
+			formData.append("idx",$("#idx").val());
+			formData.append("title",$("#title").val());
+			formData.append("productCode",$("#productCode").val());
+			formData.append("productSapCode",$("#productSapCode").val());
+			formData.append("currentIdx",$("#idx").val());
+			formData.append("currentVersionNo",$("#currentVersionNo").val());
+			formData.append("currentStatus",$("#currentStatus").val());
+			formData.append("docNo",$("#docNo").val());
+			formData.append("productName",$("#productName").val());
+			formData.append("weight",$("#weight").val());
+			formData.append("standard",$("#standard").val());
+			formData.append("keepCondition",$("#keepCondition").val());
+			formData.append("expireDate",$("#expireDate").val());
+			formData.append("contents",contents);
+			formData.append("newMat",$('input[name=newMat]:checked').val());
+			formData.append("productType",selectedArr);
+			
+			for (var i = 0; i < attatchFileArr.length; i++) {
+				formData.append('file', attatchFileArr[i])
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileType', attatchFileTypeArr[i].fileType)			
+			}
+			
+			$('select[name=docTypeTemp] option:selected').each(function(index){
+				formData.append('docType', $(this).attr('value'));
+				formData.append('docTypeText', $(this).text());
+			});
+			
+			var rowIdArr = new Array();
+			var itemTypeArr = new Array();
+			var itemMatIdxArr = new Array();
+			var itemMatCodeArr = new Array();
+			var itemSapCodeArr = new Array();
+			var itemNameArr = new Array();
+			var itemStandardArr = new Array();
+			var itemKeepExpArr = new Array();
+			var itemUnitPriceArr = new Array();
+			var itemDescArr = new Array();
+			
+			if( $('input[name=newMat]:checked').val() == 'Y' ) {
+				$('tr[id^=newMatRow]').toArray().forEach(function(contRow){
+					var rowId = $(contRow).attr('id');
+					var itemType = $('#'+ rowId + ' input[name=itemType]').val();
+					var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+					var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
+					var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
+					var itemName = $('#'+ rowId + ' input[name=itemName]').val();
+					var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
+					var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
+					var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
+					var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
+					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
+					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
+					itemSapCodeArr.push(itemSapCode);
+					itemNameArr.push(itemName);
+					itemStandardArr.push(itemStandard);
+					itemKeepExpArr.push(itemKeepExp);
+					itemUnitPriceArr.push(itemUnitPrice);
+					itemDescArr.push(itemDesc);
+				});
+			}
+
+			$('tr[id^=matRow]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemType = $('#'+ rowId + ' input[name=itemType]').val();
+				var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+				var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
+				var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
+				var itemName = $('#'+ rowId + ' input[name=itemName]').val();
+				var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
+				var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
+				var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
+				var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
+				if( itemSapCode != '' ) {
+					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
+					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
+					itemSapCodeArr.push(itemSapCode);
+					itemNameArr.push(itemName);
+					itemStandardArr.push(itemStandard);
+					itemKeepExpArr.push(itemKeepExp);
+					itemUnitPriceArr.push(itemUnitPrice);
+					itemDescArr.push(itemDesc);
+				}
+			});
+			
+			formData.append("rowIdArr", rowIdArr);
+			formData.append("itemTypeArr", itemTypeArr);
+			formData.append("itemMatIdxArr", itemMatIdxArr);
+			formData.append("itemMatCodeArr", itemMatCodeArr);
+			formData.append("itemSapCodeArr", itemSapCodeArr);
+			formData.append("itemNameArr", itemNameArr);
+			formData.append("itemStandardArr", itemStandardArr);
+			formData.append("itemKeepExpArr", itemKeepExpArr);
+			formData.append("itemUnitPriceArr", itemUnitPriceArr);
+			formData.append("itemDescArr", itemDescArr);
+			
+			var URL = "../product/updateProductAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
-				data:{
-					"menuCode":$("#menuCode").val()
-				},
+				data: formData,
+				processData: false,
+		        contentType: false,
+		        cache: false,
 				dataType:"json",
 				success:function(result) {
-					if( result.COUNT > 0 ) {
-						alert("이미 존재하는 코드입니다.");
-					    return;
+					if( result.RESULT == 'S' ) {
+						alert("수정되었습니다.");
+						fn_list();
 					} else {
-						var formData = new FormData();
-						formData.append("title",$("#title").val());
-						formData.append("menuCode",$("#menuCode").val());
-						formData.append("menuName",$("#menuName").val());
-						formData.append("contents",contents);
-						formData.append("newMat",$('input[name=newMat]:checked').val());
-						formData.append("menuType",selectedArr);
-						
-						for (var i = 0; i < attatchFileArr.length; i++) {
-							formData.append('file', attatchFileArr[i])
-						}
-						
-						for (var i = 0; i < attatchFileTypeArr.length; i++) {
-							formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
-						}
-						
-						for (var i = 0; i < attatchFileTypeArr.length; i++) {
-							formData.append('fileType', attatchFileTypeArr[i].fileType)			
-						}
-						
-						$('select[name=docTypeTemp] option:selected').each(function(index){
-							formData.append('docType', $(this).attr('value'));
-							formData.append('docTypeText', $(this).text());
-						});
-						
-						$('select[name=tempFileList] option:selected').each(function(index){
-							formData.append('tempFile', $(this).attr('value'));							
-						});
-						
-						var rowIdArr = new Array();
-						var itemTypeArr = new Array();
-						var itemMatIdxArr = new Array();
-						var itemSapCodeArr = new Array();
-						var itemNameArr = new Array();
-						var itemStandardArr = new Array();
-						var itemKeepExpArr = new Array();
-						var itemUnitPriceArr = new Array();
-						var itemDescArr = new Array();
-						
-						if( $('input[name=newMat]:checked').val() == 'Y' ) {
-							$('tr[id^=newMatRow]').toArray().forEach(function(contRow){
-								var rowId = $(contRow).attr('id');
-								var itemType = $('#'+ rowId + ' input[name=itemType]').val();
-								var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
-								var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
-								var itemName = $('#'+ rowId + ' input[name=itemName]').val();
-								var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
-								var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
-								var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
-								var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
-								rowIdArr.push(rowId);
-								itemTypeArr.push(itemType);
-								itemMatIdxArr.push(itemMatIdx);
-								itemSapCodeArr.push(itemSapCode);
-								itemNameArr.push(itemName);
-								itemStandardArr.push(itemStandard);
-								itemKeepExpArr.push(itemKeepExp);
-								itemUnitPriceArr.push(itemUnitPrice);
-								itemDescArr.push(itemDesc);
-							});
-						}
-						
-						$('tr[id^=matRow]').toArray().forEach(function(contRow){
-							var rowId = $(contRow).attr('id');
-							var itemType = $('#'+ rowId + ' input[name=itemType]').val();
-							var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
-							var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
-							var itemName = $('#'+ rowId + ' input[name=itemName]').val();
-							var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
-							var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
-							var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
-							var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
-							if( itemSapCode != '' ) {
-								rowIdArr.push(rowId);
-								itemTypeArr.push(itemType);
-								itemMatIdxArr.push(itemMatIdx);
-								itemSapCodeArr.push(itemSapCode);
-								itemNameArr.push(itemName);
-								itemStandardArr.push(itemStandard);
-								itemKeepExpArr.push(itemKeepExp);
-								itemUnitPriceArr.push(itemUnitPrice);
-								itemDescArr.push(itemDesc);
-							}
-						});
-						
-						formData.append("rowIdArr", rowIdArr);
-						formData.append("itemTypeArr", itemTypeArr);						
-						formData.append("itemMatIdxArr", itemMatIdxArr);
-						formData.append("itemSapCodeArr", itemSapCodeArr);
-						formData.append("itemNameArr", itemNameArr);
-						formData.append("itemStandardArr", itemStandardArr);
-						formData.append("itemKeepExpArr", itemKeepExpArr);
-						formData.append("itemUnitPriceArr", itemUnitPriceArr);
-						formData.append("itemDescArr", itemDescArr);
-						
-						URL = "../menu/insertMenuAjax";
-						$.ajax({
-							type:"POST",
-							url:URL,
-							data: formData,
-							processData: false,
-					        contentType: false,
-					        cache: false,
-							dataType:"json",
-							success:function(result) {
-								if( result.RESULT == 'S' ) {
-									alert($("#menuName").val()+"("+$("#menuCode").val()+")"+"가 정상적으로 생성되었습니다.");
-									fn_list();
-								} else {
-									alert("오류가 발생하였습니다.\n"+result.MESSAGE);
-								}
-							},
-							error:function(request, status, errorThrown){
-								alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-							}			
-						});
-						
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
 					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 				}			
 			});
-			
-			//formdata 설정 및 저장
 		}
 	}
 
 	function fn_list() {
-		location.href = '/menu/menuList';
+		location.href = '/product/productList';
 	}
 	
 	function nvl2(str, defaultStr){
-	    
-	    if(typeof str == "undefined" || str == null || str == "" || str == "null")
+	    if(typeof str == "undefined" || str == "undefined" || str == null || str == "" || str == "null")
 	        str = defaultStr ;
 	     
 	    return str ;
 	}
 	
-	function fn_copySearch() {
-		fn_loadSearchCategory(2,1);
-		openDialog('dialog_search');			
+	function chkNum(obj) {
+		var numStr = obj.value;
+	    var regex = /^[0-9]*$/; // 숫자만 체크
+	    if( !regex.test(numStr) ) {
+	    	numStr = numStr.replace(/[^\d]/g,"");
+	    	$(obj).val(numStr);
+	    	alert("숫자만 입력가능합니다.");	    	
+	    	return;
+	    }	    
 	}
 	
-	function fn_loadSearchCategory(pIdx, level) {
-		
-		if( level == 2 ) {
-			$("#searchCategory"+(level+1)).removeOption(/./);
-			$("#searchCategory"+(level+1)+"_div").hide();
-		}
-		
-		if( pIdx == '' ) {
-			$("#searchCategory"+level).removeOption(/./);
-			$("#searchCategory"+level+"_div").hide();
-			return;
-		}
-		
-		var URL = "../test/selectCategoryByPIdAjax";
+	function fn_removeTempFile(element, tempId){
+		//서버의 파일을 삭제한다.
+		var URL = '/product/deleteFileAjax';
 		$.ajax({
 			type:"POST",
 			url:URL,
-			data:{
-				pIdx : pIdx
-			},
-			dataType:"json",
-			async:false,
-			success:function(data) {
-				var list = data;
-				$("#searchCategory"+level).removeOption(/./);
-				$("#searchCategory"+level).addOption("", "전체", false);
-				$("#searchCategory"+level+"_label").html("전체");
-				if( list.length > 0 ) {
-					$("#searchCategory"+level+"_div").show();
-					$.each(list, function( index, value ){ //배열-> index, value
-						$("#searchCategory"+level).addOption(value.CATEGORY_IDX, value.CATEGORY_NAME, false);
-					});
-				}
-			},
-			error:function(request, status, errorThrown){
-					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-			}			
-		});
-	}
-	
-	function fn_search() {
-		var URL = "../menu/selectSearchMenuAjax";
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data:{
-				searchValue : $("#searchValue").val()
-				, "searchCategory1" : $("#searchCategory1").selectedValues()[0]
-				, "searchCategory2" : $("#searchCategory2").selectedValues()[0]
-				, "searchCategory3" : $("#searchCategory3").selectedValues()[0]
+			data: {
+				"fileIdx": tempId
 			},
 			dataType:"json",
 			success:function(result) {
-				console.log(result);
-				//productLayerBody
-				var jsonData = {};
-				jsonData = result;
-				$('#productLayerBody').empty();
-				console.log(jsonData.list.length);
-				if( jsonData.list.length == 0 ) {
-					var html = "";
-					$("#productLayerBody").html(html);
-					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
-					$("#productLayerBody").html(html);
+				if( result.RESULT == 'S' ) {
+					$(element).parent().remove();
 				} else {
-					jsonData.list.forEach(function(item){
-						var row = '<tr onClick="fn_copy(\''+item.MENU_IDX+'\')">';
-						row += '<td></td>';
-						row += '<td>'+item.MENU_CODE+'</td>';
-						row += '<td  class="tgnl">'+item.NAME+'</td>';
-						row += '<td>'+item.VERSION_NO+'</td>';
-						row += "<td><div class=\"ellipsis_txt tgnl\">";
-						if( chkNull(item.CATEGORY_NAME1) ) {
-							row += item.CATEGORY_NAME1;
-						}
-						if( chkNull(item.CATEGORY_NAME2) ) {
-							row += " > "+item.CATEGORY_NAME2;
-						}
-						if( chkNull(item.CATEGORY_NAME3) ) {
-							row += " > "+item.CATEGORY_NAME3;
-						}
-						row += "</div></td>";
-						row += '</tr>';
-						$('#productLayerBody').append(row);
-					})
+					alert("오류가 발생하였습니다.\n"+result.MESSAGE);
 				}
 			},
 			error:function(request, status, errorThrown){
-				var html = "";
-				$("#productLayerBody").html(html);
-				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
-				$("#productLayerBody").html(html);
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 			}			
 		});
-	}
-	
-	function fn_copy(idx) {
-		console.log(idx);
-		var URL = "../menu/selectMenuDataAjax";
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data:{
-				idx : idx
-			},
-			dataType:"json",
-			success:function(result) {
-				//console.log(result);
-				var data = result.menuData.data;
-				var fileList = result.menuData.fileList;
-				var fileType = result.menuData.fileType;
-				var materialList = result.menuMaterialData;
-				
-				$("#productSapCode").val(data.SAP_CODE);
-				$("#menuName").val(data.NAME);
-				$("#weight").val(data.TOTAL_WEIGHT);
-				$("#standard").val(data.STANDARD);
-				$("#keepCondition").val(data.KEEP_CONDITION);
-				$("#expireDate").val(data.EXPIRATION_DATE);
-				var selectTxtFull = "";
-				if( !chkNull(data.MENU_TYPE1) ) {
-					selectTxtFull += data.MENU_TYPE_NAME1;
-				}
-				if( !chkNull(data.MENU_TYPE2) ) {
-					selectTxtFull += " > "+data.MENU_TYPE_NAME2;
-				}
-				if( !chkNull(data.MENU_TYPE3) ) {
-					selectTxtFull += " > "+data.MENU_TYPE_NAME3;
-				}
-				
-				$("#selectTxtFull").val(selectTxtFull);
-				
-				if( !chkNull(data.MENU_TYPE3) ) {
-					selectedArr.push(data.MENU_TYPE3);
-				}
-				if( !chkNull(data.MENU_TYPE2) ) {
-					selectedArr.push(data.MENU_TYPE2);
-				}
-				if( !chkNull(data.MENU_TYPE1) ) {
-					selectedArr.push(data.MENU_TYPE1);
-				}
-				$("input[name='newMat'][value='"+data.IS_NEW_MATERIAL+"']").prop("checked", true);
-				
-				var netMatCnt = 0;
-				var matCnt = 0;
-				materialList.forEach(function(item){
-					if( item.MATERIAL_TYPE == 'Y' ){
-						netMatCnt++;
-					} else {
-						matCnt++;
-					}
-				});
-				
-				if( data.IS_NEW_MATERIAL == 'Y' ) {
-					if( netMatCnt > 0 ) {
-						$("#newMatTbody").html("");
-						$("#matNewDiv").show();
-						materialList.forEach(function(item){
-							if( item.MATERIAL_TYPE == 'Y' ){
-								$("#matNew_add_btn").trigger("click");
-								var trObj = $("#newMatTbody tr:last");
-								trObj.find("input[name='itemMatIdx']").val(item.MATERIAL_IDX);
-								trObj.find("input[name='itemSapCode']").val(item.SAP_CODE);
-								trObj.find("input[name='itemName']").val(item.NAME);
-								trObj.find("input[name='itemStandard']").val(item.STANDARD);
-								trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
-								trObj.find("input[name='itemUnitPrice']").val(item.UNIT_PRICE);
-								trObj.find("input[name='itemDesc']").val(item.DESCRIPTION);
-							}
-						});
-					}
-				}
-				
-				if( matCnt > 0 ) {
-					$("#matTbody").html("");
-					materialList.forEach(function(item){
-						if( item.MATERIAL_TYPE == 'N' ){
-							$("#mat_add_btn").trigger("click");
-							var trObj = $("#matTbody tr:last");
-							trObj.find("input[name='itemMatIdx']").val(item.MATERIAL_IDX);
-							trObj.find("input[name='itemSapCode']").val(item.SAP_CODE);
-							trObj.find("input[name='itemName']").val(item.NAME);
-							trObj.find("input[name='itemStandard']").val(item.STANDARD);
-							trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
-							trObj.find("input[name='itemUnitPrice']").val(item.UNIT_PRICE);
-							trObj.find("input[name='itemDesc']").val(item.DESCRIPTION);
-						}
-					});
-				} else {
-					$("#matTbody").html("");
-					$("#mat_add_btn").trigger("click");
-				}
-				
-				var fileTypeTxt = "";
-				fileType.forEach(function(item,index){
-					$("#docTypeTemp").addOption(item.FILE_TYPE, item.FILE_TEXT, true);
-					if( fileTypeTxt != ""  ){
-						fileTypeTxt += ", ";
-					}
-					fileTypeTxt += item.FILE_TEXT;
-				});
-				$("#docTypeTxt").html(fileTypeTxt);
-
-				console.log(fileList);
-				if( fileList.length > 0 ) {
-					$("#temp_file").show();
-					fileList.forEach(function(item,index){
-						$("#tempFileList").addOption(item.FILE_IDX, item.ORG_FILE_NAME, true);
-						var childTag = '<li><a href="#none" onclick="removeTempFile(this, \''+item.FILE_IDX+'\')"><img src="/resources/images/icon_del_file.png"></a>'+item.ORG_FILE_NAME+'</li>'
-						$("#temp_attatch_file").append(childTag);
-					});
-				}
-			},
-			error:function(request, status, errorThrown){
-
-			}			
-		});
-		fn_closeSearch();
-	}
-	function fn_closeSearch() {
-		closeDialog('dialog_search');
-		$("#searchValue").val("");
-		$("#searchCategory1").removeOption(/./);
-		$("#searchCategory2").removeOption(/./);
-		$("#searchCategory2_div").hide();
-		$("#searchCategory3").removeOption(/./);
-		$("#searchCategory3_div").hide();
-		$("#productLayerBody").html("<tr><td colspan=\"5\">제품코드 혹은 제품명을 검색해주세요</td></tr>");
 	}
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
-		메뉴 개발완료보고서&nbsp;&nbsp;
-		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;메뉴 완료보고서&nbsp;&nbsp;
+		제품개선완료보고서&nbsp;&nbsp;
+		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;제품 완료보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;<a href="#none">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 		<h2 style="position:relative">
-			<span class="title_s">Menu Complete Doc</span><span class="title">메뉴 개발완료보고서</span>
+			<span class="title_s">Product Update Doc</span><span class="title">제품개선완료보고서</span>
 			<div class="top_btn_box">
 				<ul>
 					<li>
-						<button class="btn_circle_modifiy" onclick="fn_copySearch()">&nbsp;</button>
-						<button class="btn_circle_save" onclick="fn_insert()">&nbsp;</button>
+						<button class="btn_circle_save" onclick="fn_update()">&nbsp;</button>
 					</li>
 				</ul>
 			</div>
@@ -1203,47 +950,86 @@
 					<tbody>
 						<tr>
 							<th style="border-left: none;">제목</th>
-							<td colspan="5"><input type="text" name="title" id="title" style="width: 90%;" class="req" /></td>
+							<td colspan="5">
+								<input type="text" name="title" id="title" style="width: 90%;" class="req" value="${productData.data.TITLE}"/>
+							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">제품코드</th>
 							<td>
-								<input type="hidden"  name="isSample" id="isSample" value="N"/>
-								<input type="text"  style="width:200px; float: left" class="req" name="menuCode" id="menuCode" placeholder="코드를 생성 하세요." readonly/>
-								<button class="btn_small_search ml5" onclick="selectNewCode()" style="float: left">생성</button>
+								${productData.data.PRODUCT_CODE}
+								<input type="hidden" name="idx" id="idx" value="${productData.data.PRODUCT_IDX}"/>
+								<input type="hidden" name="docNo" id="docNo" value="${productData.data.DOC_NO}"/>
+								<input type="hidden" name="currentVersionNo" id="currentVersionNo" value="${productData.data.VERSION_NO}"/>
+								<input type="hidden" name="currentStatus" id="currentStatus" value="${productData.data.STATUS}"/>
+								<input type="hidden" name="productCode" id="productCode" value="${productData.data.PRODUCT_CODE}"/>
 							</td>
 							<th style="border-left: none;">상품코드</th>
 							<td>
-								<input type="text"  style="width:200px; float: left" class="req" name="productSapCode" id="productSapCode" placeholder="코드를 조회 하세요." readonly/>
+								<input type="text" style="width:200px; float: left" class="req" name="productSapCode" id="productSapCode" value="${productData.data.SAP_CODE}" readonly/>
 								<button class="btn_small_search ml5" onclick="openDialog('dialog_erpMaterial')" style="float: left">조회</button>
 							</td>
-
 						</tr>
 						<tr>
-							<th style="border-left: none;">메뉴유형</th>
+							<th style="border-left: none;">제품명</th>
 							<td>
-								<input class="" id="selectTxtFull" name="selectTxtFull" type="text" style="width: 300px; float: left" readonly>
-								<button class="btn_small_search ml5" onclick="openDialog('dialog_menu')" style="float: left">조회</button>
+								<input type="text" style="width:350px; float: left" class="req" name="productName" id="productName" value="${productData.data.NAME}"/>
 							</td>
-							<th style="border-left: none;">메뉴명</th>
+							<th style="border-left: none;">버젼 NO.</th>
 							<td>
-								<input type="text"  style="width:200px; float: left" class="req" name="menuName" id="menuName"/>
+								${productData.data.VERSION_NO}
+							</td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">중량</th>
+							<td>
+								<input type="text"  style="width:200px; float: left" class="" name="weight" id="weight" value="${productData.data.TOTAL_WEIGHT}"/>
+							</td>
+							<th style="border-left: none;">제품규격</th>
+							<td>
+								<input type="text"  style="width:350px; float: left" class="" name="standard" id="standard" value="${productData.data.STANDARD}"/>								
+							</td>
+							
+						</tr>
+						<tr>
+							<th style="border-left: none;">보관방법</th>
+							<td>
+								<input type="text"  style="width:350px; float: left" class="" name="keepCondition" id="keepCondition" value="${productData.data.KEEP_CONDITION}"/>
+							</td>
+							<th style="border-left: none;">소비기한</th>
+							<td>
+								<input type="text"  style="width:350px; float: left" class="" name="expireDate" id="expireDate" value="${productData.data.EXPIRATION_DATE}"/>								
+							</td>							
+						</tr>
+						<tr>
+							<th style="border-left: none;">제품유형</th>
+							<td colspan="5">
+								<input class="" id="selectTxtFull" name="selectTxtFull" type="text" style="width: 450px; float: left" 
+								value="${productData.data.PRODUCT_TYPE_NAME1}>${productData.data.PRODUCT_TYPE_NAME2}>${productData.data.PRODUCT_TYPE_NAME3}" readonly>
+								<button class="btn_small_search ml5" onclick="openDialog('dialog_product')" style="float: left">조회</button>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">신규원료사용 유무</th>
 							<td colspan="5">
-								<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)" checked="checked">
+								<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)" checked="${productData.data.IS_NEW_MATERIAL == 'N' ? 'checked' : ''}">
 								<label for="newMat1"><span></span>사용안함</label>
-								<input type="radio" name="newMat" id="newMat2" onclick="changeNewMat(event)" value="Y">
+								<input type="radio" name="newMat" id="newMat2" onclick="changeNewMat(event)" value="Y" checked="${productData.data.IS_NEW_MATERIAL == 'Y' ? 'checked' : ''}">
 								<label for="newMat2"><span></span>사용</label>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">첨부파일 유형</th>
 							<td colspan="5">
-								<div id="docTypeTxt"></div>
+								<div id="docTypeTxt">
+									<c:forEach items="${productData.fileType}" var="fileType" varStatus="status">
+										<c:if test="${status.index ne 0}">, </c:if>${fileType.FILE_TEXT}
+									</c:forEach>
+								</div>
 								<select id="docTypeTemp" name="docTypeTemp" multiple style='display:none'>
+									<c:forEach items="${productData.fileType}" var="fileType" varStatus="status">
+									<option value="${fileType.FILE_TYPE}" selected>${fileType.FILE_TEXT}</option>
+									</c:forEach>
 								</select>
 							</td>
 						</tr>
@@ -1251,19 +1037,20 @@
 				</table>
 			</div>
 			
-			<div id="matDiv">
+			<div id="matNewDiv" style="${productData.data.IS_NEW_MATERIAL == 'N' ? 'display:none' : ''}">
 				<div class="title2" style="float: left; margin-top: 30px;">
-					<span class="txt">원료</span>
+					<span class="txt">신규원료</span>
 				</div>
 				<div id="matHeaderDiv" class="table_header07">
 					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
 					<span class="table_header_btn_box">
-						<button class="btn_add_tr" onclick="addRow(this, 'mat')" id="mat_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+						<button class="btn_add_tr" onclick="addRow(this, 'newMat')"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
 					</span>
 				</div>
 				<table id="matTable" class="tbl05">
 					<colgroup>
 						<col width="20">
+						<col width="140">
 						<col width="140">
 						<col width="250">
 						<col width="150">
@@ -1275,6 +1062,7 @@
 						<tr>
 							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1283,43 +1071,52 @@
 						</tr>
 					</thead>
 					<tbody id="matTbody" name="matTbody">
-						<tr id="matRow_1" class="temp_color">
+					<c:forEach items="${productMaterialData}" var="productMaterialData" varStatus="status">
+						<c:if test="${productMaterialData.MATERIAL_TYPE == 'Y' }">
+						<tr id="newMatRow_${status.count}" class="temp_color">
 							<td>
-								<input type="checkbox" id="mat_2"><label for="mat_2"><span></span></label>
-								<input type="hidden" name="itemType" value="N"/>
+								<input type="checkbox" id="mat_${status.count}"><label for="mat_${status.count}"><span></span></label>
+								<input type="hidden" name="itemType" value="${productMaterialData.MATERIAL_TYPE}"/>
+								<input type="hidden" name="itemTypeName"/>
 							</td>
 							<td>
-								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
-								<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
+								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
 							</td>
 							<td>
-								<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
 							</td>
-							<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
-							<td><input type="text" name="itemDesc" style="width: 100%"/></td>
+							<td>
+								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
+							</td>
+							<td><input type="text" name="itemStandard" style="width: 100%" value="${productMaterialData.STANDARD}" class=""/></td>
+							<td><input type="text" name="itemKeepExp" style="width: 100%" value="${productMaterialData.KEEP_EXP}" class=""/></td>
+							<td><input type="text" name="itemUnitPrice" style="width: 100%"  value="${productMaterialData.UNIT_PRICE}" readonly="readonly" class="read_only"/></td>
+							<td><input type="text" name="itemDesc" style="width: 100%" value="${productMaterialData.DESCRIPTION}"/></td>
 						</tr>
+						</c:if>	
+					</c:forEach>	
 					</tbody>
 					<tfoot>
 					</tfoot>
 				</table>
 			</div>
 			
-						<div id="matNewDiv" style="display:none">
+			<div id="matDiv">
 				<div class="title2" style="float: left; margin-top: 30px;">
-					<span class="txt">신규원료</span>
+					<span class="txt">원료</span>
 				</div>
 				<div id="matHeaderDiv" class="table_header07">
 					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
 					<span class="table_header_btn_box">
-						<button class="btn_add_tr" onclick="addRow(this, 'newMat')" id="matNew_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+						<button class="btn_add_tr" onclick="addRow(this, 'mat')"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
 					</span>
 				</div>
 				<table id="matTable" class="tbl05">
 					<colgroup>
 						<col width="20">
+						<col width="140">
 						<col width="140">
 						<col width="250">
 						<col width="150">
@@ -1329,8 +1126,9 @@
 					</colgroup>
 					<thead>
 						<tr>
-							<th><input type="checkbox" id="matTable_2" onclick="checkAll(event)"><label for="matTable_2"><span></span></label></th>
+							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
 							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>원료명</th>
 							<th>규격</th>
 							<th>보관방법 및 유통기한</th>
@@ -1338,30 +1136,40 @@
 							<th>비고</th>
 						</tr>
 					</thead>
-					<tbody id="newMatTbody" name="newMatTbody">
-						<Tr id="newMatRow_1" class="temp_color">
+					<tbody id="matTbody" name="matTbody">
+					<c:forEach items="${productMaterialData}" var="productMaterialData" varStatus="status">
+						<c:if test="${productMaterialData.MATERIAL_TYPE == 'N' }">
+						<tr id="matRow_${status.count}" class="temp_color">
 							<td>
-								<input type="checkbox" id="mat_1"><label for="mat_1"><span></span></label>
-								<input type="hidden" name="itemType" value="Y"/>
+								<input type="checkbox" id="mat_${status.count}"><label for="mat_${status.count}"><span></span></label>
+								<input type="hidden" name="itemType" value="${productMaterialData.MATERIAL_TYPE}"/>
+								<input type="hidden" name="itemTypeName"/>
 							</td>
 							<td>
-								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
-								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_IDX}"/>
+								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.MATERIAL_CODE}" onkeyup="checkMaterail(event,'mat')"/>
+								<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
 							</td>
 							<td>
-								<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${productMaterialData.SAP_CODE}"/>								
 							</td>
-							<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
-							<td><input type="text" name="itemDesc" style="width: 100%"/></td>
-						</Tr>
+							<td>
+								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${productMaterialData.NAME}" class="read_only" />
+							</td>
+							<td><input type="text" name="itemStandard" style="width: 100%" value="${productMaterialData.STANDARD}" class=""/></td>
+							<td><input type="text" name="itemKeepExp" style="width: 100%" value="${productMaterialData.KEEP_EXP}" class=""/></td>
+							<td><input type="text" name="itemUnitPrice" style="width: 100%"  value="${productMaterialData.UNIT_PRICE}" readonly="readonly" class="read_only"/></td>
+							<td><input type="text" name="itemDesc" style="width: 100%" value="${productMaterialData.DESCRIPTION}"/></td>
+						</tr>
+						</c:if>	
+					</c:forEach>	
 					</tbody>
 					<tfoot>
 					</tfoot>
 				</table>
 			</div>
+			
+			
 			<div class="title2 mt20"  style="width:90%;"><span class="txt">파일첨부</span></div>
 			<div class="title2 mt20" style="width:10%; display: inline-block;">
 				<button class="btn_con_search" onClick="openDialog('dialog_attatch')">
@@ -1372,18 +1180,12 @@
 				<ul>
 					<li class="point_img">
 						<dt>첨부파일</dt><dd>
-							<ul id="attatch_file">
-							</ul>
-						</dd>
-					</li>
-				</ul>
-			</div>
-			<div class="con_file" style="display:none" id="temp_file">
-				<select id="tempFileList" name="tempFileList" multiple style="display:none"></select>
-				<ul>
-					<li class="point_img">
-						<dt>기존파일</dt><dd>
 							<ul id="temp_attatch_file">
+								<c:forEach items="${productData.fileList}" var="fileList" varStatus="status">
+									<li><a href="#none" onclick="fn_removeTempFile(this, '${fileList.FILE_IDX}')"><img src="/resources/images/icon_del_file.png"></a>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
+								</c:forEach>
+							</ul>
+							<ul id="attatch_file">								
 							</ul>
 						</dd>
 					</li>
@@ -1395,9 +1197,7 @@
 				<ul>
 					<li class="">
 						<div class="text_insert" style="padding: 0px;">
-							<textarea name="contents" id="contents" style="width: 666px; height: 200px; display: none;">
-							<h2><strong>1. 제품명</strong></h2><p>&nbsp;</p><h2><strong>2. 개발목적</strong></h2><p>&nbsp;</p><h2><strong>3. 제품특징</strong></h2><p>&nbsp;</p><h2><strong>4. 용도</strong></h2><p>&nbsp;</p><h2><strong>5. 제품규격</strong></h2><p>&nbsp;</p><h2><strong>6. 도입예정일</strong></h2><p>&nbsp;</p><p>&nbsp;</p>
-							</textarea>
+							<textarea name="contents" id="contents" style="width: 666px; height: 200px; display: none;">${productData.data.CONTENTS}</textarea>
 							<script type="text/javascript" src="/resources/editor/build/ckeditor.js"></script>
 						</div>
 					</li>
@@ -1413,7 +1213,7 @@
 					<button class="btn_admin_red">임시/템플릿저장</button>
 					<button class="btn_admin_navi">임시저장</button>
 					 -->
-					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
+					<button class="btn_admin_sky" onclick="fn_update()">개정</button>
 					<button class="btn_admin_gray" onclick="fn_list();">취소</button>
 				</div>
 				<hr class="con_mode" />
@@ -1446,12 +1246,14 @@
 			<td>
 				<input type="checkbox" id="mat_1"><label for="mat_1"><span></span></label>
 				<input type="hidden" name="itemType"/>
-				<input type="hidden" name="itemTypeName"/>
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event)"/>
-				<button class="btn_code_search2" onclick="openMaterialPopup(this)"></button>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
+				<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1470,8 +1272,11 @@
 			</td>
 			<td>
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
+				<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+			</td>
+			<td>
+				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl"/>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
@@ -1593,9 +1398,16 @@
 						<input id="checkbox_item1" name="docType" type="checkbox" value="10"/>
 						<label for="checkbox_item1" style="vertical-align: middle;"><span></span>컨셉서-개발목적</label>
 						<input id="checkbox_item2" name="docType" type="checkbox" value="20"/>
-						<label for="checkbox_item2" style="vertical-align: middle;"><span></span>사전원가서</label>
+						<label for="checkbox_item2" style="vertical-align: middle;"><span></span>추정 원단위표</label>
 						<input id="checkbox_item3" name="docType" type="checkbox" value="30"/>
-						<label for="checkbox_item3" style="vertical-align: middle;"><span></span>조리메뉴얼</label>						
+						<label for="checkbox_item3" style="vertical-align: middle;"><span></span>배합비&제조신고용 배합비</label>						
+						<br/>
+						<input id="checkbox_item4" name="docType" type="checkbox" value="40"/>
+						<label for="checkbox_item4" style="vertical-align: middle;"><span></span>제조공정도</label>						
+						<input id="checkbox_item5" name="docType" type="checkbox" value="50"/>
+						<label for="checkbox_item5" style="vertical-align: middle;"><span></span>제조작업표준서</label>
+						<input id="checkbox_item6" name="docType" type="checkbox" value="60"/>
+						<label for="checkbox_item6" style="vertical-align: middle;"><span></span>제품규격서</label>					
 					</dd>
 				</li>
 				<li class=" mb5">
@@ -1617,14 +1429,14 @@
 <!-- 파일 생성레이어 close-->
 
 <!-- 원료 선택 레이어 start-->
-<div class="white_content" id="dialog_menu">
+<div class="white_content" id="dialog_product">
 	<div class="modal" style="	width: 400px;margin-left:-210px;height: 350px;margin-top:-100px;">
 		<h5 style="position:relative">
-			<span class="title">메뉴구분</span>
+			<span class="title">제품구분</span>
 			<div  class="top_btn_box">
 				<ul>
 					<li>
-						<button class="btn_madal_close" onClick="closeDialog('dialog_menu')"></button>
+						<button class="btn_madal_close" onClick="closeDialog('dialog_product')"></button>
 					</li>
 				</ul>
 			</div>
@@ -1633,7 +1445,7 @@
 			<div id="jsTree"></div> 
 		</div>
 		<div class="btn_box_con">
-			<button class="btn_small02" onclick="closeDialog('dialog_menu')"> 취소</button>
+			<button class="btn_small02" onclick="closeDialog('dialog_product')"> 취소</button>
 		</div>
 	</div>
 </div>
@@ -1645,6 +1457,7 @@
 <div class="white_content" id="dialog_material">
 	<input id="targetID" type="hidden">
 	<input id="itemType" type="hidden">
+	<input id="searchType" type="hidden">
 	<div class="modal positionCenter" style="width: 900px; height: 600px">
 		<h5 style="position: relative">
 			<span class="title">원료코드 검색</span>
@@ -1666,7 +1479,8 @@
 					<colgroup>
 						<col width="40px">
 						<col width="10%">
-						<col width="20%">
+						<col width="10%">
+						<col width="15%">
 						<col width="8%">
 						<col width="8%">
 						<col width="8%">
@@ -1677,7 +1491,8 @@
 					<thead>
 						<tr>
 							<th></th>
-							<th>SAP코드</th>
+							<th>원료코드</th>
+							<th>ERP코드</th>
 							<th>상품명</th>
 							<th>보관기준</th>
 							<th>사이즈</th>
@@ -1690,89 +1505,17 @@
 					<tbody id="matLayerBody">
 						<input type="hidden" id="matLayerPage" value="0"/>
 						<Tr>
-							<td colspan="9">원료코드 혹은 원료코드명을 검색해주세요</td>
+							<td colspan="10">원료코드 혹은 원료코드명을 검색해주세요</td>
 						</Tr>
 					</tbody>
 				</table>
 				<!-- 뒤에 추가 리스트가 있을때는 클래스명 02로 숫자변경 -->
 				<div id="matNextPrevDiv" class="page_navi  mt10">
-					<button class="btn_code_left01" onclick="searchMaterial('prevPage')"></button>
-					<button class="btn_code_right02" onclick="searchMaterial('nextPage')"></button>
+					<button class="btn_code_left01" onclick="searchMaterial('prevPage','')"></button>
+					<button class="btn_code_right02" onclick="searchMaterial('nextPage','')"></button>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 <!-- 코드검색 추가레이어 close-->
-<!-- 문서 검색 레이어 start-->
-<div class="white_content" id="dialog_search">
-	<div class="modal" style="	width: 700px;margin-left:-360px;height: 550px;margin-top:-300px;">
-		<h5 style="position:relative">
-			<span class="title">개발완료보고서검색</span>
-			<div  class="top_btn_box">
-				<ul>
-					<li>
-						<button class="btn_madal_close" onClick="closeDialog('dialog_search')"></button>
-					</li>
-				</ul>
-			</div>
-		</h5>
-		<div class="list_detail">
-			<ul>
-				<li>
-					<dt>제품검색</dt>
-					<dd>
-						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제품코드/제품명을 입력하세요."/>
-						<button class="btn_small_search ml5" onclick="fn_search()" style="float: left">조회</button>
-					</dd>
-				</li>
-				<li>
-					<dt>제품구분</dt>
-					<dd >
-						<div class="selectbox" style="width:100px;" id="searchCategory1_div">  
-							<label for="searchCategory1" id="searchCategory1_label">선택</label> 
-							<select name="searchCategory1" id="searchCategory1" onChange="fn_changeCategory(this,2)">
-							</select>
-						</div>
-						<div class="selectbox lm5" style="width:100px; margin-left:5px; display:none;" id="searchCategory2_div">  
-							<label for="searchCategory2" id="searchCategory2_label">선택</label> 
-							<select name="searchCategory2" id="searchCategory2" onChange="fn_changeCategory(this,3)">
-							</select>
-						</div>
-						<div class="selectbox lm5" style="width:100px; margin-left:5px; display:none;" id="searchCategory3_div">  
-							<label for="searchCategory3" id="searchCategory3_label">선택</label> 
-							<select name="searchCategory3" id="searchCategory3">
-							</select>
-						</div>
-					</dd>
-				</li>
-			</ul>
-		</div>
-		<div class="main_tbl" style="height: 300px; overflow-y: auto">
-			<table class="tbl07">
-				<colgroup>
-					<col width="40px">
-					<col width="17%">
-					<col width="23%">
-					<col width="10%">
-					<col />
-				</colgroup>
-				<thead>
-					<tr>
-						<th></th>
-						<th>제품코드</th>
-						<th>제품명</th>
-						<th>버젼</th>
-						<th>제품구분</th>
-					<tr>
-				</thead>
-				<tbody id="productLayerBody">
-					<tr>
-						<td colspan="5">제품코드 혹은 제품명을 검색해주세요</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</div>
-<!-- 원료 선택 레이어 close-->

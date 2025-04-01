@@ -222,6 +222,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public int insertAccessLog(HashMap<String, Object> param) {
 		
+		int seq = userDao.selectAccessLogSeq();
+		param.put("idx", seq);
 		int insertCnt = userDao.insertAccessLog(param);
 		String requestParams = (String)param.get("requestParams");
 		if(requestParams != null && requestParams.length() > 0 ) {

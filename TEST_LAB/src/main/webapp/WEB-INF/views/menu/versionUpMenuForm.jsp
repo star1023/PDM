@@ -274,7 +274,11 @@ var selectedArr = new Array();
 		var randomId = randomId = Math.random().toString(36).substr(2, 9);
 		var randomId2 = randomId = Math.random().toString(36).substr(2, 9);
 		
-		var row= '<tr>'+$('tbody[name=tmpMatTbody]').children('tr').html()+'</tr>';
+		if( type == 'newMat' ) {
+			var row= '<tr>'+$('tbody[name=tmpMatTbody]').children('tr').html()+'</tr>';
+		} else {
+			var row= '<tr>'+$('tbody[name=tmpMatTbody2]').children('tr').html()+'</tr>';
+		}
 	
 		
 		$(element).parent().parent().next().children('tbody').append(row);
@@ -284,6 +288,13 @@ var selectedArr = new Array();
 		$(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('label').attr('for', type+'_'+randomId);
 		//var itemSapCodeElement = $(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('input[name=itemSapCode]');
 		//bindEnterKeySapCode(itemSapCodeElement);
+		
+		// itemType 값 세팅
+		if( type == 'newMat' ) {
+			$(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('input[name=itemType]').val("Y");
+		} else {
+			$(element).parent().parent().next().children('tbody').children('tr:last').children('td').children('input[name=itemType]').val("N");
+		}
 	}
 	
 	function removeRow(element){
@@ -645,17 +656,20 @@ var selectedArr = new Array();
 				formData.append('docTypeText', $(this).text());
 			});
 			
+			var rowIdArr = new Array();
+			var itemTypeArr = new Array();
+			var itemMatIdxArr = new Array();
+			var itemSapCodeArr = new Array();
+			var itemNameArr = new Array();
+			var itemStandardArr = new Array();
+			var itemKeepExpArr = new Array();
+			var itemUnitPriceArr = new Array();
+			var itemDescArr = new Array();
+			
 			if( $('input[name=newMat]:checked').val() == 'Y' ) {
-				var rowIdArr = new Array();
-				var itemMatIdxArr = new Array();
-				var itemSapCodeArr = new Array();
-				var itemNameArr = new Array();
-				var itemStandardArr = new Array();
-				var itemKeepExpArr = new Array();
-				var itemUnitPriceArr = new Array();
-				var itemDescArr = new Array();
-				$('tr[id^=matRow]').toArray().forEach(function(contRow){
+				$('tr[id^=newMatRow]').toArray().forEach(function(contRow){
 					var rowId = $(contRow).attr('id');
+					var itemType = $('#'+ rowId + ' input[name=itemType]').val();
 					var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
 					var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
 					var itemName = $('#'+ rowId + ' input[name=itemName]').val();
@@ -664,6 +678,7 @@ var selectedArr = new Array();
 					var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
 					var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
 					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
 					itemMatIdxArr.push(itemMatIdx);
 					itemSapCodeArr.push(itemSapCode);
 					itemNameArr.push(itemName);
@@ -672,15 +687,40 @@ var selectedArr = new Array();
 					itemUnitPriceArr.push(itemUnitPrice);
 					itemDescArr.push(itemDesc);
 				});
-				formData.append("rowIdArr", rowIdArr);
-				formData.append("itemMatIdxArr", itemMatIdxArr);
-				formData.append("itemSapCodeArr", itemSapCodeArr);
-				formData.append("itemNameArr", itemNameArr);
-				formData.append("itemStandardArr", itemStandardArr);
-				formData.append("itemKeepExpArr", itemKeepExpArr);
-				formData.append("itemUnitPriceArr", itemUnitPriceArr);
-				formData.append("itemDescArr", itemDescArr);
 			}
+			
+			$('tr[id^=matRow]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemType = $('#'+ rowId + ' input[name=itemType]').val();
+				var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+				var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
+				var itemName = $('#'+ rowId + ' input[name=itemName]').val();
+				var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
+				var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
+				var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
+				var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
+				if( itemSapCode != '' ) {
+					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
+					itemMatIdxArr.push(itemMatIdx);
+					itemSapCodeArr.push(itemSapCode);
+					itemNameArr.push(itemName);
+					itemStandardArr.push(itemStandard);
+					itemKeepExpArr.push(itemKeepExp);
+					itemUnitPriceArr.push(itemUnitPrice);
+					itemDescArr.push(itemDesc);
+				}
+			});
+			
+			formData.append("rowIdArr", rowIdArr);
+			formData.append("itemTypeArr", itemTypeArr);
+			formData.append("itemMatIdxArr", itemMatIdxArr);
+			formData.append("itemSapCodeArr", itemSapCodeArr);
+			formData.append("itemNameArr", itemNameArr);
+			formData.append("itemStandardArr", itemStandardArr);
+			formData.append("itemKeepExpArr", itemKeepExpArr);
+			formData.append("itemUnitPriceArr", itemUnitPriceArr);
+			formData.append("itemDescArr", itemDescArr);
 			
 			URL = "../menu/insertNewVersionMenuAjax";
 			$.ajax({
@@ -779,9 +819,12 @@ var selectedArr = new Array();
 						<tr>
 							<th style="border-left: none;">신규원료사용 유무</th>
 							<td colspan="5">
-								<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)" checked="${menuData.data.IS_NEW_MATERIAL == 'N' ? 'checked' : ''}">
+								<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)"
+									<c:if test="${menuData.data.IS_NEW_MATERIAL == 'N'}">checked</c:if>>
 								<label for="newMat1"><span></span>사용안함</label>
-								<input type="radio" name="newMat" id="newMat2" onclick="changeNewMat(event)" value="Y" checked="${menuData.data.IS_NEW_MATERIAL == 'Y' ? 'checked' : ''}">
+								
+								<input type="radio" name="newMat" id="newMat2" value="Y" onclick="changeNewMat(event)"
+									<c:if test="${menuData.data.IS_NEW_MATERIAL == 'Y'}">checked</c:if>>
 								<label for="newMat2"><span></span>사용</label>
 							</td>
 						</tr>
@@ -804,14 +847,14 @@ var selectedArr = new Array();
 				</table>
 			</div>
 			
-			<div id="matNewDiv" style="${menuData.data.IS_NEW_MATERIAL == 'N' ? 'display:none' : ''}">
+			<div id="matDiv">
 				<div class="title2" style="float: left; margin-top: 30px;">
-					<span class="txt">신규원료</span>
+					<span class="txt">원료</span>
 				</div>
 				<div id="matHeaderDiv" class="table_header07">
 					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
 					<span class="table_header_btn_box">
-						<button class="btn_add_tr" onclick="addRow(this, 'mat')"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+						<button class="btn_add_tr" onclick="addRow(this, 'mat')" id="mat_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
 					</span>
 				</div>
 				<table id="matTable" class="tbl05">
@@ -836,17 +879,18 @@ var selectedArr = new Array();
 						</tr>
 					</thead>
 					<tbody id="matTbody" name="matTbody">
-					<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
+						<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
+						<c:if test="${menuMaterialData.MATERIAL_TYPE == 'N' }">
 						<tr id="matRow_${status.count}" class="temp_color">
 							<td>
 								<input type="checkbox" id="mat_${status.count}"><label for="mat_${status.count}"><span></span></label>
-								<input type="hidden" name="itemType"/>
+								<input type="hidden" name="itemType" value="${menuMaterialData.MATERIAL_TYPE}"/>
 								<input type="hidden" name="itemTypeName"/>
 							</td>
 							<td>
 								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${menuMaterialData.MATERIAL_IDX}"/>
-								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${menuMaterialData.SAP_CODE}" onkeyup="checkMaterail(event)"/>
-								<button class="btn_code_search2" onclick="openMaterialPopup(this)"></button>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${menuMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
+								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
 							</td>
 							<td>
 								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${menuMaterialData.NAME}" class="read_only" />
@@ -856,6 +900,68 @@ var selectedArr = new Array();
 							<td><input type="text" name="itemUnitPrice" style="width: 100%"  value="${menuMaterialData.UNIT_PRICE}" readonly="readonly" class="read_only"/></td>
 							<td><input type="text" name="itemDesc" style="width: 100%" value="${menuMaterialData.DESCRIPTION}"/></td>
 						</tr>
+						</c:if>	
+					</c:forEach>	
+					</tbody>
+					<tfoot>
+					</tfoot>
+				</table>
+			</div>
+			
+			<div id="matNewDiv" style="${productData.data.IS_NEW_MATERIAL == 'N' ? 'display:none' : ''}">
+				<div class="title2" style="float: left; margin-top: 30px;">
+					<span class="txt">신규원료</span>
+				</div>
+				<div id="matHeaderDiv" class="table_header07">
+					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
+					<span class="table_header_btn_box">
+						<button class="btn_add_tr" onclick="addRow(this, 'newMat')" id="matNew_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+					</span>
+				</div>
+				<table id="matTable" class="tbl05">
+					<colgroup>
+						<col width="20">
+						<col width="140">
+						<col width="250">
+						<col width="150">
+						<col width="200">
+						<col width="8%">
+						<col />
+					</colgroup>
+					<thead>
+						<tr>
+							<th><input type="checkbox" id="matTable_2" onclick="checkAll(event)"><label for="matTable_2"><span></span></label></th>
+							<th>원료코드</th>
+							<th>원료명</th>
+							<th>규격</th>
+							<th>보관방법 및 유통기한</th>
+							<th>공급가</th>
+							<th>비고</th>
+						</tr>
+					</thead>
+					<tbody id="matTbody" name="matTbody">
+						<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
+						<c:if test="${menuMaterialData.MATERIAL_TYPE == 'Y' }">
+						<tr id="newMatRow_${status.count}" class="temp_color">
+							<td>
+								<input type="checkbox" id="mat_${status.count}"><label for="mat_${status.count}"><span></span></label>
+								<input type="hidden" name="itemType" value="${menuMaterialData.MATERIAL_TYPE}"/>
+								<input type="hidden" name="itemTypeName"/>
+							</td>
+							<td>
+								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" value="${menuMaterialData.MATERIAL_IDX}"/>
+								<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" value="${menuMaterialData.SAP_CODE}" onkeyup="checkMaterail(event,'newMat')"/>
+								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+							</td>
+							<td>
+								<input type="text" name="itemName" style="width: 85%" readonly="readonly" value="${menuMaterialData.NAME}" class="read_only" />
+							</td>
+							<td><input type="text" name="itemStandard" style="width: 100%" value="${menuMaterialData.STANDARD}" class=""/></td>
+							<td><input type="text" name="itemKeepExp" style="width: 100%" value="${menuMaterialData.KEEP_EXP}" class=""/></td>
+							<td><input type="text" name="itemUnitPrice" style="width: 100%"  value="${menuMaterialData.UNIT_PRICE}" readonly="readonly" class="read_only"/></td>
+							<td><input type="text" name="itemDesc" style="width: 100%" value="${menuMaterialData.DESCRIPTION}"/></td>
+						</tr>
+						</c:if>	
 					</c:forEach>	
 					</tbody>
 					<tfoot>
@@ -939,6 +1045,26 @@ var selectedArr = new Array();
 				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
 				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event)"/>
 				<button class="btn_code_search2" onclick="openMaterialPopup(this)"></button>
+			</td>
+			<td>
+				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
+			</td>
+			<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
+			<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
+			<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
+			<td><input type="text" name="itemDesc" style="width: 100%"/></td>
+		</tr>
+	</tbody>
+	<tbody id="tmpMatTbody2" name="tmpMatTbody2">
+		<tr id="tempMatRow_1" class="temp_color">
+			<td>
+				<input type="checkbox" id="mat_1"><label for="mat_1"><span></span></label>
+				<input type="hidden" name="itemType"/>
+			</td>
+			<td>
+				<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
+				<input type="text" name="itemSapCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
+				<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
 			</td>
 			<td>
 				<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />

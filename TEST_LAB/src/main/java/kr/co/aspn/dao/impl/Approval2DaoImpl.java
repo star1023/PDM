@@ -164,5 +164,40 @@ public class Approval2DaoImpl implements Approval2Dao {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("approval2.selectDocData", param);
 	}
-	
+
+	@Override
+	public List<Map<String, String>> selectApprItemList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("approval2.selectApprItemList", param);
+	}
+
+	@Override
+	public List<Map<String, String>> selectReferenceList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("approval2.selectReferenceList", param);
+	}
+
+	@Override
+	public void approvalSubmitItem(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("approval2.approvalSubmitItem", param);
+	}
+
+	@Override
+	public Map<String, Object> selectNextApprItem(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("approval2.selectNextApprItem", param);
+	}
+
+	@Override
+	public void updateApprUser(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("approval2.updateApprUser", param);
+	}
+
+	@Override
+	public Map<String, String> selectApprItem(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("approval2.selectApprItem", param);
+	}	
 }

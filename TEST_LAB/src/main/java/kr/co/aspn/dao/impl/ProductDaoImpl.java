@@ -96,9 +96,9 @@ public class ProductDaoImpl implements ProductDao {
 	}
 
 	@Override
-	public void updateProduct(Map<String, Object> param) throws Exception {
+	public void updateProductIsLast(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		sqlSessionTemplate.update("product.updateProduct", param);
+		sqlSessionTemplate.update("product.updateProductIsLast", param);
 	}
 
 	@Override
@@ -135,5 +135,35 @@ public class ProductDaoImpl implements ProductDao {
 	public void insertFileCopy(HashMap<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.insert("product.insertFileCopy", param);
+	}
+
+	@Override
+	public Map<String, Object> selectFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("product.selectFileData", param);
+	}
+
+	@Override
+	public void deleteFileData(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteFileData", param);
+	}
+
+	@Override
+	public void deleteProductMaterial(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteProductMaterial", param);
+	}
+
+	@Override
+	public void deleteFileType(HashMap<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteFileType", param);
+	}
+
+	@Override
+	public void updateProductData(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("product.updateProductData", param);
 	}		
 }

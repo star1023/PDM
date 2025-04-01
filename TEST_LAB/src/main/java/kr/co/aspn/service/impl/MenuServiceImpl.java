@@ -475,6 +475,7 @@ public class MenuServiceImpl implements MenuService {
 			ArrayList<String> docType = (ArrayList<String>)listMap.get("docType");
 			ArrayList<String> docTypeText = (ArrayList<String>)listMap.get("docTypeText");
 			ArrayList<String> rowIdArr = (ArrayList<String>)listMap.get("rowIdArr");
+			ArrayList<String> itemTypeArr = (ArrayList<String>)listMap.get("itemTypeArr");
 			ArrayList<String> itemMatIdxArr = (ArrayList<String>)listMap.get("itemMatIdxArr");
 			ArrayList<String> itemSapCodeArr = (ArrayList<String>)listMap.get("itemSapCodeArr");
 			ArrayList<String> itemNameArr = (ArrayList<String>)listMap.get("itemNameArr");
@@ -497,36 +498,40 @@ public class MenuServiceImpl implements MenuService {
 			menuDao.insertMenu(param);
 			
 			//원료 리스트 등록
-			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
-				HashMap<String,String> matMap = new HashMap<String,String>();
-				matMap.put("matIdx", itemMatIdxArr.get(i));
-				matMap.put("sapCode", itemSapCodeArr.get(i));
-				matMap.put("name", itemNameArr.get(i));
-				try{
-					matMap.put("standard", itemStandardArr.get(i));
-				} catch(Exception e) {
-					matMap.put("standard", "");
-				}
-				try{
-					matMap.put("keepExp", itemKeepExpArr.get(i));
-				} catch(Exception e) {
-					matMap.put("keepExp", "");
-				}
-				try{
-					matMap.put("unitPrice", itemUnitPriceArr.get(i));
-				} catch(Exception e) {
-					matMap.put("unitPrice", "");
-				}
-				try{
-					matMap.put("desc", itemDescArr.get(i));
-				} catch(Exception e) {
-					matMap.put("desc", "");
-				}
-				matList.add(matMap);
+			if (itemSapCodeArr != null && !itemSapCodeArr.isEmpty()) {
+				ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
+				for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+					HashMap<String,String> matMap = new HashMap<String,String>();
+					matMap.put("itemType", itemTypeArr.get(i));
+					matMap.put("matIdx", itemMatIdxArr.get(i));
+					matMap.put("sapCode", itemSapCodeArr.get(i));
+					matMap.put("name", itemNameArr.get(i));
+					try{
+						matMap.put("standard", itemStandardArr.get(i));
+					} catch(Exception e) {
+						matMap.put("standard", "");
+					}
+					try{
+						matMap.put("keepExp", itemKeepExpArr.get(i));
+					} catch(Exception e) {
+						matMap.put("keepExp", "");
+					}
+					try{
+						matMap.put("unitPrice", itemUnitPriceArr.get(i));
+					} catch(Exception e) {
+						matMap.put("unitPrice", "");
+					}
+					try{
+						matMap.put("desc", itemDescArr.get(i));
+					} catch(Exception e) {
+						matMap.put("desc", "");
+					}
+					matList.add(matMap);
+					System.out.print(matMap);
+			    }
+			    param.put("matList", matList);
+			    menuDao.insertMenuMaterial(param);
 			}
-			param.put("matList", matList);
-			menuDao.insertMenuMaterial(param);
 			
 			//첨부파일 유형 저장
 			List<HashMap<String, Object>> docTypeList = new ArrayList<HashMap<String, Object>>();
@@ -636,6 +641,7 @@ public class MenuServiceImpl implements MenuService {
 			ArrayList<String> docType = (ArrayList<String>)listMap.get("docType");
 			ArrayList<String> docTypeText = (ArrayList<String>)listMap.get("docTypeText");
 			ArrayList<String> rowIdArr = (ArrayList<String>)listMap.get("rowIdArr");
+			ArrayList<String> itemTypeArr = (ArrayList<String>)listMap.get("itemTypeArr");
 			ArrayList<String> itemMatIdxArr = (ArrayList<String>)listMap.get("itemMatIdxArr");
 			ArrayList<String> itemSapCodeArr = (ArrayList<String>)listMap.get("itemSapCodeArr");
 			ArrayList<String> itemNameArr = (ArrayList<String>)listMap.get("itemNameArr");
@@ -665,6 +671,7 @@ public class MenuServiceImpl implements MenuService {
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
 			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
+				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
 				matMap.put("sapCode", itemSapCodeArr.get(i));
 				matMap.put("name", itemNameArr.get(i));
@@ -784,6 +791,15 @@ public class MenuServiceImpl implements MenuService {
 		// TODO Auto-generated method stub
 		Map<String, Object> map = new HashMap<String, Object>();
 		List<Map<String, Object>> list = menuDao.selectSearchProduct(param);
+		map.put("list", list);
+		return map;
+	}
+	
+	@Override
+	public Map<String, Object> selectSearchMenu(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		Map<String, Object> map = new HashMap<String, Object>();
+		List<Map<String, Object>> list = menuDao.selectSearchMenu(param);
 		map.put("list", list);
 		return map;
 	}

@@ -5,7 +5,7 @@
 		<if test="searchType != null and searchType != ''">
 			<choose>
 				<when test="searchType.equals('userName')">
-					AND userName LIKE concat('%',#{searchValue},'%')
+					AND USER_NAME LIKE concat('%',#{searchValue},'%')
 				</when>
 				<otherwise>
 					AND ${searchType} LIKE concat('%',#{searchValue},'%')
@@ -18,7 +18,7 @@
 		<if test="searchType != null and searchType != ''">
 			<choose>
 				<when test="searchType.equals('userName')">
-					AND userName LIKE concat('%',#{searchValue},'%')
+					AND USER_NAME LIKE concat('%',#{searchValue},'%')
 				</when>
 				<otherwise>
 					AND ${searchType} LIKE concat('%',#{searchValue},'%')
@@ -34,7 +34,7 @@
 		<if test="searchType != null and searchType != ''">
 			<choose>
 				<when test="searchType.equals('userName')">
-					AND userName LIKE concat('%',#{searchValue},'%')
+					AND USER_NAME LIKE concat('%',#{searchValue},'%')
 				</when>
 				<otherwise>
 					AND ${searchType} LIKE concat('%',#{searchValue},'%')
@@ -44,11 +44,21 @@
 	</sql>
 
 	<select id="getLoginLogListTotal" resultType="int">
+		<!-- 
 		SELECT COUNT(1) FROM (
 			SELECT seq
 				, userId
 				, userIp
 			FROM userLogin_log a
+		) tmp
+    	WHERE 1=1
+    	<include refid="log.loginWhere"/>
+    	 -->
+    	 SELECT COUNT(1) FROM (
+			SELECT LOG_IDX AS seq
+				, USER_ID AS userId
+				, USER_IP AS userIp
+			FROM lab_login_log a
 		) tmp
     	WHERE 1=1
     	<include refid="log.loginWhere"/>
@@ -59,12 +69,12 @@
 			SELECT ROW_NUMBER() OVER(ORDER BY seq DESC) rn
 				 , a.* 
 			FROM (
-				SELECT seq
-					, userId
-					, getUserName(userId) userName
-					, userIp
-					, DATE_FORMAT(loginDate,'%Y-%m-%d') as loginDate
-				FROM userLogin_log a
+				SELECT LOG_IDX AS seq
+					, USER_ID AS userId
+					, getUserName(USER_ID) userName
+					, USER_IP AS userIp
+					, DATE_FORMAT(LOGIN_DATE,'%Y-%m-%d') as loginDate
+				FROM lab_login_log a
 			) a
 	    	WHERE 1=1
 	    	<include refid="log.loginWhere"/>
@@ -129,22 +139,22 @@
 	<select id="getCommonLogListTotal" resultType="int">
 		SELECT COUNT(1)
 		FROM (
-			SELECT a.seq
-				, a.userId
-					, getUserName(a.userId) userName
-					, a.url
-					, a.time
-					, a.regDate
+			SELECT a.LOG_IDX AS seq
+				, a.USER_ID AS userId
+					, getUserName(a.USER_ID) userName
+					, a.URL AS url
+					, a.ACCESS_DATE AS time
+					, a.REG_DATE AS regDate
 					, b.typeName
-					, c.docNo
-					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.docNo) productName
+					, c.DOC_NO
+					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.DOC_NO) productName
 					, c.pNo
-					, (SELECT productName FROM productDesignDoc WHERE pno = c.pNo) productDesignName
-					, c.params
-			FROM userAccess_log a
-			INNER JOIN logTypeTable b ON a.url = b.typeUrl
-			LEFT OUTER JOIN userAccess_log_params c ON a.seq = c.parent_seq
-			WHERE a.url LIKE concat(${logType},'%')
+					, (SELECT productName FROM productDesignDoc WHERE pno = c.P_NO) productDesignName
+					, c.PARAMS
+			FROM lab_useraccess_log a
+			INNER JOIN logTypeTable b ON a.URL = b.typeUrl
+			LEFT OUTER JOIN lab_useraccess_log_params c ON a.LOG_IDX = c.PARENT_IDX
+			WHERE a.URL LIKE concat(${logType},'%')
 		) a
 		WHERE 1=1
 		<include refid="log.bomWhere"/>
@@ -155,22 +165,22 @@
 			SELECT ROW_NUMBER() OVER(ORDER BY seq DESC) rn
 				, a.*
 			FROM (
-				SELECT a.seq
-					, a.userId
-					, getUserName(a.userId) userName
-					, a.url
-					, a.time
-					, a.regDate
+				SELECT a.LOG_IDX AS seq
+					, a.USER_ID AS userId
+					, getUserName(a.USER_ID) userName
+					, a.URL AS url
+					, a.ACCESS_DATE AS time
+					, a.REG_DATE AS regDate
 					, b.typeName
-					, c.docNo
-					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.docNo) productName
-					, c.pNo
-					, (SELECT productName FROM productDesignDoc WHERE pno = c.pNo) productDesignName
-					, c.params
-				FROM userAccess_log a
-				INNER JOIN logTypeTable b ON a.url = b.typeUrl
-				LEFT OUTER JOIN userAccess_log_params c ON a.seq = c.parent_seq
-				WHERE a.url LIKE concat(${logType},'%')
+					, c.DOC_NO
+					, (SELECT MAX(productName) FROM devDoc WHERE docNo = c.DOC_NO) productName
+					, c.P_NO
+					, (SELECT productName FROM productDesignDoc WHERE pno = c.P_NO) productDesignName
+					, c.PARAMS
+				FROM lab_useraccess_log a
+				INNER JOIN logTypeTable b ON a.URL = b.typeUrl
+				LEFT OUTER JOIN lab_useraccess_log_params c ON a.LOG_IDX = c.PARENT_IDX
+				WHERE a.URL LIKE concat(${logType},'%')
 			) a
 			WHERE 1=1
 			<include refid="log.bomWhere"/>

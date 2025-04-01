@@ -450,7 +450,13 @@ public class TestServiceImpl implements TestService {
 		System.err.println(param);
 		int totalCount = testDao.selectErpMaterialCount(param);
 		
-		int viewCount = 10;
+		int viewCount = 0;
+		try {
+			viewCount = Integer.parseInt(param.get("viewCount").toString());
+		} catch( Exception e ) {
+			viewCount = 10;
+		}
+		
 		int pageNo = 1;
 		try {
 			pageNo = Integer.parseInt((String)param.get("pageNo"));
