@@ -10,7 +10,7 @@
 	position: absolute;
 	transform: translate(-50%, -45%);
 }
-.ck-editor__editable { max-height: 400px; min-height:400px;}
+.ck-editor__editable { max-height: 200px; min-height:200px;}
 </style>
 
 <link href="../resources/css/mfg.css" rel="stylesheet" type="text/css">
@@ -21,6 +21,16 @@
 	$(document).ready(function(){
 		CreateEditor("contents");		
 		fn_loadCategory();
+		
+		$("#scheduleDate").datepicker({
+			showOn: "both",
+			buttonImage: "../resources/images/btn_calendar.png",
+			buttonImageOnly: true,
+			buttonText: "Select date",
+			dateFormat: "yy-mm-dd",
+			showButtonPanel: true,
+			showAnim: ""
+		});
 	});
 	
 	var selectedArr = new Array();
@@ -729,7 +739,175 @@
 	    		console.error( error );
 	    	});
 	}
-	
+	function fn_insertTmp(){
+		if( !chkNull($("#title").val()) ) {
+			alert("제목을 입력해 주세요.");
+			$("#title").focus();
+			return;
+		} else {
+			var contents = editor.getData();
+			var formData = new FormData();
+			formData.append("title",$("#title").val());
+			formData.append("productName",$("#productName").val());
+			
+			var purposeArr = new Array();
+			$('tr[id^=purpose_tr]').toArray().forEach(function(purposeRow){
+				var rowId = $(purposeRow).attr('id');
+				purposeArr.push($('#'+ rowId + ' input[name=purpose]').val());
+			});		
+			formData.append("purposeArr", purposeArr);		
+			
+			var featureArr = new Array();
+			$('tr[id^=feature_tr]').toArray().forEach(function(featureRow){
+				var rowId = $(featureRow).attr('id');
+				featureArr.push($('#'+ rowId + ' input[name=feature]').val());
+			});
+			formData.append("featureArr", featureArr);	
+			
+			var newItemNameArr = new Array();
+			var newItemStandardArr = new Array();
+			var newItemSupplierArr = new Array();
+			var newItemKeepExpArr = new Array();
+			var newItemNoteArr = new Array();
+			$('tr[id^=new_tr]').toArray().forEach(function(newRow){
+				var rowId = $(newRow).attr('id');
+				newItemNameArr.push($('#'+ rowId + ' input[name=itemName]').val());
+				newItemStandardArr.push($('#'+ rowId + ' input[name=itemStandard]').val());
+				newItemSupplierArr.push($('#'+ rowId + ' input[name=itemSupplier]').val());
+				newItemKeepExpArr.push($('#'+ rowId + ' input[name=itemKeepExp]').val());
+				newItemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
+			});
+			formData.append("newItemNameArr", newItemNameArr);	
+			formData.append("newItemStandardArr", newItemStandardArr);	
+			formData.append("newItemSupplierArr", newItemSupplierArr);	
+			formData.append("newItemKeepExpArr", newItemKeepExpArr);	
+			formData.append("newItemNoteArr", newItemNoteArr);	
+			
+			formData.append("scheduleDate",$("#scheduleDate").val());
+			
+			
+			formData.append("productCode",$("#productCode").val());
+			formData.append("productSapCode",$("#productSapCode").val());		
+			formData.append("weight",$("#weight").val());
+			formData.append("standard",$("#standard").val());
+			formData.append("keepCondition",$("#keepCondition").val());
+			formData.append("expireDate",$("#expireDate").val());
+			formData.append("contents",contents);
+			formData.append("newMat",$('input[name=newMat]:checked').val());
+			formData.append("productType",selectedArr);
+			formData.append("status", "TMP");
+			
+			for (var i = 0; i < attatchFileArr.length; i++) {
+				formData.append('file', attatchFileArr[i])
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileType', attatchFileTypeArr[i].fileType)			
+			}
+			
+			$('select[name=docTypeTemp] option:selected').each(function(index){
+				formData.append('docType', $(this).attr('value'));
+				formData.append('docTypeText', $(this).text());
+			});
+			
+			$('select[name=tempFileList] option:selected').each(function(index){
+				formData.append('tempFile', $(this).attr('value'));							
+			});
+			
+			var rowIdArr = new Array();
+			var itemTypeArr = new Array();
+			var itemMatIdxArr = new Array();
+			var itemMatCodeArr = new Array();
+			var itemSapCodeArr = new Array();
+			var itemNameArr = new Array();
+			var itemStandardArr = new Array();
+			var itemKeepExpArr = new Array();
+			var itemUnitPriceArr = new Array();
+			var itemDescArr = new Array();
+			
+			if( $('input[name=newMat]:checked').val() == 'Y' ) {
+				$('tr[id^=newMatRow]').toArray().forEach(function(contRow){
+					var rowId = $(contRow).attr('id');
+					var itemType = $('#'+ rowId + ' input[name=itemType]').val();
+					var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+					var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
+					var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
+					var itemName = $('#'+ rowId + ' input[name=itemName]').val();
+					var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
+					var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
+					var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
+					var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
+					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
+					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
+					itemSapCodeArr.push(itemSapCode);
+					itemNameArr.push(itemName);
+					itemStandardArr.push(itemStandard);
+					itemKeepExpArr.push(itemKeepExp);
+					itemUnitPriceArr.push(itemUnitPrice);
+					itemDescArr.push(itemDesc);
+				});
+			}
+
+			$('tr[id^=matRow]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemType = $('#'+ rowId + ' input[name=itemType]').val();
+				var itemMatIdx = $('#'+ rowId + ' input[name=itemMatIdx]').val();
+				var itemMatCode = $('#'+ rowId + ' input[name=itemMatCode]').val();
+				var itemSapCode = $('#'+ rowId + ' input[name=itemSapCode]').val();
+				var itemName = $('#'+ rowId + ' input[name=itemName]').val();
+				var itemStandard = $('#'+ rowId + ' input[name=itemStandard]').val();
+				var itemKeepExp = $('#'+ rowId + ' input[name=itemKeepExp]').val();
+				var itemUnitPrice = $('#'+ rowId + ' input[name=itemUnitPrice]').val();
+				var itemDesc = $('#'+ rowId + ' input[name=itemDesc]').val();
+				if( itemSapCode != '' ) {
+					rowIdArr.push(rowId);
+					itemTypeArr.push(itemType);
+					itemMatIdxArr.push(itemMatIdx);
+					itemMatCodeArr.push(itemMatCode);
+					itemSapCodeArr.push(itemSapCode);
+					itemNameArr.push(itemName);
+					itemStandardArr.push(itemStandard);
+					itemKeepExpArr.push(itemKeepExp);
+					itemUnitPriceArr.push(itemUnitPrice);
+					itemDescArr.push(itemDesc);
+				}
+			});
+			
+			formData.append("rowIdArr", rowIdArr);
+			formData.append("itemTypeArr", itemTypeArr);
+			formData.append("itemMatIdxArr", itemMatIdxArr);
+			formData.append("itemMatCodeArr", itemMatCodeArr);
+			formData.append("itemSapCodeArr", itemSapCodeArr);
+			formData.append("itemNameArr", itemNameArr);
+			formData.append("itemStandardArr", itemStandardArr);
+			formData.append("itemKeepExpArr", itemKeepExpArr);
+			formData.append("itemUnitPriceArr", itemUnitPriceArr);
+			formData.append("itemDescArr", itemDescArr);
+			
+			URL = "../product/insertTmpProductAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data: formData,
+				processData: false,
+		        contentType: false,
+		        cache: false,
+				dataType:"json",
+				success:function(result) {
+					
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
+	}
 	//입력확인
 	function fn_insert(){
 		var contents = editor.getData();
@@ -754,9 +932,6 @@
 		} else if( attatchFileArr.length == 0 && $("#tempFileList option").length == 0 ) {
 			alert("첨부파일을 등록해주세요.");		
 			return;			
-		} else if( !chkNull(contents) ) {
-			alert("기안문을 작성해주세요.");		
-			return;
 		} else {
 			if( $('input[name=newMat]:checked').val() == 'Y' ) {
 				var matCount = 0;
@@ -798,9 +973,45 @@
 					} else {
 						var formData = new FormData();
 						formData.append("title",$("#title").val());
+						formData.append("productName",$("#productName").val());						
+						
+						var purposeArr = new Array();
+						$('tr[id^=purpose_tr]').toArray().forEach(function(purposeRow){
+							var rowId = $(purposeRow).attr('id');
+							purposeArr.push($('#'+ rowId + ' input[name=purpose]').val());
+						});		
+						formData.append("purposeArr", purposeArr);		
+						
+						var featureArr = new Array();
+						$('tr[id^=feature_tr]').toArray().forEach(function(featureRow){
+							var rowId = $(featureRow).attr('id');
+							featureArr.push($('#'+ rowId + ' input[name=feature]').val());
+						});
+						formData.append("featureArr", featureArr);	
+						
+						var newItemNameArr = new Array();
+						var newItemStandardArr = new Array();
+						var newItemSupplierArr = new Array();
+						var newItemKeepExpArr = new Array();
+						var newItemNoteArr = new Array();
+						$('tr[id^=new_tr]').toArray().forEach(function(newRow){
+							var rowId = $(newRow).attr('id');
+							newItemNameArr.push($('#'+ rowId + ' input[name=itemName]').val());
+							newItemStandardArr.push($('#'+ rowId + ' input[name=itemStandard]').val());
+							newItemSupplierArr.push($('#'+ rowId + ' input[name=itemSupplier]').val());
+							newItemKeepExpArr.push($('#'+ rowId + ' input[name=itemKeepExp]').val());
+							newItemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
+						});
+						formData.append("newItemNameArr", newItemNameArr);	
+						formData.append("newItemStandardArr", newItemStandardArr);	
+						formData.append("newItemSupplierArr", newItemSupplierArr);	
+						formData.append("newItemKeepExpArr", newItemKeepExpArr);	
+						formData.append("newItemNoteArr", newItemNoteArr);	
+						
+						formData.append("scheduleDate",$("#scheduleDate").val());
+						
 						formData.append("productCode",$("#productCode").val());
 						formData.append("productSapCode",$("#productSapCode").val());
-						formData.append("productName",$("#productName").val());
 						formData.append("weight",$("#weight").val());
 						formData.append("standard",$("#standard").val());
 						formData.append("keepCondition",$("#keepCondition").val());
@@ -808,6 +1019,7 @@
 						formData.append("contents",contents);
 						formData.append("newMat",$('input[name=newMat]:checked').val());
 						formData.append("productType",selectedArr);
+						formData.append("status", "REG");
 						
 						for (var i = 0; i < attatchFileArr.length; i++) {
 							formData.append('file', attatchFileArr[i])
@@ -1041,60 +1253,6 @@
 	}
 	
 	function fn_search() {
-		/*
-		if( !chkNull($("#searchValue").val()) ) {
-			alert("제품코드 또는 제품명을 입력해주세요.");
-			$("#searchValue").focus();
-			return;
-		} else {
-			var URL = "../menu/selectSearchProductAjax";
-			$.ajax({
-				type:"POST",
-				url:URL,
-				data:{
-					searchValue : $("#searchValue").val()
-					, "searchCategory1" : $("#searchCategory1").selectedValues()[0]
-					, "searchCategory2" : $("#searchCategory2").selectedValues()[0]
-					, "searchCategory3" : $("#searchCategory3").selectedValues()[0]
-				},
-				dataType:"json",
-				success:function(result) {
-					console.log(result);
-					//productLayerBody
-					var jsonData = {};
-					jsonData = result;
-					$('#productLayerBody').empty();
-					jsonData.list.forEach(function(item){
-						var row = '<tr onClick="fn_copy(\''+item.PRODUCT_IDX+'\')">';
-						row += '<td></td>';
-						//row += '<Td>'+item.companyCode+'('+item.plant+')'+'</Td>';
-						row += '<td>'+item.PRODUCT_CODE+'</td>';
-						row += '<td  class="tgnl">'+item.NAME+'</td>';
-						row += '<td>'+item.VERSION_NO+'</td>';
-						row += "<td><div class=\"ellipsis_txt tgnl\">";
-						if( chkNull(item.CATEGORY_NAME1) ) {
-							row += item.CATEGORY_NAME1;
-						}
-						if( chkNull(item.CATEGORY_NAME2) ) {
-							row += " > "+item.CATEGORY_NAME2;
-						}
-						if( chkNull(item.CATEGORY_NAME3) ) {
-							row += " > "+item.CATEGORY_NAME3;
-						}
-						row += "</div></td>";
-						row += '</tr>';
-						$('#productLayerBody').append(row);
-					})
-				},
-				error:function(request, status, errorThrown){
-					var html = "";
-					$("#productLayerBody").html(html);
-					html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
-					$("#productLayerBody").html(html);
-				}			
-			});
-		}
-		*/
 		var URL = "../product/selectSearchProductAjax";
 		$.ajax({
 			type:"POST",
@@ -1629,6 +1787,53 @@
 		}
 	}
 	
+	
+	function tabChange(tabId) {
+		if( tabId == 'tab1' ) {
+			$("#tab1_div").show();
+			$("#tab1_li").prop("class","select");
+			$("#tab2_div").hide();
+			$("#tab2_li").prop("class","");
+		} else {
+			$("#tab1_div").hide();
+			$("#tab1_li").prop("class","");
+			$("#tab2_div").show();
+			$("#tab2_li").prop("class","select");
+		}
+	}
+	
+	
+	function fn_addCol(type) {
+		var randomId = randomId = Math.random().toString(36).substr(2, 9);
+		var randomId2 = randomId = Math.random().toString(36).substr(2, 9);
+		var row= '<tr>'+$('tbody[name='+type+'_tbody_temp]').children('tr').html()+'</tr>';
+		
+		$("#"+type+"_tbody").append(row);
+		$("#"+type+"_tbody").children('tr:last').attr('id', type + '_tr_' + randomId);
+		$("#"+type+"_tbody").children('tr:last').children('td').children('input[type=checkbox]').attr('id', type+'_'+randomId);
+		$("#"+type+"_tbody").children('tr:last').children('td').children('label').attr('for', type+'_'+randomId);
+	}
+	
+	function fn_delCol(type) {
+		var tbody = $("#"+type+"_tbody");
+		var checkboxArr = tbody.children('tr').children('td').children('input[type=checkbox]').toArray();
+		
+		var checkedCnt = 0;
+		var checkedId;
+		checkboxArr.forEach(function(v, i){
+			if($(v).is(':checked')){
+				checkedCnt++;
+			}
+		});
+		
+		if(checkedCnt == 0) return alert('삭제하실 항목을 선택해주세요');
+		
+		tbody.children('tr').toArray().forEach(function(v, i){
+			var checkBoxId = $(v).children('td:first').children('input[type=checkbox]')[0].id;
+			if($('#'+checkBoxId).is(':checked')) $(v).remove();
+		})
+	}
+	
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -1649,285 +1854,492 @@
 			</div>
 		</h2>
 		<div class="group01 mt20">
-			<div class="title2"  style="width: 80%;"><span class="txt">기본정보</span></div>
-			<div class="title2" style="width: 20%; display: inline-block;">
+			<div class="title"><!--span class="txt">연구개발시스템 공지사항</span--></div>
+			<div class="tab02">
+				<ul>
+					<!-- 선택됬을경우는 탭 클래스에 select를 넣어주세요 -->
+					<!-- 내 제품설계서 같은경우는 change select 이렇게 change 그대로 두고 한칸 띄고 select 삽입 -->
+					<a href="#" onClick="tabChange('tab1')"><li  class="select" id="tab1_li">기안내용</li></a>
+					<a href="#" onClick="tabChange('tab2')"><li class="" id="tab2_li">완료보고서상세정보</li></a>
+				</ul>
+			</div>
+			<div id="tab1_div">
+				<div class="title2"  style="width: 80%;"><span class="txt">제목 </span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">						
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col  />							
+						</colgroup>
+						<tbody>
+							<tr>
+								<td><input type="text" name="title" id="title" style="width: 99%;" class="req" /></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="title2"  style="width: 80%;"><span class="txt">제품명</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col  />							
+						</colgroup>
+						<tbody>
+							<tr>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="productName" id="productName"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="title2"  style="width: 80%;"><span class="txt">개발 목적</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+					<button class="btn_con_search" onClick="fn_addCol('purpose')">
+						<img src="/resources/images/icon_s_write.png" />추가 
+					</button>
+					<button class="btn_con_search" onClick="fn_delCol('purpose')">
+						<img src="/resources/images/icon_s_del.png" />삭제 
+					</button>
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col width="20" />
+							<col  />							
+						</colgroup>
+						<tbody id="purpose_tbody" name="purpose_tbody">
+							<tr id="purpose_tr_1">
+								<td>
+									<input type="checkbox" id="purpose_1"><label for="purpose_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="purpose" value="가."/>
+								</td>
+							</tr>
+						</tbody>
+						<tbody id="purpose_tbody_temp" name="purpose_tbody_temp" style="display:none">
+							<tr id="purpose_tmp_tr_1"> 
+								<td>
+									<input type="checkbox" id="purpose_1"><label for="purpose_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="purpose"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				
+				<div class="title2"  style="width: 80%;"><span class="txt">제품 특징</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+					<button class="btn_con_search" onClick="fn_addCol('feature')">
+						<img src="/resources/images/icon_s_write.png" />추가 
+					</button>
+					<button class="btn_con_search" onClick="fn_delCol('feature')">
+						<img src="/resources/images/icon_s_del.png" />삭제 
+					</button>
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col width="20" />
+							<col  />							
+						</colgroup>
+						<tbody id="feature_tbody" name="feature_tbody">
+							<tr id="feature_tr_1">
+								<td>
+									<input type="checkbox" id="feature_1"><label for="feature_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="feature" value="가."/>
+								</td>
+							</tr>
+						</tbody>
+						<tbody id="feature_tbody_temp" name="feature_tbody_temp" style="display:none">
+							<tr id="feature_tmp_tr_1"> 
+								<td>
+									<input type="checkbox" id="feature_1"><label for="feature_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="feature"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				
+				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+				</div>
+				
+				<div id="">
+					<div class="title2" style="float: left; margin-top: 30px;">
+						<span class="txt">신규도입품/제품규격</span>
+					</div>
+					<div id="matHeaderDiv" class="table_header07">
+						<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
+						<span class="table_header_btn_box">
+							<button class="btn_add_tr" onclick="fn_addCol('new')"></button><button class="btn_del_tr" onclick="fn_delCol('new')"></button>
+						</span>
+					</div>
+					<table id="new_Table" class="tbl05">
+						<colgroup>
+							<col width="20">
+							<col width="140">
+							<col width="140">
+							<col width="250">
+							<col width="150">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th></th>
+								<th>제품명</th>
+								<th>포장규격</th>
+								<th>공급처 및 담당자</th>
+								<th>보관조건 및 소비기한</th>
+								<th>비고</th>
+							</tr>
+						</thead>
+						<tbody id="new_tbody" name="new_tbody">
+							<tr id="new_tr_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="new_1"><label for="new_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text" name="itemName" style="width: 100%" class="req code_tbl"/>
+								</td>
+								<td>
+									<input type="text" name="itemStandard" style="width: 100%"/>
+								</td>
+								<td>
+									<input type="text" name="itemSupplier" style="width: 100%"/>
+								</td>
+								<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemNote" style="width: 100%" class=""/></td>
+							</tr>
+						</tbody>
+						<tbody id="new_tbody_temp" name="new_tbody_temp" style="display:none">
+							<tr id="new_tmp_tr_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="new_1"><label for="new_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text" name="itemName" style="width: 100%" class="req code_tbl"/>
+								</td>
+								<td>
+									<input type="text" name="itemStandard" style="width: 100%"/>
+								</td>
+								<td>
+									<input type="text" name="itemSupplier" style="width: 100%"/>
+								</td>
+								<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemNote" style="width: 100%" class=""/></td>
+							</tr>
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
+				</div>
+				
+				<div class="title2"  style="width: 80%;"><span class="txt">도입 예정일</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col  />							
+						</colgroup>
+						<tbody>
+							<tr>
+								<td>
+									<input type="text" name="scheduleDate" id="scheduleDate" style="width: 120px;"/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				
+				<div class="title2 mt20"  style="width:90%;"><span class="txt">파일첨부</span></div>
+				<div class="title2 mt20" style="width:10%; display: inline-block;">
+					<button class="btn_con_search" onClick="openDialog('dialog_attatch')">
+						<img src="/resources/images/icon_s_file.png" />파일첨부 
+					</button>
+				</div>
+				<div class="con_file" style="">
+					<ul>
+						<li class="point_img">
+							<dt>첨부파일</dt><dd>
+								<ul id="attatch_file">
+								</ul>
+							</dd>
+						</li>
+					</ul>
+				</div>
+				<div class="con_file" style="display:none" id="temp_file">
+					<select id="tempFileList" name="tempFileList" multiple style="display:none"></select>
+					<ul>
+						<li class="point_img">
+							<dt>기존파일</dt><dd>
+								<ul id="temp_attatch_file">
+								</ul>
+							</dd>
+						</li>
+					</ul>
+				</div>
 				
 			</div>
-			<div class="main_tbl">
-				<table class="insert_proc01">
-					<colgroup>
-						<col width="15%" />
-						<col width="35%" />
-						<col width="15%" />
-						<col width="35%" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th style="border-left: none;">제목</th>
-							<td colspan="5"><input type="text" name="title" id="title" style="width: 90%;" class="req" /></td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">제품코드</th>
-							<td>
-								<input type="hidden"  name="isSample" id="isSample" value="N"/>
-								<input type="text"  style="width:200px; float: left" class="req" name="productCode" id="productCode" placeholder="코드를 생성 하세요." readonly/>
-								<button class="btn_small_search ml5" onclick="selectNewCode()" style="float: left">생성</button>
-							</td>
-							<th style="border-left: none;">상품코드</th>
-							<td>
-								<input type="text"  style="width:200px; float: left" class="req" name="productSapCode" id="productSapCode" placeholder="코드를 조회 하세요." readonly/>
-								<button class="btn_small_search ml5" onclick="openDialog('dialog_erpMaterial')" style="float: left">조회</button>
-								<button class="btn_small_search ml5" onclick="fn_initForm()" style="float: left">초기화</button>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">결재라인</th>
-							<td colspan="3">
-								<input class="" id="apprTxtFull" name="apprTxtFull" type="text" style="width: 450px; float: left" readonly>
-								<button class="btn_small_search ml5" onclick="fn_apprOpen()" style="float: left">결재</button>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">참조자</th>
-							<td colspan="3">
-								<div id="refTxtFull" name="refTxtFull"></div>								
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">제품명</th>
-							<td colspan="5">
-								<input type="text"  style="width:350px; float: left" class="req" name="productName" id="productName"/>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">중량</th>
-							<td>
-								<input type="text"  style="width:200px; float: left" class="" name="weight" id="weight"/>
-							</td>
-							<th style="border-left: none;">제품규격</th>
-							<td>
-								<input type="text"  style="width:350px; float: left" class="" name="standard" id="standard"/>								
-							</td>
+			<div id="tab2_div" style="display:none">
+				<div class="title2"  style="width: 80%;"><span class="txt">기본정보</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+					
+				</div>
+				<div class="main_tbl">
+					<table class="insert_proc01">
+						<colgroup>
+							<col width="15%" />
+							<col width="35%" />
+							<col width="15%" />
+							<col width="35%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th style="border-left: none;">제품코드</th>
+								<td>
+									<input type="hidden"  name="isSample" id="isSample" value="N"/>
+									<input type="text"  style="width:200px; float: left" class="req" name="productCode" id="productCode" placeholder="코드를 생성 하세요." readonly/>
+									<button class="btn_small_search ml5" onclick="selectNewCode()" style="float: left">생성</button>
+								</td>
+								<th style="border-left: none;">상품코드</th>
+								<td>
+									<input type="text"  style="width:200px; float: left" class="req" name="productSapCode" id="productSapCode" placeholder="코드를 조회 하세요." readonly/>
+									<button class="btn_small_search ml5" onclick="openDialog('dialog_erpMaterial')" style="float: left">조회</button>
+									<button class="btn_small_search ml5" onclick="fn_initForm()" style="float: left">초기화</button>
+								</td>
+							</tr>
+							<tr>
+								<th style="border-left: none;">결재라인</th>
+								<td colspan="3">
+									<input class="" id="apprTxtFull" name="apprTxtFull" type="text" style="width: 450px; float: left" readonly>
+									<button class="btn_small_search ml5" onclick="fn_apprOpen()" style="float: left">결재</button>
+								</td>
+							</tr>
+							<tr>
+								<th style="border-left: none;">참조자</th>
+								<td colspan="3">
+									<div id="refTxtFull" name="refTxtFull"></div>								
+								</td>
+							</tr>
 							
-						</tr>
-						<tr>
-							<th style="border-left: none;">보관방법</th>
-							<td>
-								<input type="text"  style="width:350px; float: left" class="" name="keepCondition" id="keepCondition"/>
-							</td>
-							<th style="border-left: none;">소비기한</th>
-							<td>
-								<input type="text"  style="width:350px; float: left" class="" name="expireDate" id="expireDate"/>								
-							</td>							
-						</tr>
-						<tr>
-							<th style="border-left: none;">제품유형</th>
-							<td colspan="5">
-								<input class="" id="selectTxtFull" name="selectTxtFull" type="text" style="width: 450px; float: left" readonly>
-								<button class="btn_small_search ml5" onclick="openDialog('dialog_product')" style="float: left">조회</button>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">신규원료사용 유무</th>
-							<td colspan="5">
-								<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)" checked="checked">
-								<label for="newMat1"><span></span>사용안함</label>
-								<input type="radio" name="newMat" id="newMat2" onclick="changeNewMat(event)" value="Y">
-								<label for="newMat2"><span></span>사용</label>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">첨부파일 유형</th>
-							<td colspan="5">
-								<div id="docTypeTxt"></div>
-								<select id="docTypeTemp" name="docTypeTemp" multiple style='display:none'>
-								</select>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-			
-			<div id="matNewDiv" style="display:none">
-				<div class="title2" style="float: left; margin-top: 30px;">
-					<span class="txt">신규원료</span>
+							<tr>
+								<th style="border-left: none;">중량</th>
+								<td>
+									<input type="text"  style="width:200px; float: left" class="" name="weight" id="weight"/>
+								</td>
+								<th style="border-left: none;">제품규격</th>
+								<td>
+									<input type="text"  style="width:350px; float: left" class="" name="standard" id="standard"/>								
+								</td>
+								
+							</tr>
+							<tr>
+								<th style="border-left: none;">보관방법</th>
+								<td>
+									<input type="text"  style="width:350px; float: left" class="" name="keepCondition" id="keepCondition"/>
+								</td>
+								<th style="border-left: none;">소비기한</th>
+								<td>
+									<input type="text"  style="width:350px; float: left" class="" name="expireDate" id="expireDate"/>								
+								</td>							
+							</tr>
+							<tr>
+								<th style="border-left: none;">제품유형</th>
+								<td colspan="5">
+									<input class="" id="selectTxtFull" name="selectTxtFull" type="text" style="width: 450px; float: left" readonly>
+									<button class="btn_small_search ml5" onclick="openDialog('dialog_product')" style="float: left">조회</button>
+								</td>
+							</tr>
+							<tr>
+								<th style="border-left: none;">신규원료사용 유무</th>
+								<td colspan="5">
+									<input type="radio" name="newMat" id="newMat1" value="N" onclick="changeNewMat(event)" checked="checked">
+									<label for="newMat1"><span></span>사용안함</label>
+									<input type="radio" name="newMat" id="newMat2" onclick="changeNewMat(event)" value="Y">
+									<label for="newMat2"><span></span>사용</label>
+								</td>
+							</tr>
+							<tr>
+								<th style="border-left: none;">첨부파일 유형</th>
+								<td colspan="5">
+									<div id="docTypeTxt"></div>
+									<select id="docTypeTemp" name="docTypeTemp" multiple style='display:none'>
+									</select>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
-				<div id="matHeaderDiv" class="table_header07">
-					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
-					<span class="table_header_btn_box">
-						<button class="btn_add_tr" onclick="addRow(this, 'newMat')" id="matNew_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
-					</span>
-				</div>
-				<table id="matTable" class="tbl05">
-					<colgroup>
-						<col width="20">
-						<col width="140">
-						<col width="140">
-						<col width="250">
-						<col width="150">
-						<col width="200">
-						<col width="8%">
-						<col />
-					</colgroup>
-					<thead>
-						<tr>
-							<th><input type="checkbox" id="matTable_2" onclick="checkAll(event)"><label for="matTable_2"><span></span></label></th>
-							<th>원료코드</th>
-							<th>ERP코드</th>
-							<th>원료명</th>
-							<th>규격</th>
-							<th>보관방법 및 유통기한</th>
-							<th>공급가</th>
-							<th>비고</th>
-						</tr>
-					</thead>
-					<tbody id="newMatTbody" name="newMatTbody">
-						<Tr id="newMatRow_1" class="temp_color">
-							<td>
-								<input type="checkbox" id="mat_1"><label for="mat_1"><span></span></label>
-								<input type="hidden" name="itemType" value="Y"/>
-							</td>
-							<td>
-								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
-								<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
-							</td>
-							<td>
-								<input type="text" name="itemSapCode" style="width: 100px"/>
-							</td>
-							<td>
-								<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
-							</td>
-							<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
-							<td><input type="text" name="itemDesc" style="width: 100%"/></td>
-						</Tr>
-					</tbody>
-					<tfoot>
-					</tfoot>
-				</table>
-			</div>
-			
-			<div id="matDiv">
-				<div class="title2" style="float: left; margin-top: 30px;">
-					<span class="txt">원료</span>
-				</div>
-				<div id="matHeaderDiv" class="table_header07">
-					<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
-					<span class="table_header_btn_box">
-						<button class="btn_add_tr" onclick="addRow(this, 'mat')" id="mat_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
-					</span>
-				</div>
-				<table id="matTable" class="tbl05">
-					<colgroup>
-						<col width="20">
-						<col width="140">
-						<col width="140">
-						<col width="250">
-						<col width="150">
-						<col width="200">
-						<col width="8%">
-						<col />
-					</colgroup>
-					<thead>
-						<tr>
-							<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
-							<th>원료코드</th>
-							<th>ERP코드</th>
-							<th>원료명</th>
-							<th>규격</th>
-							<th>보관방법 및 유통기한</th>
-							<th>공급가</th>
-							<th>비고</th>
-						</tr>
-					</thead>
-					<tbody id="matTbody" name="matTbody">
-						<tr id="matRow_1" class="temp_color">
-							<td>
-								<input type="checkbox" id="mat_2"><label for="mat_2"><span></span></label>
-								<input type="hidden" name="itemType" value="N"/>
-							</td>
-							<td>
-								<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
-								<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
-								<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
-							</td>
-							<td>
-								<input type="text" name="itemSapCode" style="width: 100px"/>
-							</td>
-							<td>
-								<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
-							</td>
-							<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
-							<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
-							<td><input type="text" name="itemDesc" style="width: 100%"/></td>
-						</tr>
-					</tbody>
-					<tfoot>
-					</tfoot>
-				</table>
-			</div>
-			
-			
-			<div class="title2 mt20"  style="width:90%;"><span class="txt">파일첨부</span></div>
-			<div class="title2 mt20" style="width:10%; display: inline-block;">
-				<button class="btn_con_search" onClick="openDialog('dialog_attatch')">
-					<img src="/resources/images/icon_s_file.png" />파일첨부 
-				</button>
-			</div>
-			<div class="con_file" style="">
-				<ul>
-					<li class="point_img">
-						<dt>첨부파일</dt><dd>
-							<ul id="attatch_file">
-							</ul>
-						</dd>
-					</li>
-				</ul>
-			</div>
-			<div class="con_file" style="display:none" id="temp_file">
-				<select id="tempFileList" name="tempFileList" multiple style="display:none"></select>
-				<ul>
-					<li class="point_img">
-						<dt>기존파일</dt><dd>
-							<ul id="temp_attatch_file">
-							</ul>
-						</dd>
-					</li>
-				</ul>
-			</div>
-			
-			<div class="title2 mt20"  style="width:90%;"><span class="txt">기안문</span></div>
-			<div class="main_tbl">
-				<ul>
-					<li class="">
-						<div class="text_insert" style="padding: 0px;">
-							<textarea name="contents" id="contents" style="width: 666px; height: 200px; display: none;">
-							<h2><strong>1. 제품명</strong></h2><p>&nbsp;</p><h2><strong>2. 개발목적</strong></h2><p>&nbsp;</p><h2><strong>3. 제품특징</strong></h2><p>&nbsp;</p><h2><strong>4. 용도</strong></h2><p>&nbsp;</p><h2><strong>5. 제품규격</strong></h2><p>&nbsp;</p><h2><strong>6. 도입예정일</strong></h2><p>&nbsp;</p><p>&nbsp;</p>
-							</textarea>
-							<script type="text/javascript" src="/resources/editor/build/ckeditor.js"></script>
-						</div>
-					</li>
-				</ul>
-			</div>
 				
-			<div class="main_tbl">
-				<div class="btn_box_con5">
-					<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
+				<div id="matNewDiv" style="display:none">
+					<div class="title2" style="float: left; margin-top: 30px;">
+						<span class="txt">신규원료</span>
+					</div>
+					<div id="matHeaderDiv" class="table_header07">
+						<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
+						<span class="table_header_btn_box">
+							<button class="btn_add_tr" onclick="addRow(this, 'newMat')" id="matNew_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+						</span>
+					</div>
+					<table id="matTable" class="tbl05">
+						<colgroup>
+							<col width="20">
+							<col width="140">
+							<col width="140">
+							<col width="250">
+							<col width="150">
+							<col width="200">
+							<col width="8%">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th><input type="checkbox" id="matTable_2" onclick="checkAll(event)"><label for="matTable_2"><span></span></label></th>
+								<th>원료코드</th>
+								<th>ERP코드</th>
+								<th>원료명</th>
+								<th>규격</th>
+								<th>보관방법 및 유통기한</th>
+								<th>공급가</th>
+								<th>비고</th>
+							</tr>
+						</thead>
+						<tbody id="newMatTbody" name="newMatTbody">
+							<Tr id="newMatRow_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="mat_1"><label for="mat_1"><span></span></label>
+									<input type="hidden" name="itemType" value="Y"/>
+								</td>
+								<td>
+									<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
+									<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'newMat')"/>
+									<button class="btn_code_search2" onclick="openMaterialPopup(this,'newMat')"></button>
+								</td>
+								<td>
+									<input type="text" name="itemSapCode" style="width: 100px"/>
+								</td>
+								<td>
+									<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
+								</td>
+								<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
+								<td><input type="text" name="itemDesc" style="width: 100%"/></td>
+							</Tr>
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
 				</div>
-				<div class="btn_box_con4">
-					<!-- 
-					<button class="btn_admin_red">임시/템플릿저장</button>
-					<button class="btn_admin_navi">임시저장</button>
-					 -->
-					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
-					<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
+				
+				<div id="matDiv">
+					<div class="title2" style="float: left; margin-top: 30px;">
+						<span class="txt">원료</span>
+					</div>
+					<div id="matHeaderDiv" class="table_header07">
+						<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
+						<span class="table_header_btn_box">
+							<button class="btn_add_tr" onclick="addRow(this, 'mat')" id="mat_add_btn"></button><button class="btn_del_tr" onclick="removeRow(this)"></button>
+						</span>
+					</div>
+					<table id="matTable" class="tbl05">
+						<colgroup>
+							<col width="20">
+							<col width="140">
+							<col width="140">
+							<col width="250">
+							<col width="150">
+							<col width="200">
+							<col width="8%">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th><input type="checkbox" id="matTable_1" onclick="checkAll(event)"><label for="matTable_1"><span></span></label></th>
+								<th>원료코드</th>
+								<th>ERP코드</th>
+								<th>원료명</th>
+								<th>규격</th>
+								<th>보관방법 및 유통기한</th>
+								<th>공급가</th>
+								<th>비고</th>
+							</tr>
+						</thead>
+						<tbody id="matTbody" name="matTbody">
+							<tr id="matRow_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="mat_2"><label for="mat_2"><span></span></label>
+									<input type="hidden" name="itemType" value="N"/>
+								</td>
+								<td>
+									<input type="hidden" name="itemMatIdx" style="width: 100px" class="req code_tbl" />
+									<input type="text" name="itemMatCode" style="width: 100px" class="req code_tbl" onkeyup="checkMaterail(event,'mat')"/>
+									<button class="btn_code_search2" onclick="openMaterialPopup(this,'mat')"></button>
+								</td>
+								<td>
+									<input type="text" name="itemSapCode" style="width: 100px"/>
+								</td>
+								<td>
+									<input type="text" name="itemName" style="width: 85%" readonly="readonly" class="read_only" />
+								</td>
+								<td><input type="text" name="itemStandard" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemKeepExp" style="width: 100%" class=""/></td>
+								<td><input type="text" name="itemUnitPrice" style="width: 100%"  readonly="readonly" class="read_only"/></td>
+								<td><input type="text" name="itemDesc" style="width: 100%"/></td>
+							</tr>
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
 				</div>
-				<hr class="con_mode" />
+				
+				<div class="title2 mt20"  style="width:90%;"><span class="txt">비고</span></div>
+				<div class="main_tbl">
+					<ul>
+						<li class="">
+							<div class="text_insert" style="padding: 0px;">
+								<textarea name="contents" id="contents" style="width: 666px; height: 120px; display: none;">
+								<h2><strong>1. 제품명</strong></h2><p>&nbsp;</p><h2><strong>2. 개발목적</strong></h2><p>&nbsp;</p><h2><strong>3. 제품특징</strong></h2><p>&nbsp;</p><h2><strong>4. 용도</strong></h2><p>&nbsp;</p><h2><strong>5. 제품규격</strong></h2><p>&nbsp;</p><h2><strong>6. 도입예정일</strong></h2><p>&nbsp;</p><p>&nbsp;</p>
+								</textarea>
+								<script type="text/javascript" src="/resources/editor/build/ckeditor.js"></script>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>		
+				<div class="main_tbl">
+					<div class="btn_box_con5">
+						<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
+					</div>
+					<div class="btn_box_con4">
+						<!-- 
+						<button class="btn_admin_red">임시/템플릿저장</button>
+						<button class="btn_admin_navi">임시저장</button>
+						 -->
+						 <button class="btn_admin_navi" onclick="fn_insertTmp()">임시저장</button>
+						<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
+						<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
+					</div>
+					<hr class="con_mode" />
+				</div>
 			</div>
-		</div>
 	</section>
 </div>
 

@@ -45,6 +45,10 @@ public interface FileDao {
 
 	int deleteTrialFile(TrialReportFile trialReprotFile);
 
+	Map<String, Object> selectFileData(Map<String, Object> param);
+
+	void deleteFileData(Map<String, Object> param);
+
 	//int deleteFile(Map<String, Object> param) throws Exception;
 
 	//void deleteImageFile(Map<String, Object> param) throws Exception;

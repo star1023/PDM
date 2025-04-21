@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="report2">
+	<select id="selectDesignSeq" resultType="int">
+	/*	report2.selectDesignSeq */
+		SELECT nextval('design_seq') as seq
+	</select>
+	
+	<insert id="insertDesign" parameterType="map">
+	/*	report2.insertDesign */
+		INSERT INTO lab_design(
+			DESIGN_IDX
+			, PRODUCT_CODE
+			, SAP_CODE
+			, TITLE
+			, PRODUCT_NAME
+			, CHANGE_COMMENT
+			, CHANGE_TIME
+			, CONTENTS
+			, VERSION_NO
+			, IS_DELETE
+			, IS_LAST
+			, STATUS
+			, REG_USER
+			, DOC_OWNER			
+		)VALUES(
+			#{idx}
+			, #{productCode}
+			, #{productSapCode}
+			, #{title}
+			, #{productName}
+			, #{changeComment}
+			, #{changeTime}
+			, #{contents}
+			, 1
+			, 'N'
+			, 'Y'
+			, #{status}
+			, #{userId}
+			, #{userId}			
+		)
+	</insert>
+	
+	<insert id="insertChangeList" parameterType="map">
+	/*	report2.insertChangeList */
+		INSERT 
+    	INTO lab_design_change_info(
+			CHANGE_IDX
+			, DESIGN_IDX
+			, ITEM_DIV
+			, ITEM_CURRENT
+			, ITEM_CHANGE
+			, ITEM_NOTE
+			, ORDER_NO
+		)values
+		<foreach collection="changeList" item="item" index="index"  separator=",">
+		( nextval('design_change_info_seq'), #{idx}, #{item.itemDiv}, #{item.itemCurrent}, #{item.itemChange}, #{item.itemNote} , ${index+1} )
+		</foreach>
+	</insert>
+	
+	<sql id="whereDesignList">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND PRODUCT_NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchTitle')">
+      		AND TITLE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND DESIGN_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'DESIGN' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectDesignCount" parameterType="map" resultType="int">
+	/*	report2.selectDesignCount */
+		SELECT
+			COUNT(DESIGN_IDX) as cnt
+		FROM 	
+			lab_design
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			<include refid="report2.whereDesignList" />
+	</select>
+	
+	<select id="selectDesignList" parameterType="map" resultType="hashmap">
+	/*	report2.selectDesignList */
+		SELECT
+			tmp.*
+			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, CASE 
+				WHEN tmp.STATUS = 'REG' THEN '등록'
+				WHEN tmp.STATUS = 'APPR' THEN '결재중'
+				WHEN tmp.STATUS = 'COMP' THEN '완료'
+				WHEN tmp.STATUS = 'COND_APPR' THEN '부분승인'
+				END	AS STATUS_TXT
+		FROM
+		(	
+			SELECT
+				row_number() over (order by  DESIGN_IDX DESC) as rnum
+				, DESIGN_IDX
+				, PRODUCT_CODE
+				, SAP_CODE
+				, TITLE
+				, PRODUCT_NAME
+				, CHANGE_COMMENT
+				, CHANGE_TIME
+				, CONTENTS
+				, VERSION_NO
+				, IS_DELETE
+				, IS_LAST
+				, STATUS
+				, REG_USER
+				, DOC_OWNER
+			FROM 	
+				lab_design
+			WHERE 1 = 1
+				AND DOC_OWNER = #{userId}
+				AND IS_DELETE = 'N'
+				AND IS_LAST = 'Y'
+				<include refid="report2.whereDesignList" />
+		)tmp
+		WHERE rnum between #{startRow} and #{endRow}		
+	</select>
+	
+	<select id="selectDesignData" parameterType="map" resultType="hashmap">
+	/*	report2.selectDesignData */
+		SELECT
+			DESIGN_IDX
+			, PRODUCT_CODE
+			, SAP_CODE
+			, TITLE
+			, PRODUCT_NAME
+			, CHANGE_COMMENT
+			, CHANGE_TIME
+			, CONTENTS
+			, VERSION_NO
+			, IS_DELETE
+			, IS_LAST
+			, STATUS
+			, REG_USER
+			, DOC_OWNER
+			, TITLE
+		FROM 
+			lab_design
+		WHERE 1 = 1
+			AND DESIGN_IDX = #{idx}
+	</select>
+	
+	<select id="selectDesignChangeList" parameterType="map" resultType="hashmap">
+	/*	report2.selectDesignChangeList */
+		SELECT
+			CHANGE_IDX
+			, DESIGN_IDX
+			, ITEM_DIV
+			, ITEM_CURRENT
+			, ITEM_CHANGE
+			, ITEM_NOTE
+			, ORDER_NO
+		FROM
+			lab_design_change_info
+		WHERE 1 = 1
+			AND DESIGN_IDX = #{idx}
+		ORDER BY ORDER_NO ASC	
+	</select>
+	
+	<select id="selectHistory" parameterType="map" resultType="hashmap">
+	/* report2.selectHistory */
+	SELECT 
+		lh.DOC_IDX
+		, lh.HISTORY_TYPE
+		, CASE WHEN lh.HISTORY_TYPE  = 'I' then '등록'
+			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
+			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
+			WHEN lh.HISTORY_TYPE  = 'U' then '수정'
+			END HISTORY_TYPE_TXT 
+		,<choose>
+			<when test="docType.equals('DESIGN')">
+			rt.PRODUCT_NAME 
+			</when> 
+			<when test="docType.equals('TRIP')">
+			rt.TITLE
+			</when>
+			<when test="docType.equals('PLAN')">
+			rt.TITLE
+			</when>
+		</choose>
+			AS TITLE
+		, lh.USER_ID 
+		, (SELECT USER_NAME FROM lab_user u WHERE 1 = 1 AND u.USER_ID = lh.USER_ID) as USER_NAME
+		, DATE_FORMAT(lh.REG_DATE, '%Y-%m-%d %H:%i:%s') as REG_DATE
+	FROM lab_history lh ,
+	<choose>
+		<when test="docType.equals('DESIGN')">
+		lab_design rt
+		</when> 
+		<when test="docType.equals('TRIP')">
+		lab_business_trip rt
+		</when>
+		<when test="docType.equals('PLAN')">
+		lab_business_trip_plan rt
+		</when>
+	</choose>	
+	WHERE 1 = 1
+		AND lh.DOC_IDX = #{idx}
+		AND lh.DOC_TYPE = #{docType}
+		<choose>
+			<when test="docType.equals('DESIGN')">
+			AND lh.DOC_IDX = rt.DESIGN_IDX 
+			</when> 
+			<when test="docType.equals('TRIP')">
+			AND lh.DOC_IDX = rt.TRIP_IDX 
+			</when>
+			<when test="docType.equals('PLAN')">
+			AND lh.DOC_IDX = rt.PLAN_IDX 
+			</when>
+		</choose>		
+	ORDER BY lh.REG_DATE ASC
+	</select>
+	
+	<update id="updateDesign" parameterType="map">
+	/*	report2.updateDesign */
+		UPDATE 
+			lab_design
+		SET 
+			PRODUCT_CODE = #{productCode}
+			, SAP_CODE = #{productSapCode}
+			, TITLE = #{title}
+			, PRODUCT_NAME = #{productName}
+			, CHANGE_COMMENT = #{changeComment}
+			, CHANGE_TIME = #{changeTime}
+			, CONTENTS = #{contents}
+			<if test="status != null and status != '' ">
+			, STATUS = #{status}
+			</if>
+		WHERE 1 = 1
+			AND DESIGN_IDX = #{idx}	
+	</update>
+	
+	<delete id="deleteChangeList" parameterType="map">
+	/*	report2.deleteChangeList */
+		DELETE
+		FROM lab_design_change_info
+		WHERE 1 = 1
+			AND DESIGN_IDX = #{idx}
+	</delete>
+	
+	<sql id="whereBusinessTrip">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND PRODUCT_NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchTitle')">
+      		AND TITLE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND DESIGN_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'DESIGN' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectBusinessTripCount" parameterType="map" resultType="int">
+	/*	report2.selectBusinessTripCount */
+		SELECT
+			count(TRIP_IDX) as cnt
+		FROM
+			lab_business_trip
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			<include refid="report2.whereBusinessTrip" />			
+	</select>
+	
+	<select id="selectBusinessTripList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripList */
+		SELECT
+			tmp.*
+			, CASE 
+				WHEN tmp.TRIP_TYPE = 'I' THEN '국내'
+				WHEN tmp.TRIP_TYPE = 'O' THEN '해외'
+				END	AS TRIP_TYPE_TXT
+			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, CASE 
+				WHEN tmp.STATUS = 'REG' THEN '등록'
+				WHEN tmp.STATUS = 'APPR' THEN '결재중'
+				WHEN tmp.STATUS = 'COMP' THEN '완료'
+				WHEN tmp.STATUS = 'COND_APPR' THEN '부분승인'
+				END	AS STATUS_TXT
+		FROM
+		(	
+			SELECT
+				row_number() over (order by  TRIP_IDX DESC) as rnum
+				, TRIP_IDX
+				, TRIP_TYPE
+				, TITLE
+				, DEPT
+				, POSITION
+				, NAME
+				, TRIP_PURPOSE
+				, TRIP_START_DATE
+				, TRIP_END_DATE
+				, TRIP_DESTINATION
+				, TRIP_TRANSIT
+				, CONTENTS
+				, TRIP_COST
+				, OVER_REASON
+				, TRIP_EFFECT
+				, REG_USER
+				, DOC_OWNER
+				, STATUS
+				, IS_LAST
+				, IS_DELETE
+				, VERSION_NO
+			FROM 	
+				lab_business_trip
+			WHERE 1 = 1
+				AND DOC_OWNER = #{userId}
+				AND IS_DELETE = 'N'
+				AND IS_LAST = 'Y'
+				<include refid="report2.whereBusinessTrip" />
+		)tmp
+		WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	
+	<select id="selectTripSeq" resultType="int">
+		/*	report2.selectTripSeq */
+		SELECT nextval('business_trip_seq') as seq
+	</select>
+	
+	<insert id="insertBusinessTrip" parameterType="map">
+	/*	report2.insertBusinessTrip */
+		INSERT INTO lab_business_trip(
+			TRIP_IDX
+			, TRIP_TYPE
+			, TITLE
+			, DEPT
+			, POSITION
+			, NAME
+			, TRIP_PURPOSE
+			, TRIP_START_DATE
+			, TRIP_END_DATE
+			, TRIP_DESTINATION
+			, TRIP_TRANSIT
+			, CONTENTS
+			, TRIP_COST
+			, OVER_REASON
+			, TRIP_EFFECT
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_LAST
+			, IS_DELETE
+			, VERSION_NO			
+		)VALUES(
+			#{idx}
+			, #{tripType}
+			, #{title}
+			, #{dept}
+			, #{position}
+			, #{name}
+			, #{tripPurpose}
+			, #{tripStartDate}
+			, #{tripEndDate}
+			, #{tripDestination}
+			, #{tripTransit}
+			, #{tripContents}
+			, #{tripCost}
+			, #{overReason}
+			, #{tripEffect}
+			, #{userId}
+			, #{userId}
+			, #{status}
+			, 'Y'
+			, 'N'
+			, 1		
+		)
+	</insert>
+	
+	<select id="selectBusinessTripData" parameterType="map" resultType="hashmap">
+		SELECT
+			TRIP_IDX
+			, TRIP_TYPE
+			, CASE 
+				WHEN TRIP_TYPE = 'I' THEN '국내'
+				WHEN TRIP_TYPE = 'O' THEN '해외'
+				END	AS TRIP_TYPE_TXT
+			, TITLE
+			, DEPT
+			, POSITION
+			, NAME
+			, TRIP_PURPOSE
+			, TRIP_START_DATE
+			, TRIP_END_DATE
+			, TRIP_DESTINATION
+			, TRIP_TRANSIT
+			, CONTENTS
+			, TRIP_COST
+			, OVER_REASON
+			, TRIP_EFFECT
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_LAST
+			, IS_DELETE
+			, VERSION_NO
+		FROM
+			lab_business_trip
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}		
+	</select>
+	
+	<update id="updateBusinessTrip" parameterType="map">
+		UPDATE 
+			lab_business_trip
+		SET 
+			TRIP_TYPE = #{tripType}
+			, TITLE = #{title}
+			, DEPT = #{dept}
+			, POSITION = #{position}
+			, NAME = #{name}
+			, TRIP_PURPOSE = #{tripPurpose}
+			, TRIP_START_DATE = #{tripStartDate}
+			, TRIP_END_DATE = #{tripEndDate}
+			, TRIP_DESTINATION = #{tripDestination}
+			, TRIP_TRANSIT = #{tripTransit}
+			, CONTENTS = #{tripContents}
+			, TRIP_COST = #{tripCost}
+			, OVER_REASON = #{overReason}
+			, TRIP_EFFECT = #{tripEffect}
+			<if test="status != null and status != '' ">
+			, STATUS = #{status}
+			</if>
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+	</update>
+	
+	<select id="searchBusinessTripPlanList" parameterType="map" resultType="hashmap">
+		/*	report2.searchBusinessTripPlanList */
+		SELECT
+			PLAN_IDX
+			, TRIP_TYPE
+			, TITLE
+			, DEPT
+			, POSITION
+			, NAME
+			, TRIP_PURPOSE
+			, TRIP_START_DATE
+			, TRIP_END_DATE
+			, TRIP_DESTINATION
+			, TRIP_TRANSIT
+			, CONTENTS
+			, TRIP_COST
+			, CAL_METHOD
+			, TRIP_EFFECT
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_LAST
+			, IS_DELETE
+			, VERSION_NO
+		FROM 	
+			lab_business_trip_plan
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			AND IS_DELETE = 'N'
+			AND IS_LAST = 'Y'
+			AND ( TITLE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_PURPOSE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_DESTINATION LIKE CONCAT('%',#{searchValue},'%') OR CONTENTS LIKE CONCAT('%',#{searchValue},'%') OR TRIP_EFFECT LIKE CONCAT('%',#{searchValue},'%') )
+	</select>
+	
+	<sql id="whereBusinessTripPlan">
+		<if test="searchType != null and searchType != '' ">
+		<choose>
+			<when test="searchType.equals('searchName')">
+			AND PRODUCT_NAME LIKE CONCAT('%',#{searchValue},'%')
+			</when>
+      		<when test="searchType.equals('searchTitle')">
+      		AND TITLE LIKE CONCAT('%',#{searchValue},'%')
+      		</when>
+      	</choose>
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND DESIGN_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'DESIGN' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
+	<select id="selectBusinessTripPlanCount" parameterType="map" resultType="int">
+	/*	report2.selectBusinessTripPlanCount */
+		SELECT
+			count(PLAN_IDX) as cnt
+		FROM
+			lab_business_trip_plan
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			<include refid="report2.whereBusinessTripPlan" />			
+	</select>
+	
+	<select id="selectBusinessTripPlanList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripPlanList */
+		SELECT
+			tmp.*
+			, CASE 
+				WHEN tmp.TRIP_TYPE = 'I' THEN '국내'
+				WHEN tmp.TRIP_TYPE = 'O' THEN '해외'
+				END	AS TRIP_TYPE_TXT
+			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, CASE 
+				WHEN tmp.STATUS = 'REG' THEN '등록'
+				WHEN tmp.STATUS = 'APPR' THEN '결재중'
+				WHEN tmp.STATUS = 'COMP' THEN '완료'
+				WHEN tmp.STATUS = 'COND_APPR' THEN '부분승인'
+				END	AS STATUS_TXT
+		FROM
+		(	
+			SELECT
+				row_number() over (order by  PLAN_IDX DESC) as rnum
+				, PLAN_IDX
+				, TRIP_TYPE
+				, TITLE
+				, DEPT
+				, POSITION
+				, NAME
+				, TRIP_PURPOSE
+				, TRIP_START_DATE
+				, TRIP_END_DATE
+				, TRIP_DESTINATION
+				, TRIP_TRANSIT
+				, CONTENTS
+				, TRIP_COST
+				, CAL_METHOD
+				, TRIP_EFFECT
+				, REG_USER
+				, DOC_OWNER
+				, STATUS
+				, IS_LAST
+				, IS_DELETE
+				, VERSION_NO
+			FROM 	
+				lab_business_trip_plan
+			WHERE 1 = 1
+				AND DOC_OWNER = #{userId}
+				AND IS_DELETE = 'N'
+				AND IS_LAST = 'Y'
+				<include refid="report2.whereBusinessTripPlan" />
+		)tmp
+		WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	
+	<select id="selectTripPlanSeq" resultType="int">
+		/*	report2.selectTripPlanSeq */
+		SELECT nextval('business_trip_plan_seq') as seq
+	</select>
+	
+	<insert id="insertBusinessTripPlan" parameterType="map">
+	/*	report2.insertBusinessTripPlan */
+		INSERT INTO lab_business_trip_plan(
+			PLAN_IDX
+			, TRIP_TYPE
+			, TITLE
+			, DEPT
+			, POSITION
+			, NAME
+			, TRIP_PURPOSE
+			, TRIP_START_DATE
+			, TRIP_END_DATE
+			, TRIP_DESTINATION
+			, TRIP_TRANSIT
+			, CONTENTS
+			, TRIP_COST
+			, CAL_METHOD
+			, TRIP_EFFECT
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_LAST
+			, IS_DELETE
+			, VERSION_NO			
+		)VALUES(
+			#{idx}
+			, #{tripType}
+			, #{title}
+			, #{dept}
+			, #{position}
+			, #{name}
+			, #{tripPurpose}
+			, #{tripStartDate}
+			, #{tripEndDate}
+			, #{tripDestination}
+			, #{tripTransit}
+			, #{tripContents}
+			, #{tripCost}
+			, #{calMethod}
+			, #{tripEffect}
+			, #{userId}
+			, #{userId}
+			, #{status}
+			, 'Y'
+			, 'N'
+			, 1		
+		)
+	</insert>
+	
+	<select id="selectBusinessTripPlanData" parameterType="map" resultType="hashmap">
+		SELECT
+			PLAN_IDX
+			, TRIP_TYPE
+			, TITLE
+			, DEPT
+			, POSITION
+			, NAME
+			, TRIP_PURPOSE
+			, TRIP_START_DATE
+			, TRIP_END_DATE
+			, TRIP_DESTINATION
+			, TRIP_TRANSIT
+			, CONTENTS
+			, TRIP_COST
+			, CAL_METHOD
+			, TRIP_EFFECT
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_LAST
+			, IS_DELETE
+			, VERSION_NO
+		FROM
+			lab_business_trip_plan
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}	
+	</select>
+</mapper>

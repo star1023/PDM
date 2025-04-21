@@ -235,6 +235,10 @@ function fn_viewComment(itemIdx) {
 function getTextareaHTML(note) {
     return "</p><p>"+ note.trim().replace(/\n\r?/g,"</p><p>") +"</p>";
 }
+
+function downloadFile(idx){
+	location.href = '/test/fileDownload?idx='+idx;
+}
 </script>
 <h2 style=" position:fixed;" class="print_hidden">
 	<span class="title"><img src="/resources/images/bg_bs_box_fast02.png">결재</span>
@@ -351,14 +355,84 @@ function getTextareaHTML(note) {
 						<th style="border-left: none;">제목</th>
 						<td colspan="3">${productData.data.TITLE}</td>
 					</tr>
-					<c:if test="${productData.STATUS == 'REG' }">
 					<tr>
-						<th style="border-left: none;">결재라인</th>
+						<th style="border-left: none;">제품명</th>
 						<td colspan="3">
-							<button class="btn_small_search ml5" onclick="fn_apprOpen()" style="float: left">결재</button>
+							${productData.data.NAME}
 						</td>
 					</tr>
-					</c:if>
+					<tr>
+						<th style="border-left: none;">개발 목적</th>
+						<td colspan="3">
+							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
+								<c:if test="${addInfoList.INFO_TYPE == 'PUR' }">
+									${addInfoList.INFO_TEXT} <br>
+								</c:if>
+							</c:forEach>
+						</td>
+					</tr>
+					<tr>
+						<th style="border-left: none;">제품 특징</th>
+						<td colspan="3">
+							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
+								<c:if test="${addInfoList.INFO_TYPE == 'FEA' }">
+									${addInfoList.INFO_TEXT} <br>
+								</c:if>
+							</c:forEach>
+						</td>
+					</tr>
+					<tr>
+						<th style="border-left: none;">용도</th>
+						<td colspan="3">
+
+						</td>
+					</tr>
+					<tr>
+						<th style="border-left: none;">신규도입품/제품규격</th>
+						<td colspan="3">
+							<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
+								<colgroup>
+									<col width="140">
+									<col width="140">
+									<col width="250">
+									<col width="150">
+									<col />
+								</colgroup>
+								<thead>
+									<tr>
+										<th>제품명</th>
+										<th>포장규격</th>
+										<th>공급처 및 담당자</th>
+										<th>보관조건 및 소비기한</th>
+										<th>비고</th>
+									</tr>
+								</thead>
+								<tbody>
+									<c:forEach items="${newDataList}" var="newDataList" varStatus="status">
+										<tr id="new_tr_${status.count}" class="temp_color">
+											<td>
+												${newDataList.PRODUCT_NAME}
+											</td>
+											<td>
+												${newDataList.PACKAGE_STANDARD}
+											</td>
+											<td>
+												${newDataList.SUPPLIER}
+											</td>
+											<td>${newDataList.KEEP_EXP}</td>
+											<td>${newDataList.NOTE}</td>
+										</tr>
+									</c:forEach>
+								</tbody>
+							</table>	
+						</td>
+					</tr>
+					<tr>
+						<th style="border-left: none;">도입 예정일</th>
+						<td colspan="3">
+							${productData.data.SCHEDULE_DATE}
+						</td>
+					</tr>
 					<tr>
 						<th style="border-left: none;">제품코드</th>
 						<td>
@@ -370,12 +444,8 @@ function getTextareaHTML(note) {
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">제품명</th>
-						<td>
-							${productData.data.NAME}
-						</td>
 						<th style="border-left: none;">버젼 No.</th>
-						<td>
+						<td colspan="3">
 							${productData.data.VERSION_NO}
 						</td>
 					</tr>

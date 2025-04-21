@@ -56,4 +56,16 @@ public interface ProductDao {
 	void deleteFileType(HashMap<String, Object> map) throws Exception;
 
 	void updateProductData(Map<String, Object> param) throws Exception;
+
+	void insertAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception;
+
+	List<Map<String, String>> selectAddInfo(Map<String, Object> param);
+
+	void insertProductNew(ArrayList<HashMap<String, Object>> newList) throws Exception;
+
+	List<Map<String, String>> selectNewDataList(Map<String, Object> param);
+
+	void deleteAddInfo(HashMap<String, Object> map) throws Exception;
+
+	void deleteProductNew(HashMap<String, Object> map) throws Exception;
 }

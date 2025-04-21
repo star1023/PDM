@@ -266,4 +266,31 @@
 		/* file.deleteTrialFile 시생산보고서 첨부파일 삭제 */
 		DELETE FROM trialReportFile WHERE fNo = #{fNo}
 	</delete>
+	
+	<select id="selectFileData" parameterType="map" resultType="hashmap">
+	/* file.selectFileData */
+		SELECT
+			FILE_IDX
+			, DOC_IDX
+			, DOC_TYPE
+			, FILE_TYPE
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+			, REG_DATE
+			, FILE_CONTENT
+		FROM 
+			lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</select>
+	
+	<delete id="deleteFileData" parameterType="map">
+	/* file.deleteFileData */
+		DELETE
+		FROM lab_file
+		WHERE 1 = 1
+			AND FILE_IDX = #{fileIdx}
+	</delete>
+	
 </mapper>

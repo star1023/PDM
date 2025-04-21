@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.aspn.dao.Approval2Dao;
 import kr.co.aspn.dao.ProductDao;
+import kr.co.aspn.dao.Report2Dao;
 import kr.co.aspn.service.Approval2Service;
 import kr.co.aspn.util.PageNavigator;
 
@@ -27,6 +28,9 @@ public class Approval2ServiceImpl implements Approval2Service {
 	@Autowired
 	ProductDao productDao;
 	
+	@Autowired
+	Report2Dao reportDao;
+	
 	@Override
 	public List<Map<String, Object>> searchUser(Map<String, Object> param) {
 		// TODO Auto-generated method stub
@@ -37,12 +41,12 @@ public class Approval2ServiceImpl implements Approval2Service {
 	@Transactional
 	public void insertApprLine(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		//1.line idx 조회
+		//5.line idx 조회
 		int lineIdx = approvalDao.selectLineSeq(); 	//key value 조회
-		//2.line header 저장
+		//6.line header 저장
 		param.put("lineIdx", lineIdx);
 		approvalDao.insertApprLine(param);
-		//3.line item 저장
+		//7.line item 저장
 		approvalDao.insertApprLineItem(param);
 	}
 
@@ -67,7 +71,22 @@ public class Approval2ServiceImpl implements Approval2Service {
 	@Override
 	public void insertAppr(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		//1. appr idx를 조회한다.
+		//1.기존에 결재중인 결재데이터가 있는 경우 삭제처리 한다.
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("docIdx", param.get("docIdx"));
+		paramMap.put("docType", param.get("docType"));
+		paramMap.put("lastStatus", "C");
+		Map<String, String> headerData = approvalDao.selectApprHeaderData(paramMap);
+		if( headerData != null && !"".equals(headerData.get("APPR_IDX")) ) {
+			//기존 결재 정보를 삭제한다.
+			//2.결재 아이템을 삭제한다.
+			approvalDao.deleteApprItem(headerData);
+			//3.결재 헤더를 삭제한다.
+			approvalDao.deleteApprHeader(headerData);
+			//4.참조 데이터를 삭제한다.
+			approvalDao.deleteApprReference(headerData);
+		}
+		//5. appr idx를 조회한다.
 		int APPR_IDX = approvalDao.selectApprSeq();
 		param.put("apprIdx", APPR_IDX);		
 		ArrayList<String> apprLine = (ArrayList<String>)param.get("apprLine");
@@ -77,16 +96,18 @@ public class Approval2ServiceImpl implements Approval2Service {
 		param.put("currentUser", apprLine.get(0));
 		
 		System.err.println(param);
-		//2. appr header를 저장한다.
+		//6. appr header를 저장한다.
 		approvalDao.insertApprHeader(param);
-		//3. appr item을 저장한다.
+		//7. appr item을 저장한다.
 		approvalDao.insertApprItem(param);
-		//4. arrp ref를 저장한다.
-		approvalDao.insertReference(param);
-		//5. 문서 상태를 REG에서 APPR로 변경한다.
-		param.put("status", "APPR");
-		approvalDao.updateStatus(param);
-		//6. 메일발송 및 알람등을 처리한다.
+		//8. arrp ref를 저장한다.
+		if( refLine != null && refLine.size() > 0 ) {
+			approvalDao.insertReference(param);
+		}
+		//9. 문서 상태를 REG에서 APPR로 변경한다.
+		param.put("docStatus", "APPR");
+		approvalDao.updateDocStatus(param);
+		//10. 메일발송 및 알람등을 처리한다.
 	}
 	
 	@Override
@@ -275,6 +296,10 @@ public class Approval2ServiceImpl implements Approval2Service {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
 			
+		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
+			docData = reportDao.selectDesignData(param);
+		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
+			docData = reportDao.selectBusinessTripData(param);
 		}
 		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
 		System.err.println("docData : "+docData);
@@ -334,6 +359,10 @@ public class Approval2ServiceImpl implements Approval2Service {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
 			
+		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
+			docData = reportDao.selectDesignData(param);
+		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
+			docData = reportDao.selectBusinessTripData(param);
 		}
 		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
 		System.err.println("docData : "+docData);
@@ -398,6 +427,10 @@ public class Approval2ServiceImpl implements Approval2Service {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
 			
+		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
+			docData = reportDao.selectDesignData(param);
+		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
+			docData = reportDao.selectBusinessTripData(param);
 		}
 		
 		//문서 상태가 승인중, 부분승인인 경우에만 반려가 가능하다.

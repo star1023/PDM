@@ -344,4 +344,29 @@ public class FileController {
 			return "F";
 		}
 	}
+	
+	@RequestMapping(value = "/deleteFile2Ajax", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> deleteFile2Ajax(HttpServletResponse respose, HttpServletRequest request, @RequestParam Map<String, Object> param) throws Exception{
+		Map<String, Object> map = new HashMap<String, Object>();
+		try {
+			Map<String, Object> fileData = fileService.selectFileData(param);
+			System.err.println("파일 데이터 : "+fileData);
+			String path = (String)fileData.get("FILE_PATH");
+			String fileName = (String)fileData.get("FILE_NAME");
+
+			String fullPath = path+"/"+fileName;
+			File file = new File(fullPath);
+			if(file.exists() == true){		
+				file.delete();				// 해당 경로의 파일이 존재하면 파일 삭제
+				System.err.println("파일삭제");
+			}
+			fileService.deleteFileData(param);
+			map.put("RESULT", "S");
+		} catch( Exception e ) {
+			map.put("RESULT", "E");
+			map.put("MESSAGE", e.getMessage());
+		}
+		return map;
+	}
 }

@@ -64,4 +64,10 @@ public interface Approval2Dao {
 	void updateApprUser(Map<String, Object> map) throws Exception;
 
 	Map<String, String> selectApprItem(Map<String, Object> param);
+
+	void deleteApprItem(Map<String, String> param) throws Exception;
+
+	void deleteApprHeader(Map<String, String> param) throws Exception;
+
+	void deleteApprReference(Map<String, String> headerData) throws Exception;
 }

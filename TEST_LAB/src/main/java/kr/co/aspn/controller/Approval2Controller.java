@@ -40,6 +40,9 @@ public class Approval2Controller {
 	@Autowired
 	ProductService productService;
 	
+	@Autowired
+	Report2Service reportService;
+	
 	@RequestMapping("/searchUserAjax")
 	@ResponseBody
 	public List<Map<String, Object>> searchUserAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
@@ -234,15 +237,58 @@ public class Approval2Controller {
 		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
 		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
 		Map<String, Object> productData = productService.selectProductData(param);
-		
+		List<Map<String, String>> addInfoList = productService.selectAddInfo(param);		
+		List<Map<String, String>> newDataList = productService.selectNewDataList(param);
 		model.addAttribute("apprHeader", apprHeader);
 		model.addAttribute("apprItem", apprItem);
 		model.addAttribute("refList", refList);
 		model.addAttribute("productData", productData);
+		model.addAttribute("addInfoList", addInfoList);
+		model.addAttribute("newDataList", newDataList);
 		model.addAttribute("paramVO", param);
 		//lab_product_materisl 테이블 조회
 		model.addAttribute("productMaterialData", productService.selectProductMaterial(param));
 		return "/approval2/productPopup";
+	}
+	
+	@RequestMapping("/designPopup")
+	public String designPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> designData = reportService.selectDesignData(param);
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("designData", designData);
+		model.addAttribute("paramVO", param);
+		//lab_product_materisl 테이블 조회
+		
+		model.addAttribute("designChangeList", reportService.selectDesignChangeList(param));
+		return "/approval2/designPopup";
+	}
+	
+	@RequestMapping("/businessTripPopup")
+	public String businessTripPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> businessTripData = reportService.selectBusinessTripData(param);
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("businessTripData", businessTripData);
+		model.addAttribute("paramVO", param);
+
+		return "/approval2/businessTripPopup";
 	}
 
 	@RequestMapping("/approvalSubmitAjax")

@@ -120,7 +120,7 @@
 								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_versionUp('"+item.PRODUCT_IDX+"')\"><img src=\"/resources/images/icon_doc02.png\">개정</button>";
 							//}
 							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.PRODUCT_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
-							if( item.STATUS == 'COND_APPR' ) {
+							if( item.STATUS == 'TMP' || item.STATUS == 'COND_APPR' ) {
 								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.PRODUCT_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
 							}
 							html += "		</li>";
@@ -175,7 +175,13 @@
 				var html = "";
 				data.forEach(function (item) {
 					html += "<li>";
-					html += item.NAME+"("+item.PRODUCT_CODE+")이(가)";
+					if( item.NAME != '' ) {
+						html += item.NAME;
+					}
+					if( item.PRODUCT_CODE != '' ) {
+						html += "("+item.PRODUCT_CODE+")이(가)";
+					}
+					
 					if( item.HISTORY_TYPE == 'I' ) {
 						html += " 생성되었습니다.(버젼 : "+item.VERSION_NO+")";
 					} else if( item.HISTORY_TYPE == 'V' ) {
@@ -184,6 +190,8 @@
 						html += " 삭제되었습니다.";
 					} else if( item.HISTORY_TYPE == 'U' ) {
 						html += " 수정되었습니다.";
+					} else if( item.HISTORY_TYPE == 'T' ) {
+						html += " 임시저장 되었습니다.";
 					} 
 					html += "<br/><span>"+item.USER_NAME+"</span>&nbsp;&nbsp;<span class=\"date\">"+item.REG_DATE+"</span>";
 					html += "</li>"; 

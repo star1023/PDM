@@ -77,7 +77,9 @@
 		FROM 
 			lab_approval_line_header
 		WHERE 1 = 1
+		<if test="docType != null and docType != '' ">
 			AND DOC_TYPE = #{docType}
+		</if>	
 			AND REG_USER = #{userId}
 			AND IS_DELETE = 'N'
 	</select>
@@ -188,7 +190,9 @@
 		SELECT 
 			tmp.*	
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
-					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서'
+					   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서' 
+					   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
 			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -251,7 +255,9 @@
 		SELECT 
 			tmp.*	
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
-					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
 			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -319,7 +325,9 @@
 		SELECT 
 			tmp.*	
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
-					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서'
+				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서' 
 				  END DOC_TYPE_NAME
 			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -374,7 +382,9 @@
 		SELECT 
 			tmp.*	
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
-					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
+				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
 			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -433,9 +443,20 @@
 			lab_approval_header lah
 			, lab_approval_item lai 
 		WHERE 1 = 1
+		<if test="apprIdx != null and apprIdx != '' ">
 			AND lah.APPR_IDX = #{apprIdx}
-			and lah.APPR_IDX = lai.APPR_IDX 
-			and lah.CURRENT_STEP = lai.APPR_NO 	
+		</if>
+		<if test="docIdx != null and docIdx != '' ">
+			AND lah.DOC_IDX = #{docIdx}
+		</if>
+		<if test="docType != null and docType != '' ">
+			AND lah.DOC_TYPE = #{docType}
+		</if>
+		<if test="lastStatus != null and lastStatus != '' ">
+			AND lah.LAST_STATUS = #{lastStatus}
+		</if>	
+			AND lah.APPR_IDX = lai.APPR_IDX 
+			AND lah.CURRENT_STEP = lai.APPR_NO 	
 	</select>
 	
 	<select id="selectDocData" parameterType="map" resultType="hashmap">
@@ -450,6 +471,12 @@
       		<when test="docType.equals('MENU')">
       		lab_menu
       		</when>
+      		<when test="docType.equals('DESIGN')">
+      		lab_design
+      		</when>
+      		<when test="docType.equals('TRIP')">
+      		lab_business_trip
+      		</when>
       	</choose>
 		WHERE 1 = 1
 			AND IS_DELETE = 'N'
@@ -459,6 +486,12 @@
 				</when>
 	      		<when test="docType.equals('MENU')">
 	      		AND MENU_IDX = #{docIdx}
+	      		</when>
+	      		<when test="docType.equals('DESIGN')">
+	      		AND DESIGN_IDX = #{docIdx}
+	      		</when>
+	      		<when test="docType.equals('TRIP')">
+	      		AND TRIP_IDX = #{docIdx}
 	      		</when>
 	      	</choose>
 	</select>
@@ -484,6 +517,12 @@
       		<when test="docType.equals('MENU')">
       		lab_menu
       		</when>
+      		<when test="docType.equals('DESIGN')">
+      		lab_design
+      		</when>
+      		<when test="docType.equals('TRIP')">
+      		lab_business_trip
+      		</when>
       	</choose>
 		SET
 			STATUS = #{docStatus}
@@ -494,6 +533,12 @@
 			</when>
       		<when test="docType.equals('MENU')">
       		AND MENU_IDX = #{docIdx}
+      		</when>
+      		<when test="docType.equals('DESIGN')">
+      		AND DESIGN_IDX = #{docIdx}
+      		</when>
+      		<when test="docType.equals('TRIP')">
+      		AND TRIP_IDX = #{docIdx}
       		</when>
       	</choose>
 	</update>
@@ -608,4 +653,25 @@
 		WHERE 1 = 1
 			AND ITEM_IDX = #{itemIdx}
 	</select>
+	
+	<delete id="deleteApprItem" parameterType="map">
+		DELETE
+		FROM lab_approval_item
+		WHERE 1 = 1
+			AND APPR_IDX = #{APPR_IDX}
+	</delete>
+	
+	<delete id="deleteApprHeader" parameterType="map">
+		DELETE
+		FROM lab_approval_header
+		WHERE 1 = 1
+			AND APPR_IDX = #{APPR_IDX}
+	</delete>
+	
+	<delete id="deleteApprReference" parameterType="map">
+		DELETE
+		FROM lab_approval_reference
+		WHERE 1 = 1
+			AND APPR_IDX = #{APPR_IDX}
+	</delete>
 </mapper>

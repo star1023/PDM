@@ -43,4 +43,14 @@ public interface ProductService {
 	void deleteFileData(Map<String, Object> param) throws Exception;
 
 	void updateProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	int insertTmpProduct(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	List<Map<String, String>> selectAddInfo(Map<String, Object> param) throws Exception;
+
+	List<Map<String, String>> selectNewDataList(Map<String, Object> param);
+
+	void updateProductTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	int insertNewVersionProductTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 }

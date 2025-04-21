@@ -144,4 +144,14 @@ public class FileServiceImpl implements FileService {
 	public int deleteTrialFile(TrialReportFile trialReprotFile) {
 		return fileDao.deleteTrialFile(trialReprotFile);
 	}
+	@Override
+	public Map<String, Object> selectFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return fileDao.selectFileData(param);
+	}
+	@Override
+	public void deleteFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		fileDao.deleteFileData(param);
+	}
 }

@@ -120,4 +120,16 @@ public class FileDaoImpl implements FileDao {
 	public int deleteTrialFile(TrialReportFile trialReprotFile) {
 		return sqlSessionTemplate.delete("file.deleteTrialFile", trialReprotFile);
 	}
+
+	@Override
+	public Map<String, Object> selectFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("file.selectFileData", param);
+	}
+
+	@Override
+	public void deleteFileData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("file.deleteFileData", param);
+	}
 }

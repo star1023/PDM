@@ -158,6 +158,7 @@
 			, REG_USER
 			, DOC_OWNER
 			, STATUS
+			, SCHEDULE_DATE
 		)VALUES(
 			#{idx}
 			, (SELECT ifnull(MAX(lp.DOC_NO),0)+1 FROM lab_product lp WHERE 1 = 1)
@@ -186,7 +187,38 @@
 			, #{userId}
 			, #{userId}
 			, #{status}
+			, #{scheduleDate}
 		)
+	</insert>
+	
+	<insert id="insertAddInfo" parameterType="list">
+		INSERT
+		INTO lab_product_add_info(
+			INFO_IDX
+			, PRODUCT_IDX
+			, INFO_TYPE
+			, INFO_TEXT
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( nextval('lab_product_add_info_seq'), #{item.idx}, #{item.infoType}, #{item.infoText} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertProductNew" parameterType="list">
+		INSERT
+		INTO lab_product_new(
+			NEW_IDX
+			, PRODUCT_IDX
+			, DISPLAY_ORDER
+			, PRODUCT_NAME
+			, PACKAGE_STANDARD
+			, SUPPLIER
+			, KEEP_EXP
+			, NOTE
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( nextval('lab_product_new_seq'), #{item.idx}, #{item.displayOrder}, #{item.productName}, #{item.packageStandard}, #{item.supplier}, #{item.keepExp}, #{item.note} )
+		</foreach>
 	</insert>
 	
 	<insert id="insertProductMaterial" parameterType="map">
@@ -250,6 +282,7 @@
 		SELECT 
 			lp.*
 			, CASE 
+				WHEN lp.STATUS = 'TMP' THEN '임시저장'
 				WHEN lp.STATUS = 'REG' THEN '등록'
 				WHEN lp.STATUS = 'APPR' THEN '결재중'
 				WHEN lp.STATUS = 'COMP' THEN '완료'
@@ -331,6 +364,7 @@
 			, CONTENTS
 			, STATUS
 			, SAP_CODE
+			, SCHEDULE_DATE
 		FROM 
 			lab_product
 		WHERE 1 = 1 
@@ -369,6 +403,7 @@
 			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
 			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
 			WHEN lh.HISTORY_TYPE  = 'U' then '수정'
+			WHEN lh.HISTORY_TYPE  = 'U' then '임시저장'
 			END HISTORY_TYPE_TXT 
 		, lp.VERSION_NO
 		, lp.NAME 
@@ -425,6 +460,7 @@
 			, REG_USER
 			, DOC_OWNER
 			, STATUS
+			, SCHEDULE_DATE
 		)VALUES(
 			#{idx}
 			, #{docNo}
@@ -453,6 +489,7 @@
 			, #{userId}
 			, #{userId}
 			, #{status}
+			, #{scheduleDate}
 		)
 	</insert>
 	
@@ -669,6 +706,7 @@
 		SET
 			NAME = #{productName}
 			, TITLE = #{title}
+			, PRODUCT_CODE = #{productCode}
 			, TOTAL_WEIGHT = #{weight}
 			, STANDARD = #{standard}
 			, KEEP_CONDITION = #{keepCondition}
@@ -682,6 +720,7 @@
 			<if test="status != null and status != '' ">
 			, STATUS = #{status}
 			</if>
+			, SCHEDULE_DATE = #{scheduleDate}
 		WHERE 1 = 1
 			AND PRODUCT_IDX = #{productIdx}
 	</update>
@@ -701,5 +740,49 @@
 		WHERE 1 = 1
 			AND DOC_IDX = #{productIdx}
 			AND DOC_TYPE = #{docType}
+	</delete>
+	
+	<select id="selectAddInfo" parameterType="map" resultType="hashmap">
+		SELECT
+			INFO_IDX
+			, PRODUCT_IDX
+			, INFO_TYPE
+			, INFO_TEXT
+		FROM 
+			lab_product_add_info
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{idx}
+		ORDER BY INFO_IDX ASC
+	</select>
+	
+	<select id="selectNewDataList" parameterType="map" resultType="hashmap">
+		SELECT
+			NEW_IDX
+			, PRODUCT_IDX
+			, DISPLAY_ORDER
+			, PRODUCT_NAME
+			, PACKAGE_STANDARD
+			, SUPPLIER
+			, KEEP_EXP
+			, NOTE
+		FROM
+			lab_product_new
+		WHERE 1 = 1		
+			AND PRODUCT_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC
+	</select>
+	
+	<delete id="deleteAddInfo" parameterType="map">
+		DELETE
+		FROM lab_product_add_info
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</delete>
+	
+	<delete id="deleteProductNew" parameterType="map">
+		DELETE
+		FROM lab_product_new
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
 	</delete>
 </mapper>

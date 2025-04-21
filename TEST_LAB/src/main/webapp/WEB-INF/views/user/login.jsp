@@ -63,7 +63,7 @@ function loginProc(){
  		<div class="login_wrap">
  			<div class="login_box login_ani">
 				<div class="login_txt">
-					<p class="pb20">로고 추가 예정<!--img src="/resources/images/img_logo_login.png"--></p>
+					<p class="pb20"><img src="/resources/images/bbq_logo.png" width="250" height=""></p>
 					<p><span>BBQ 식품연구소 관리자 페이지입니다.</span></p>				
 				</div>
 	 			<div class="login_input">

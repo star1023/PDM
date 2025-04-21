@@ -52,4 +52,8 @@ public interface FileService {
 	TrialReportFile getTrialFileInfo(TrialReportFile trialReprotFile);
 
 	int deleteTrialFile(TrialReportFile trialReprotFile);
+
+	Map<String, Object> selectFileData(Map<String, Object> param);
+
+	void deleteFileData(Map<String, Object> param);
 }

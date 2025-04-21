@@ -199,5 +199,23 @@ public class Approval2DaoImpl implements Approval2Dao {
 	public Map<String, String> selectApprItem(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("approval2.selectApprItem", param);
+	}
+
+	@Override
+	public void deleteApprItem(Map<String, String> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("approval2.deleteApprItem", param);
+	}
+
+	@Override
+	public void deleteApprHeader(Map<String, String> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("approval2.deleteApprHeader", param);
+	}
+
+	@Override
+	public void deleteApprReference(Map<String, String> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("approval2.deleteApprReference", param);
 	}	
 }

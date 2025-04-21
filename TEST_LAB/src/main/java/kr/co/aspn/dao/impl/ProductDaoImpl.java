@@ -58,6 +58,12 @@ public class ProductDaoImpl implements ProductDao {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.insert("product.insertProduct", param);
 	}
+	
+	@Override
+	public void insertAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("product.insertAddInfo", addInfoList);
+	}	
 
 	@Override
 	public void insertProductMaterial(Map<String, Object> param) throws Exception {
@@ -165,5 +171,35 @@ public class ProductDaoImpl implements ProductDao {
 	public void updateProductData(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.update("product.updateProductData", param);
+	}
+
+	@Override
+	public List<Map<String, String>> selectAddInfo(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("product.selectAddInfo", param);
+	}
+
+	@Override
+	public void insertProductNew(ArrayList<HashMap<String, Object>> newList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("product.insertProductNew", newList);
+	}
+
+	@Override
+	public List<Map<String, String>> selectNewDataList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("product.selectNewDataList", param);
+	}
+
+	@Override
+	public void deleteAddInfo(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteAddInfo", map);
+	}
+
+	@Override
+	public void deleteProductNew(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteProductNew", map);
 	}		
 }
