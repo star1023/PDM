@@ -224,7 +224,7 @@
 	<insert id="insertProductMaterial" parameterType="map">
 	/* product.insertProductMaterial */
 		INSERT 
-    	INTO lab_product_materal(
+    	INTO lab_product_material(
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
 			, MATERIAL_IDX
@@ -388,7 +388,7 @@
 			, DESCRIPTION
 			, MATERIAL_TYPE
 		FROM 
-			lab_product_materal
+			lab_product_material
 		WHERE 1 = 1
 			AND PRODUCT_IDX = #{idx}
 		ORDER BY P_MATERIAL_IDX ASC
@@ -728,7 +728,7 @@
 	<delete id="deleteProductMaterial" parameterType="map">
 	/* product.deleteProductMaterial */
 		DELETE
-		FROM lab_product_materal
+		FROM lab_product_material
 		WHERE 1 = 1
 			AND PRODUCT_IDX = #{productIdx}
 	</delete>

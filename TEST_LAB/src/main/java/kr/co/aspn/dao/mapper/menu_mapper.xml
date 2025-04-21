@@ -179,7 +179,7 @@
 	
 	<insert id="insertProductMaterial" parameterType="map">
 		INSERT 
-    	INTO lab_product_materal(
+    	INTO lab_product_material(
 			P_MATERIAL_IDX
 			, PRODUCT_IDX
 			, MATERIAL_IDX
@@ -331,7 +331,7 @@
 			, DESCRIPTION
 			, MATERIAL_TYPE
 		FROM 
-			lab_product_materal
+			lab_product_material
 		WHERE 1 = 1
 			AND PRODUCT_IDX = #{idx}
 		ORDER BY P_MATERIAL_IDX ASC
@@ -584,7 +584,7 @@
 	
 	<insert id="insertMenuMaterial" parameterType="map">
 		INSERT 
-    	INTO lab_menu_materisl(
+    	INTO lab_menu_material(
 			M_MATERIAL_IDX
 			, MENU_IDX
 			, MATERIAL_IDX
@@ -663,7 +663,7 @@
 			, DESCRIPTION
 			, MATERIAL_TYPE
 		FROM 
-			lab_menu_materisl
+			lab_menu_material
 		WHERE 1 = 1
 			AND MENU_IDX = #{idx}
 		ORDER BY M_MATERIAL_IDX ASC
