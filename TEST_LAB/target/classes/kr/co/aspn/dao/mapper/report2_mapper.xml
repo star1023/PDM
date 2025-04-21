@@ -3,7 +3,7 @@
 <mapper namespace="report2">
 	<select id="selectDesignSeq" resultType="int">
 	/*	report2.selectDesignSeq */
-		SELECT nextval('design_seq') as seq
+		SELECT FN_NEXTVAL('design_seq') as seq
 	</select>
 	
 	<insert id="insertDesign" parameterType="map">
@@ -54,7 +54,7 @@
 			, ORDER_NO
 		)values
 		<foreach collection="changeList" item="item" index="index"  separator=",">
-		( nextval('design_change_info_seq'), #{idx}, #{item.itemDiv}, #{item.itemCurrent}, #{item.itemChange}, #{item.itemNote} , ${index+1} )
+		( FN_NEXTVAL('design_change_info_seq'), #{idx}, #{item.itemDiv}, #{item.itemCurrent}, #{item.itemChange}, #{item.itemNote} , ${index+1} )
 		</foreach>
 	</insert>
 	
@@ -91,7 +91,7 @@
 	/*	report2.selectDesignList */
 		SELECT
 			tmp.*
-			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
 			, CASE 
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
@@ -284,7 +284,7 @@
 				WHEN tmp.TRIP_TYPE = 'I' THEN '국내'
 				WHEN tmp.TRIP_TYPE = 'O' THEN '해외'
 				END	AS TRIP_TYPE_TXT
-			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
 			, CASE 
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
@@ -329,7 +329,7 @@
 	
 	<select id="selectTripSeq" resultType="int">
 		/*	report2.selectTripSeq */
-		SELECT nextval('business_trip_seq') as seq
+		SELECT FN_NEXTVAL('business_trip_seq') as seq
 	</select>
 	
 	<insert id="insertBusinessTrip" parameterType="map">
@@ -507,7 +507,7 @@
 				WHEN tmp.TRIP_TYPE = 'I' THEN '국내'
 				WHEN tmp.TRIP_TYPE = 'O' THEN '해외'
 				END	AS TRIP_TYPE_TXT
-			, GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
 			, CASE 
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
@@ -552,7 +552,7 @@
 	
 	<select id="selectTripPlanSeq" resultType="int">
 		/*	report2.selectTripPlanSeq */
-		SELECT nextval('business_trip_plan_seq') as seq
+		SELECT FN_NEXTVAL('business_trip_plan_seq') as seq
 	</select>
 	
 	<insert id="insertBusinessTripPlan" parameterType="map">

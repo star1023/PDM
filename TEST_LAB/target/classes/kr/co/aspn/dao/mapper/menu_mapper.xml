@@ -4,7 +4,7 @@
 	
 	<select id="selectProductCode" resultType="String">
 		SELECT 
-			LPAD(nextval('product_code_seq'), '3' , '0') as code
+			LPAD(FN_NEXTVAL('product_code_seq'), '3' , '0') as code
 	</select>
 	
 	<select id="checkMaterial" parameterType="map" resultType="hashmap">
@@ -114,7 +114,7 @@
 	</select>
 	
 	<select id="selectProductSeq" resultType="int">
-		SELECT nextval('product_seq') as seq
+		SELECT FN_NEXTVAL('product_seq') as seq
 	</select>
 	
 	<insert id="insertProduct" parameterType="map">
@@ -192,7 +192,7 @@
 			, MATERIAL_TYPE
 		)values
 		<foreach collection="matList" item="item" index="index"  separator=",">
-		( nextval('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		( FN_NEXTVAL('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
 		</foreach>
 	</insert>
 	
@@ -529,7 +529,7 @@
 	</select>
 	
 	<select id="selectMenuSeq" resultType="int">
-		SELECT nextval('menu_seq') as seq
+		SELECT FN_NEXTVAL('menu_seq') as seq
 	</select>
 	
 	<insert id="insertMenu" parameterType="map">
@@ -597,7 +597,7 @@
 			, MATERIAL_TYPE
 		)values
 		<foreach collection="matList" item="item" index="index"  separator=",">
-		( nextval('menu_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		( FN_NEXTVAL('menu_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
 		</foreach>
 	</insert>
 	
@@ -734,7 +734,7 @@
 			, MENU_IDX
 			, REG_YN	
 		)VALUES(
-			nextval('cook_manual_seq')
+			FN_NEXTVAL('cook_manual_seq')
 			, #{idx}
 			, 'N'
 		)
@@ -1001,7 +1001,7 @@
 	</select>
 	
 	<select id="selectLineSeq" resultType="int">
-		SELECT nextval('approval_line_header_seq') as seq
+		SELECT FN_NEXTVAL('approval_line_header_seq') as seq
 	</select>
 	
 	<insert id="insertApprLine" parameterType="map">
@@ -1031,7 +1031,7 @@
 			, USER_ID
 		)values
 		<foreach collection="apprLine" item="item" index="index"  separator=",">
-		( nextval('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
+		( FN_NEXTVAL('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
 		</foreach>
 	</insert>
 	
@@ -1079,6 +1079,6 @@
 	</update>
 	
 	<select id="selectApprSeq" resultType="int">
-		SELECT nextval('approval_line_reference_seq') as seq
+		SELECT FN_NEXTVAL('approval_line_reference_seq') as seq
 	</select>
 </mapper>

@@ -263,7 +263,7 @@
 		    ,USER_IP
 		    ,LOGIN_DATE
 		)	VALUES (
-			nextval('login_log_seq') 
+			FN_NEXTVAL('login_log_seq') 
 			,	#{userId}
 			,	#{userIp}
 			, 	sysdate()
@@ -333,7 +333,7 @@
 	</select>
 
 	<select id="selectAccessLogSeq" resultType="int">
-		SELECT nextval('useraccess_log_seq') as seq
+		SELECT FN_NEXTVAL('useraccess_log_seq') as seq
 	</select>
 	
 	<insert id="insertAccessLog">
@@ -362,7 +362,7 @@
 			, DOC_TYPE
 			, P_NO
 		) VALUES (
-			nextval('useraccess_log_params_seq')
+			FN_NEXTVAL('useraccess_log_params_seq')
 			, #{idx}
 			, #{requestParams}
 			, #{docNo}

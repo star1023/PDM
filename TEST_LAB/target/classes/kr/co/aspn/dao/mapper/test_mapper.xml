@@ -177,7 +177,7 @@
 			, regUserId
 			, regDate
 		) VALUES (
-			nextval('system_menu_seq')
+			FN_NEXTVAL('system_menu_seq')
 			<if test="pMenuId != null and pMenuId !='' ">
 			, #{pMenuId}
 			</if>
@@ -205,7 +205,7 @@
 			, regUserId
 			, regDate
 		)VALUES(
-			nextval('system_menu_seq')
+			FN_NEXTVAL('system_menu_seq')
 			, #{pId}
 			, #{menuName}
 			, 'Y'
@@ -300,7 +300,7 @@
 			, REG_USER_ID
 			, REG_DATE
 		) VALUES (
-			nextval('system_role_seq')
+			FN_NEXTVAL('system_role_seq')
 			, #{roleId}
 			, #{roleName}
 			, #{roleDesc}
@@ -428,7 +428,7 @@
 			, REG_DATE
 		)values
 		<foreach collection="selectedMenu" item="item" index="index"  separator=",">
-		( nextval('system_role_menu_seq'), #{selectedRoleIdx}, ${item}, 'N', #{userId}, sysdate() )
+		( FN_NEXTVAL('system_role_menu_seq'), #{selectedRoleIdx}, ${item}, 'N', #{userId}, sysdate() )
 		</foreach>
 	
 	</insert>
@@ -570,7 +570,7 @@
 			, REG_USER_ID
 			, REG_DATE
 		)VALUES(
-			nextval('system_category_seq')
+			FN_NEXTVAL('system_category_seq')
 			<if test="pId != null and pId != '' ">
 			, #{pId}
 			</if>
@@ -968,7 +968,7 @@
 	</select>
 	
 	<select id="selectMaterialSeq" resultType="int">
-		SELECT nextval('material_seq') as seq
+		SELECT FN_NEXTVAL('material_seq') as seq
 	</select>
 	
 	<insert id="insertMaterial" parameterType="map">
@@ -1125,7 +1125,7 @@
 			, USER_ID
 			, REG_DATE
 		)VALUES(
-			nextval('history_seq')
+			FN_NEXTVAL('history_seq')
 			, #{docIdx}
 			, #{docType}
 			, #{historyType}
@@ -1393,7 +1393,7 @@
 	
 	<select id="selectmaterialCode" resultType="String">
 		SELECT 
-			LPAD(nextval('material_code_seq'), '3' , '0') as code
+			LPAD(FN_NEXTVAL('material_code_seq'), '3' , '0') as code
 	</select>
 	
 	<insert id="insertFileType" parameterType="java.util.List">

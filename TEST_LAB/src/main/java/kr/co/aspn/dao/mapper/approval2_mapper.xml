@@ -32,7 +32,7 @@
 	</select>
 	
 	<select id="selectLineSeq" resultType="int">
-		SELECT nextval('approval_line_header_seq') as seq
+		SELECT FN_NEXTVAL('approval_line_header_seq') as seq
 	</select>
 	
 	<insert id="insertApprLine" parameterType="map">
@@ -62,7 +62,7 @@
 			, USER_ID
 		)values
 		<foreach collection="apprLine" item="item" index="index"  separator=",">
-		( nextval('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
+		( FN_NEXTVAL('approval_line_item_seq'), #{lineIdx} , ${index+1}, #{item} )
 		</foreach>
 	</insert>
 	
@@ -112,7 +112,7 @@
 	</update>
 	
 	<select id="selectApprSeq" resultType="int">
-		SELECT nextval('approval_header_seq') as seq
+		SELECT FN_NEXTVAL('approval_header_seq') as seq
 	</select>
 	
 	<insert id="insertApprHeader" parameterType="map">
@@ -152,7 +152,7 @@
 			, TARGET_USER_ID
 		)values
 		<foreach collection="apprLine" item="item" index="index"  separator=",">
-		( nextval('approval_item_seq'), #{apprIdx} , ${index+1}, #{item} )
+		( FN_NEXTVAL('approval_item_seq'), #{apprIdx} , ${index+1}, #{item} )
 		</foreach>
 	</insert>
 	
@@ -164,7 +164,7 @@
 			, TARGET_USER_ID
 		)values
 		<foreach collection="refLine" item="item" index="index"  separator=",">
-		( nextval('approval_line_reference_seq'), #{apprIdx}, #{item} )
+		( FN_NEXTVAL('approval_line_reference_seq'), #{apprIdx}, #{item} )
 		</foreach>
 	</insert>
 	
@@ -194,8 +194,8 @@
 					   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서' 
 					   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
-			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
-			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
 			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
 				   WHEN LAST_STATUS = 'A' THEN '결재중'
 				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
@@ -240,7 +240,7 @@
 				, REG_USER
 				, REG_DATE
 				, LAST_STATUS
-				, GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
+				, FN_GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
 				, UPDATE_DATE
 			FROM 
 				lab_approval_header
@@ -259,8 +259,8 @@
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
-			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
-			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
 			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
 				   WHEN LAST_STATUS = 'A' THEN '결재중'
 				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
@@ -296,7 +296,7 @@
 					, REG_USER
 					, REG_DATE
 					, LAST_STATUS
-					, GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
+					, FN_GET_DOC_STATUS(DOC_IDX, DOC_TYPE) AS STATUS
 					, UPDATE_DATE
 				FROM 
 					lab_approval_header
@@ -329,8 +329,8 @@
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서' 
 				  END DOC_TYPE_NAME
-			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
-			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
 			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
 				   WHEN LAST_STATUS = 'A' THEN '결재중'
 				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
@@ -386,8 +386,8 @@
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
 				  END DOC_TYPE_NAME
-			, GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
-			, GET_USER_NAME(REG_USER) as REG_USER_NAME
+			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
+			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
 			, CASE WHEN LAST_STATUS = 'N' THEN '결재상신'
 				   WHEN LAST_STATUS = 'A' THEN '결재중'
 				   WHEN LAST_STATUS = 'Y' THEN '결재완료'
@@ -551,7 +551,7 @@
 			, APPR_IDX
 			, APPR_NO
 			, TARGET_USER_ID
-			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, STATUS
 			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
 				   WHEN STATUS = 'Y' THEN '결재완료'
@@ -575,7 +575,7 @@
 			REF_IDX
 			, APPR_IDX
 			, TARGET_USER_ID
-			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 		FROM
 			lab_approval_reference
 		WHERE 1 = 1
@@ -602,7 +602,7 @@
 			, APPR_IDX
 			, APPR_NO
 			, TARGET_USER_ID
-			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, STATUS
 			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
 				   WHEN STATUS = 'Y' THEN '결재완료'
@@ -638,7 +638,7 @@
 			, APPR_IDX
 			, APPR_NO
 			, TARGET_USER_ID
-			, GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
+			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, STATUS
 			, CASE WHEN STATUS = 'N' OR STATUS = '' OR STATUS IS NULL THEN '미결'
 				   WHEN STATUS = 'Y' THEN '결재완료'
