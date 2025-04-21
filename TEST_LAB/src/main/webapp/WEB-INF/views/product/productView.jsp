@@ -470,10 +470,10 @@
 			<div class="top_btn_box">
 				<ul>
 					<li>
-						<c:if test="${productData.data.STATUS == 'TMP' }">
+						<c:if test="${productData.data.STATUS == 'TMP' and productData.data.IS_LAST == 'Y'}">
 						<button class="btn_circle_modifiy" onclick="fn_update('${productData.data.PRODUCT_IDX}')">&nbsp;</button>
 						</c:if>
-						<c:if test="${productData.data.STATUS == 'COMP' }">
+						<c:if test="${productData.data.STATUS == 'COMP' and productData.data.IS_LAST == 'Y'}">
 						<button class="btn_circle_version" onclick="fn_versionUp('${productData.data.PRODUCT_IDX}')">&nbsp;</button>
 						</c:if>
 					</li>
@@ -586,9 +586,7 @@
 					<div class="title2" style="float: left; margin-top: 30px;">
 						<span class="txt">신규도입품/제품규격</span>
 					</div>
-					<div id="matHeaderDiv" class="table_header07">
-					</div>
-					<table id="new_Table" class="tbl05">
+					<table id="new_Table" class="tbl01" style="border-bottom: 2px solid #4b5165;">
 						<colgroup>
 							<col width="140">
 							<col width="140">
@@ -622,8 +620,6 @@
 								</tr>
 							</c:forEach>							
 						</tbody>
-						<tfoot>
-						</tfoot>
 					</table>
 				</div>
 				
@@ -667,7 +663,7 @@
 					
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="insert_proc01" style="border-bottom: 2px solid #4b5165;">
 						<colgroup>
 							<col width="15%" />
 							<col width="35%" />
@@ -868,9 +864,9 @@
 					</table>
 				</div>
 				
-				<div class="title2 mt20"  style="width:90%;"><span class="txt">기안문</span></div>
+				<div class="title2 mt20"  style="width:90%;"><span class="txt">비고</span></div>
 				<div>
-					<table class="insert_proc01">
+					<table class="insert_proc01" style="border-bottom: 2px solid #4b5165;">
 						<tr>
 							<td>${productData.data.CONTENTS}</td>
 						</tr>
@@ -881,7 +877,7 @@
 				<div class="btn_box_con5">					
 				</div>
 				<div class="btn_box_con4">
-					<c:if test="${productData.data.STATUS == 'TMP' }">
+					<c:if test="${productData.data.STATUS == 'TMP' and productData.data.IS_LAST == 'Y'}">
 						<button class="btn_admin_sky" onclick="fn_update('${productData.data.PRODUCT_IDX}')">수정</button>
 					</c:if>	
 					<button class="btn_admin_gray" onClick="fn_list();" style="width: 120px;">목록</button>

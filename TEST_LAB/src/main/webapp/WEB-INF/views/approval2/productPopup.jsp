@@ -516,7 +516,7 @@ function downloadFile(idx){
 		</div>
 		<c:if test="${productData.data.IS_NEW_MATERIAL == 'Y' }">
 		<div class="main_tbl">				
-			<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
+			<table class="tbl01">
 				<colgroup>
 					<col width="140">
 					<col width="140">
@@ -573,7 +573,7 @@ function downloadFile(idx){
 		</c:if>
 		
 		<div class="main_tbl">				
-			<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
+			<table class="tbl01 ">
 				<colgroup>
 					<col width="140">					
 					<col width="140">
