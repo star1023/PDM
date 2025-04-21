@@ -203,7 +203,7 @@
 			, plant
 			, (select plantName + '('+plant +')' from plant where companyCode = p.companyCode and plantCode = p.plant) as plantName
 			, productCategory
-			, getCodeName('PRODCAT', productCategory) as productCategoryName
+			, FN_GET_CODE_NAME('PRODCAT', productCategory) as productCategoryName
 			, productCategoryText	
 			, DATE_FORMAT(d.regDate,'%Y-%m-%d') as regDate
 			, d.makeProcess

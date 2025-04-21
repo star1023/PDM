@@ -415,6 +415,7 @@
 			}
 			
 			function loadNotificationCount() {
+				/*
 				var URL = "../common/notificationCountAjax";
 				var requestPath = "${requestScope['javax.servlet.forward.servlet_path']}";
 				$.ajax({
@@ -449,6 +450,7 @@
 						}
 					}			
 				});	
+				*/
 			}
 			
 			function loadNotificationList() {

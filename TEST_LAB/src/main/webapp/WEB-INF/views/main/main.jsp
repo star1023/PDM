@@ -21,17 +21,17 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-	loadApprCount();
-	loadMyCount();
-	loadRefCount();
+	//loadApprCount();
+	//loadMyCount();
+	//loadRefCount();
 	loadMailCheck();
 	loadCompany('');
 	
 	google.charts.load("current", {packages:['corechart']});
-	google.charts.setOnLoadCallback(drawVisualization);
-	google.charts.setOnLoadCallback(drawVisualization2);
+	//google.charts.setOnLoadCallback(drawVisualization);
+	//google.charts.setOnLoadCallback(drawVisualization2);
 	
-	drawSellingChart();
+	//drawSellingChart();
 	
 	$("#reserveDate").datepicker({
 		dateFormat: 'yy-mm-dd',
@@ -889,7 +889,7 @@ function showLeftMain(){
 }
 
 function loadCompany(companyCode) {
-	var URL = "../common/companyListAjax";
+	/* var URL = "../common/companyListAjax";
 	$.ajax({
 		type:"POST",
 		url:URL,
@@ -924,7 +924,7 @@ function loadCompany(companyCode) {
 		},
 		error:function(request, status, errorThrown){
 		}			
-	});
+	}); */
 }
 
 function loadPlant( companyCode ) {

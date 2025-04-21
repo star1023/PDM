@@ -93,7 +93,7 @@
 			, a.docNo
 			, a.docVersion
 			, a.productCode
-			, (CASE ifnull(a.storeDiv,'') WHEN '' THEN a.productName ELSE '[' + getCodeName('STORE', a.storeDiv) + ']' + a.productName END) AS productName
+			, (CASE ifnull(a.storeDiv,'') WHEN '' THEN a.productName ELSE '[' + FN_GET_CODE_NAME('STORE', a.storeDiv) + ']' + a.productName END) AS productName
 			, a.productCategory
 			, a.productCategoryText
 			, a.explanation
@@ -113,7 +113,7 @@
 			, a.nonHeat
 			, a.manufacturingNo
 			, (SELECT manufacturingName FROM manufacturingNo WHERE seq = a.manufacturingNoSeq) manufacturingName
-			, getCodeName('PRODCAT', a.productCategory) productCategoryName
+			, FN_GET_CODE_NAME('PRODCAT', a.productCategory) productCategoryName
 			, getUserName(regUserId) userName 
 			,(select dNo from manufacturingProcessDoc where docNo=a.docNo and docVersion=a.docVersion order by dNo desc limit 1) as dNo
 			,(select docType from manufacturingProcessDoc where docNo=a.docNo and docVersion=a.docVersion order by dNo desc limit 1) as docType  
@@ -124,7 +124,7 @@
 			, a.etcDisplay
 			, a.productDocType
 			, a.storeDiv
-			, getCodeName('STORE', a.storeDiv) as storeDivText
+			, FN_GET_CODE_NAME('STORE', a.storeDiv) as storeDivText
 		FROM devDoc a WHERE docNo in (
 			SELECT docNo FROM (
 				SELECT row_number() over (order by a.docNo desc) as rn
@@ -230,16 +230,16 @@
 			, productType3
 			, sterilization
 			, etcDisplay
-			, getCodeName('PRODCAT1', productType1) as productType1Text
-			, getCodeName('PRODCAT2', productType2) as productType2Text
-			, getCodeName('PRODCAT3', productType3) as productType3Text
-			, getCodeName('STERILIZATION', sterilization) as sterilizationText
-			, getCodeName('ETCDISPLAY', etcDisplay) etcDisplayText
+			, FN_GET_CODE_NAME('PRODCAT1', productType1) as productType1Text
+			, FN_GET_CODE_NAME('PRODCAT2', productType2) as productType2Text
+			, FN_GET_CODE_NAME('PRODCAT3', productType3) as productType3Text
+			, FN_GET_CODE_NAME('STERILIZATION', sterilization) as sterilizationText
+			, FN_GET_CODE_NAME('ETCDISPLAY', etcDisplay) etcDisplayText
 			, imNo
 			, isNew
 			, productDocType
 			, storeDiv
-			, getCodeName('STORE', storeDiv) as storeDivText
+			, FN_GET_CODE_NAME('STORE', storeDiv) as storeDivText
 		FROM devDoc WHERE docNo = #{docNo} AND docVersion = #{docVersion} and isHidden != 'Y'
 	</select>
 	
@@ -1244,7 +1244,7 @@
 	
 	<select id="getNutritionLabel" resultType="kr.co.aspn.vo.NutritionLabel">
 		SELECT a.*
-			, getCodeName('NATRIUMTYPE', a.natriumType) natriumTypeText
+			, FN_GET_CODE_NAME('NATRIUMTYPE', a.natriumType) natriumTypeText
 			, getNatriumLevel(convert(numeric,contNatrium)) natriumLevel
 		FROM nutritionLabel a WHERE drNo = #{drNo}
 	</select>
@@ -1299,7 +1299,7 @@
 			, keepConditionCode
 			, CASE calcType WHEN '40' THEN keepCondition ELSE (
 				CASE keepConditionCode WHEN '7' THEN keepCondition
-				ELSE getCodeName('KEEPCONDITION', keepConditionCode)
+				ELSE FN_GET_CODE_NAME('KEEPCONDITION', keepConditionCode)
 				END
 			  ) END AS keepCondition
 			, packUnit
@@ -1562,8 +1562,8 @@
 			, a.lineName 
 			, b.productCode
 			, b.productName
-			--, getCodeName('MFG_STATE', a.state) mfgState
-			--, getCodeName('DEVDOC_STATE', b.isClose) devDocState
+			--, FN_GET_CODE_NAME('MFG_STATE', a.state) mfgState
+			--, FN_GET_CODE_NAME('DEVDOC_STATE', b.isClose) devDocState
 		FROM manufacturingProcessDoc a
 		LEFT OUTER JOIN devDoc b ON a.docNo = b.docNo AND a.docVersion = b.docVersion
 		WHERE b.docNo = #{docNo} and b.docVersion = #{docVersion}

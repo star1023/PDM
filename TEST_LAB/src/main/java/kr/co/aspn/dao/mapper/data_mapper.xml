@@ -137,7 +137,7 @@
 	</select>
 	
 	<select id="userInfo" parameterType="string" resultType="hashmap">
-		select USER_NAME, getCodeName('DEPT',DEPT_CODE) AS deptFullName  from lab_user  where USER_ID = #{userId}
+		select USER_NAME, FN_GET_CODE_NAME('DEPT',DEPT_CODE) AS deptFullName  from lab_user  where USER_ID = #{userId}
 	</select>
 	
 	<select id="getUserInfo" parameterType="string" resultType="hashmap">

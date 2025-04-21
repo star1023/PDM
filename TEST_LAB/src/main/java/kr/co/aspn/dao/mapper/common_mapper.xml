@@ -90,14 +90,14 @@
 		USER_ID AS userId
       ,USER_NAME AS userName
       ,USER_GRAD AS userGrade
-      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+      ,FN_GET_CODE_NAME('GRADE',USER_GRAD) AS userGradeName
       ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') as regDate
       ,USER_CODE AS userCode
       ,EMAIL AS email
       ,DEPT_CODE AS deptCode
-      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+      ,FN_GET_CODE_NAME('DEPT',DEPT_CODE) AS deptCodeName
       ,TEAM_CODE AS teamCode
-      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName	
+      ,FN_GET_CODE_NAME('TEAM',TEAM_CODE) AS teamCodeName	
       ,TITLE_CODE AS titleCode
       ,USER_TYPE AS userType
       ,IS_ADMIN AS isAdmin
@@ -138,14 +138,14 @@
 					      ,USER_PWD AS userPwd
 					      ,USER_NAME AS userName
 					      ,USER_GRAD AS userGrade
-					      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+					      ,FN_GET_CODE_NAME('GRADE',USER_GRAD) AS userGradeName
 					      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS regDate
 					      ,USER_CODE AS userCode
 					      ,EMAIL AS email
 					      ,DEPT_CODE AS deptCode
-					      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+					      ,FN_GET_CODE_NAME('DEPT',DEPT_CODE) AS deptCodeName
 					      ,TEAM_CODE AS teamCode
-					      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName					      
+					      ,FN_GET_CODE_NAME('TEAM',TEAM_CODE) AS teamCodeName					      
 					      ,TITLE_CODE AS titleCode
 					      ,USER_TYPE AS userType
 					      ,IS_ADMIN AS isAdmin	
@@ -165,14 +165,14 @@
 	      ,USER_PWD AS userPwd
 	      ,USER_NAME AS userName
 	      ,USER_GRAD AS userGrade
-	      ,getCodeName('GRADE',USER_GRAD) AS userGradeName
+	      ,FN_GET_CODE_NAME('GRADE',USER_GRAD) AS userGradeName
 	      ,DATE_FORMAT(REG_DATE,'%Y-%m-%d') AS regDate
 	      ,USER_CODE AS userCode
 	      ,EMAIL AS email
 	      ,DEPT_CODE AS deptCode
-	      ,getCodeName('DEPT',DEPT_CODE) AS deptCodeName
+	      ,FN_GET_CODE_NAME('DEPT',DEPT_CODE) AS deptCodeName
 	      ,TEAM_CODE AS teamCode
-	      ,getCodeName('TEAM',TEAM_CODE) AS teamCodeName					      
+	      ,FN_GET_CODE_NAME('TEAM',TEAM_CODE) AS teamCodeName					      
 	      ,TITLE_CODE AS titleCode
 	      ,USER_TYPE AS userType
 	      ,IS_ADMIN AS isAdmin	

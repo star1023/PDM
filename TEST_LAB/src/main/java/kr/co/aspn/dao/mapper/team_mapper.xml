@@ -89,7 +89,7 @@
 	</select>
 	
 	<select id="getTeamNoticeView" resultType="hashmap">
-		SELECT nNo, title,getUserName(regUserId) as userName,content,regDate,modUserId,departName,getCodeName('DEPT',departName) AS deptCodeName,hits FROM departNotice WHERE nNo = #{nNo}
+		SELECT nNo, title,getUserName(regUserId) as userName,content,regDate,modUserId,departName,FN_GET_CODE_NAME('DEPT',departName) AS deptCodeName,hits FROM departNotice WHERE nNo = #{nNo}
 	</select>
 	
 	<insert id="noticeSave">

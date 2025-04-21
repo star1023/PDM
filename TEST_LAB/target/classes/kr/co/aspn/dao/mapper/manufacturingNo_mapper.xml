@@ -368,7 +368,7 @@
 				WHEN mNo.status = 'RE' THEN '신고중'
 				END AS statusName			
 			, mNoD.keepCondition
-			, getCodeName('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
+			, FN_GET_CODE_NAME('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
 			, mNoD.keepConditionText
 			, mNoD.sellDate1
 			, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
@@ -391,21 +391,21 @@
 				WHEN mNoD.sellDate6 = 'D' THEN '일'
 				WHEN mNoD.sellDate6 = 'H' THEN '시간' END AS sellDate6Text	
 			, mNoD.productType1
-			, getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name
 			, mNoD.productType2
-			, getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name
 			, mNoD.productType3
-			, getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 			, mNoD.sterilization
-			, getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
-			, /**(SELECT STUFF((SELECT ',' + getCodeName('PACKAGE_UNIT',packageUnit)
+			, FN_GET_CODE_NAME('STERILIZATION2',mNoD.sterilization) as sterilizationName
+			, /**(SELECT STUFF((SELECT ',' + FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit)
 							FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq
 		                 FOR XML PATH('')
 			   ), 1, 1, '') AS packageUnitNames
 				FROM manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq
 			GROUP BY a.dNoSeq) AS packageUnitNames*/
 			(select( 			
-				select group_concat(getCodeName('PACKAGE_UNIT',packageUnit),',')   
+				select group_concat(FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit),',')   
 						FROM manufacturingNoPackageUnit pUnit ) AS packageUnitNames
 			FROM manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq	
 			GROUP BY a.dNoSeq ) AS packageUnitNames
@@ -477,11 +477,11 @@
 				WHEN mNo.status = 'RE' THEN '신고중'
 				END AS statusName		
 			, mNoD.productType1
-			, getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name
 			, mNoD.productType2
-			, getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name
 			, mNoD.productType3
-			, getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 			, mNoD.sellDate1
 			, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
 				WHEN mNoD.sellDate1 = 'H' THEN '제조시간으로부터'
@@ -503,13 +503,13 @@
 				WHEN mNoD.sellDate6 = 'D' THEN '일'
 				WHEN mNoD.sellDate6 = 'H' THEN '시간' END AS sellDate6Text
 		    , mNoD.keepCondition
-			, getCodeName('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
+			, FN_GET_CODE_NAME('KEEPCONDITION2',mNoD.keepCondition)  as keepConditionName
 			, mNoD.keepConditionText
 			, mNoD.sterilization
 			, mNoD.comment
 			, mNoD.qnsChange
-			, getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
-			, , /** (SELECT STUFF((SELECT ',' + getCodeName('PACKAGE_UNIT',packageUnit)
+			, FN_GET_CODE_NAME('STERILIZATION2',mNoD.sterilization) as sterilizationName
+			, , /** (SELECT STUFF((SELECT ',' + FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit)
 						FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq
 			            FOR XML PATH('')
 							), 1, 1, '') AS packageUnitNames
@@ -521,7 +521,7 @@
 					a.dNoSeq
 				) AS packageUnitNames */
 			(select( 			
-				select group_concat(getCodeName('PACKAGE_UNIT',packageUnit),',')   
+				select group_concat(FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit),',')   
 						FROM manufacturingNoPackageUnit pUnit ) AS packageUnitNames
 			FROM manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq	
 			GROUP BY a.dNoSeq ) AS packageUnitNames
@@ -641,19 +641,19 @@
 		, mNoD.seq
 		,mNoD.no_seq
 		,mNoD.productType1
-		,getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+		,FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name
 		,mNoD.productType2
-		,getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+		,FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name
 		,mNoD.productType3
-		,getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+		,FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 		,mNoD.sterilization
-		,getCodeName('STERILIZATION2',mNoD.sterilization) as sterilizationName
+		,FN_GET_CODE_NAME('STERILIZATION2',mNoD.sterilization) as sterilizationName
 		,mNoD.keepCondition
 		<!-- 
 		,CASE WHEN mNoD.keepCondition = 4 THEN keepConditionText
-			ELSE getCodeName('KEEPCONDITION2',mNoD.keepCondition)  END AS keepConditionName
+			ELSE FN_GET_CODE_NAME('KEEPCONDITION2',mNoD.keepCondition)  END AS keepConditionName
 		 -->
-		, getCodeName('KEEPCONDITION2',mNoD.keepCondition)  AS keepConditionName	
+		, FN_GET_CODE_NAME('KEEPCONDITION2',mNoD.keepCondition)  AS keepConditionName	
 		,keepConditionText
 		,mNoD.sellDate1
 		,CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터'
@@ -681,7 +681,7 @@
 		,mNoD.createPlant
 		,mNoD.comment
 		,mNoD.packageUnit
-	    ,getCodeName('PACKAGE_UNIT',mNoD.packageUnit) as packageUnitName
+	    ,FN_GET_CODE_NAME('PACKAGE_UNIT',mNoD.packageUnit) as packageUnitName
 		,mNoD.packageEtc
 		,mNoD.regUserId
 		,getUserName(mNoD.regUserId) as userName
@@ -712,19 +712,19 @@
 		,mNoData.seq AS dNoSeq
 		,mNoData.no_seq
 	    ,mNoData.productType1
-	    ,getCodeName('PRODCAT1',mNoData.productType1) as productType1Name
+	    ,FN_GET_CODE_NAME('PRODCAT1',mNoData.productType1) as productType1Name
 	    ,mNoData.productType2
-	    ,getCodeName('PRODCAT2',mNoData.productType2) as productType2Name
+	    ,FN_GET_CODE_NAME('PRODCAT2',mNoData.productType2) as productType2Name
 	    ,mNoData.productType3
-	    ,getCodeName('PRODCAT3',mNoData.productType3) as productType3Name
+	    ,FN_GET_CODE_NAME('PRODCAT3',mNoData.productType3) as productType3Name
 	    ,mNoData.sterilization
-		,getCodeName('STERILIZATION2',mNoData.sterilization) as sterilizationName
+		,FN_GET_CODE_NAME('STERILIZATION2',mNoData.sterilization) as sterilizationName
 		,mNoData.keepCondition
 		<!--  
 		,CASE WHEN mNoData.keepCondition = 4 THEN mNoData.keepConditionText
-			ELSE getCodeName('KEEPCONDITION2',mNoData.keepCondition)  END AS keepConditionName
+			ELSE FN_GET_CODE_NAME('KEEPCONDITION2',mNoData.keepCondition)  END AS keepConditionName
 		-->	
-		,getCodeName('KEEPCONDITION2',mNoData.keepCondition)  AS keepConditionName
+		,FN_GET_CODE_NAME('KEEPCONDITION2',mNoData.keepCondition)  AS keepConditionName
 		,mNoData.keepConditionText
 		,mNoData.sellDate1
 		,CASE WHEN mNoData.sellDate1 = 'D' THEN '제조일로부터'
@@ -752,7 +752,7 @@
 	    ,mNoData.createPlant
 	    ,mNoData.comment
 	    ,mNoData.packageUnit
-	    ,getCodeName('PACKAGE_UNIT',mNoData.packageUnit) as packageUnitName
+	    ,FN_GET_CODE_NAME('PACKAGE_UNIT',mNoData.packageUnit) as packageUnitName
 		,mNoData.packageEtc
 	    ,mNoData.regUserId
 	    ,getUserName(mNoData.regUserId) as userName
@@ -845,7 +845,7 @@
 	/** manufacturingNo.selectPackageUnit */
 		SELECT 
 			packageUnit
-			, getCodeName('PACKAGE_UNIT',packageUnit) as packageUnitName
+			, FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit) as packageUnitName
 		FROM manufacturingNoPackageUnit
                WHERE dNoSeq = #{dNoSeq}
 	</select>
@@ -985,11 +985,11 @@
 			, DATE_FORMAT(mNo.stopReqDate,'%Y-%m-%d') as stopReqDate
 			, DATE_FORMAT(mNo.stopDate,'%Y-%m-%d') as stopDate
 			, mNoD.productType1
-			, getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+			, FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name
 			, mNoD.productType2
-			, getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+			, FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name
 			, mNoD.productType3
-			, getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+			, FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 			, DATE_FORMAT(mNo.reportSDate,'%Y-%m-%d') AS reportSDate
 			, DATE_FORMAT(mNo.reportEDate,'%Y-%m-%d') AS reportEDate
 			, DATE_FORMAT(mNo.versionUpReqDate,'%Y-%m-%d') AS versionUpReqDat
@@ -1052,12 +1052,12 @@
 		, mNo.manufacturingName
 		, mNo.licensingNo
 		, mNoD.productType1 
-		, getCodeName('PRODCAT1',mNoD.productType1) as productType1Name 
+		, FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name 
 		, mNoD.productType2 
-		, getCodeName('PRODCAT2',mNoD.productType2) as productType2Name 
-		, mNoD.productType3 , getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+		, FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name 
+		, mNoD.productType3 , FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 		, mNoD.keepCondition 
-		, getCodeName('KEEPCONDITION2',mNoD.keepCondition) as keepConditionName 
+		, FN_GET_CODE_NAME('KEEPCONDITION2',mNoD.keepCondition) as keepConditionName 
 		, mNoD.keepConditionText
 		, mNoD.sellDate1 
 		, CASE WHEN mNoD.sellDate1 = 'D' THEN '제조일로부터' 
@@ -1073,10 +1073,10 @@
 			END AS sellDate3Text
 		, 
 		/**
-		(SELECT STUFF((SELECT ',' + getCodeName('PACKAGE_UNIT',packageUnit) FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq FOR XML PATH('') ), 1, 1, '') AS packageUnitNames FROM manufacturingNoPackageUnit a WHERE a.dNoSeq = mNoD.seq GROUP BY a.dNoSeq) AS packageUnitNames
+		(SELECT STUFF((SELECT ',' + FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit) FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq FOR XML PATH('') ), 1, 1, '') AS packageUnitNames FROM manufacturingNoPackageUnit a WHERE a.dNoSeq = mNoD.seq GROUP BY a.dNoSeq) AS packageUnitNames
 		*/
 		(select( 			
-				select group_concat(getCodeName('PACKAGE_UNIT',packageUnit),',')   
+				select group_concat(FN_GET_CODE_NAME('PACKAGE_UNIT',packageUnit),',')   
 						FROM manufacturingNoPackageUnit pUnit WHERE pUnit.dNoSeq = mNoD.seq) AS packageUnitNames
 			FROM manufacturingNoPackageUnit a WHERE  a.dNoSeq = mNoD.seq	
 			GROUP BY a.dNoSeq ) AS packageUnitNames
@@ -1428,8 +1428,8 @@
 			, mNoV.oldManufacturingName
 			, mNoV.newManufacturingName
 			, mNoV.keepConditionChange
-			, getCodeName('KEEPCONDITION2', oldKeepCondition) AS oldKeepCondition
-			, getCodeName('KEEPCONDITION2', newKeepCondition) AS newKeepCondition
+			, FN_GET_CODE_NAME('KEEPCONDITION2', oldKeepCondition) AS oldKeepCondition
+			, FN_GET_CODE_NAME('KEEPCONDITION2', newKeepCondition) AS newKeepCondition
 			, mNoV.oldKeepConditionText
 			, mNoV.newKeepConditionText
 			, sellDateChange
@@ -1467,8 +1467,8 @@
 				WHEN newSellDate6 = 'H' THEN '시간' END AS newSellDate6
 			, mNoV.QNSChange
 			, mNoV.newQNS
-			, getCodeName('STERILIZATION2', oldSterilization) AS oldSterilization
-			, getCodeName('STERILIZATION2', newSterilization) AS newSterilization
+			, FN_GET_CODE_NAME('STERILIZATION2', oldSterilization) AS oldSterilization
+			, FN_GET_CODE_NAME('STERILIZATION2', newSterilization) AS newSterilization
 			, mNoV.etcChange
 			, mNoV.oldOEM
 			, mNoV.newOEM
@@ -1711,11 +1711,11 @@
 				 , DATE_FORMAT(mNo.stopReqDate,'%Y-%m-%d') as stopReqDate
 				 , DATE_FORMAT(mNo.stopDate,'%Y-%m-%d') as stopDate
 				 , mNoD.productType1
-				 , getCodeName('PRODCAT1',mNoD.productType1) as productType1Name
+				 , FN_GET_CODE_NAME('PRODCAT1',mNoD.productType1) as productType1Name
 				 , mNoD.productType2
-				 , getCodeName('PRODCAT2',mNoD.productType2) as productType2Name
+				 , FN_GET_CODE_NAME('PRODCAT2',mNoD.productType2) as productType2Name
 				 , mNoD.productType3
-				 , getCodeName('PRODCAT3',mNoD.productType3) as productType3Name
+				 , FN_GET_CODE_NAME('PRODCAT3',mNoD.productType3) as productType3Name
 				 , DATE_FORMAT(mNo.reportSDate,'%Y-%m-%d') AS reportSDate
 				 , DATE_FORMAT(mNo.reportEDate,'%Y-%m-%d') AS reportEDate
 				 , DATE_FORMAT(mNo.versionUpReqDate,'%Y-%m-%d') AS versionUpReqDate

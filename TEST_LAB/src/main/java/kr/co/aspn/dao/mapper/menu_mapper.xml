@@ -192,7 +192,7 @@
 			, MATERIAL_TYPE
 		)values
 		<foreach collection="matList" item="item" index="index"  separator=",">
-		( FN_NEXTVAL('product_materisl_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
+		( FN_NEXTVAL('product_material_seq'), #{idx} , #{item.matIdx}, #{item.sapCode}, #{item.name}, #{item.unitPrice}, #{item.standard}, #{item.keepExp}, #{item.desc}, #{item.itemType} )
 		</foreach>
 	</insert>
 	

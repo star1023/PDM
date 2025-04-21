@@ -140,7 +140,7 @@
 				, modDate
 				, getUserName(h.regUserId) AS userName
 				, getUserDeptName(h.regUserId) AS deptCodeName
-				, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = h.regUserId)) AS authName
+				, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = h.regUserId)) AS authName
 				,  (select count(*) from approvalBoxInfo where apprNo = h.apprNo and state = 1) as maxSeq
 				, comment
 			FROM APPROVALBOXHEADER h
@@ -175,7 +175,7 @@
 			, note
 			, getUserName(targetUserId) AS userName
 			, getUserDeptName(targetUserId) AS deptCodeName
-			, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
+			, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
 			, case when seq = 1 then '기안' 
 			  else case when state = 0 then '대기' 
 			  when state = 1 then '승인'
@@ -204,7 +204,7 @@
 			, note
 			, getUserName(targetUserId) AS userName
 			, getUserDeptName(targetUserId) AS deptCodeName
-			, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
+			, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
 			, case when seq = 1 then '기안' 
 			  else case when state = 0 then '대기' 
 			  when state = 1 then '승인'
@@ -235,7 +235,7 @@
 			,	type
 			, getUserName(targetUserId) AS userName
 			, getUserDeptName(targetUserId) AS deptCodeName
-			, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
+			, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
 			, getUserName(regUserId) AS regUserName
 		FROM approvalReference
 		WHERE APPRNO = #{apprNo}
@@ -263,9 +263,9 @@
 								, apprType
 								, targetUserId		
 								, u.USER_NAME
-								,getCodeName('GRADE',u.USER_GRAD) AS gradeCodeName
-								,getCodeName('DEPT',u.DEPT_CODE) AS deptCodeName
-								,getCodeName('TEAM',u.TEAM_CODE) AS teamCodeName	
+								,FN_GET_CODE_NAME('GRADE',u.USER_GRAD) AS gradeCodeName
+								,FN_GET_CODE_NAME('DEPT',u.DEPT_CODE) AS deptCodeName
+								,FN_GET_CODE_NAME('TEAM',u.TEAM_CODE) AS teamCodeName	
 			FROM			approvalLineInfo i
 			INNER JOIN 	lab_user u
 			ON				i.targetUserId = u.USER_ID
@@ -913,7 +913,7 @@
 			, note
 			, getUserName(targetUserId) AS userName
 			, getUserDeptName(targetUserId) AS deptCodeName
-			, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
+			, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
 			, case when seq = 1 then '기안' 
 			  else case when state = 0 then '대기' 
 			  when state = 1 then '승인'
@@ -1161,7 +1161,7 @@
 			, note
 			, getUserName(targetUserId) AS userName
 			, getUserDeptName(targetUserId) AS deptCodeName
-			, getCodeName('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
+			, FN_GET_CODE_NAME('GRADE', (SELECT USER_GRAD FROM lab_user where USER_ID = targetUserId)) AS authName
 			, case when seq = 1 then '기안' 
 				else case when state = 0 then '대기' 
 				when state = 1 then '승인'
@@ -1186,7 +1186,7 @@
 			, USER_NAME AS username
 			, DEPT_CODE AS deptCode
 			, getUserDeptName(USER_ID)
-			, getCodeName(USER_GRAD, 'TEAM') 
+			, FN_GET_CODE_NAME(USER_GRAD, 'TEAM') 
 		FROM lab_user 
 		WHERE USER_GRAD = 2
 		  AND DEPT_CODE = (SELECT DEPT_CODE FROM lab_user WHERE USER_ID = #{currentUserId})
@@ -1196,7 +1196,7 @@
 			, USER_NAME AS username
 			, DEPT_CODE AS deptCode
 			, getUserDeptName(USER_ID)
-			, getCodeName(USER_GRAD, 'TEAM') 
+			, FN_GET_CODE_NAME(USER_GRAD, 'TEAM') 
 		FROM lab_user 
 		WHERE USER_ID = 'bkson'
 	</select>

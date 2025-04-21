@@ -21,8 +21,8 @@
 		  		 , A.*
 		  		 , (SELECT lineName FROM plantLine WHERE lineCode = A.line AND companyCode = B.companyCode AND plantCode = B.plantCode) AS lineName
 		  		 , CASE A.state WHEN '0' THEN '등록' WHEN '3' THEN '결재중' WHEN '4' THEN '결재완료' WHEN '5' THEN '결재완료' END AS stateName
-		  		 , getCodeName('TRIALPRODREPORT1', A.devIntensity) AS devIntensityName
-		  		 , getCodeName('TRIALPRODREPORT2', A.result) AS resultName
+		  		 , FN_GET_CODE_NAME('TRIALPRODREPORT1', A.devIntensity) AS devIntensityName
+		  		 , FN_GET_CODE_NAME('TRIALPRODREPORT2', A.result) AS resultName
 		  		 , (SELECT COUNT(*) CNT FROM fileManager WHERE fmNo IS NOT NULL AND tbType = 'trialprodreport' AND tbKey = A.rNo ) AS fileCount
 		  		 , (SELECT COUNT(*) FROM comment WHERE tbKey = A.rNo AND tbType = 'trialProductionReport' AND isDelete = 0) commentCnt
 		  	  FROM trialProductionReport A, (SELECT dNo, companyCode, plantCode FROM manufacturingProcessDoc) B

@@ -46,10 +46,10 @@
 			modUserId, 
 			versionUpMemo,
 			isClose,
-			getCodeName('PRODCAT',productCategory)  as productCategoryName, 
-			getCodeName('PRODCAT1', productType1) as productType1Text, 
-			getCodeName('PRODCAT2', productType2) as productType2Text, 
-			getCodeName('PRODCAT3', productType3) as productType3Text
+			FN_GET_CODE_NAME('PRODCAT',productCategory)  as productCategoryName, 
+			FN_GET_CODE_NAME('PRODCAT1', productType1) as productType1Text, 
+			FN_GET_CODE_NAME('PRODCAT2', productType2) as productType2Text, 
+			FN_GET_CODE_NAME('PRODCAT3', productType3) as productType3Text
 			FROM devDoc
 			WHERE 1 =1
 			<if test='userId != null and userId != ""'>
@@ -84,7 +84,7 @@
 		SELECT 	 pNo
 		      ,productName
 		      ,getPlantName(companyCode, plant) as plantName
-			  ,getCodeName('PRODCAT',productCategory)  as productCategoryName
+			  ,FN_GET_CODE_NAME('PRODCAT',productCategory)  as productCategoryName
 		      ,getCompanyName(companyCode) as companyName
 		      ,regUserId
 		      ,getUserName(regUserId) as regUserName
@@ -139,7 +139,7 @@
 		dpNo, dNo, mpd.docNo, mpd.docVersion, dd.productCode, 
 		dd.productName, plantCode, plantName, stdAmount, divWeight, 
 		lineCode, lineName, bagAmout, bomRate, numBong, 
-		numBox, totWeight, docProdName, loss, getCodeName('PRODCAT',dd.productCategory), 
+		numBox, totWeight, docProdName, loss, FN_GET_CODE_NAME('PRODCAT',dd.productCategory), 
 		compWeight, regNum,adminWeight, distPeriDoc, dispWeight, 
 		distPeriSite, prodStandard, ingredient, keepCondition, packUnit,
 		childHarm, note, menuProcess, standard , DATE_FORMAT(mpd.regDate,'%Y-%m-%d') as regDate,  

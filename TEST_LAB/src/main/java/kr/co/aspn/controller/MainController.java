@@ -126,7 +126,7 @@ public class MainController {
 		        param.put("monday", monday);
 		        param.put("friday", friday);
 		        
-		        List<Map<String,Object>> reserveList = reserveService.reserveRoomList(param);
+		       /* List<Map<String,Object>> reserveList = reserveService.reserveRoomList(param);
 		        
 		        List<Map<String,Object>> reserveList1 = new ArrayList<Map<String,Object>>();
 		        List<Map<String,Object>> reserveList2 = new ArrayList<Map<String,Object>>();
@@ -398,6 +398,10 @@ public class MainController {
 		        	
 		        }
 		        
+		        */
+		        
+		        
+		        
 //		        if((String)param.get("reserveCode") !=null && !((String)param.get("reserveCode")).equals("")) {
 //		        	model.addAttribute("reserveCode",(String)param.get("reserveCode"));
 //		        }else {
@@ -405,12 +409,12 @@ public class MainController {
 //		        }
 		        
 		        model.addAttribute("loginUserId",AuthUtil.getAuth(request).getUserId());
-				model.addAttribute("reserveListDay1",reserveListDay1);
-				model.addAttribute("reserveListDay2",reserveListDay2);
-				model.addAttribute("reserveListDay3",reserveListDay3);
-				model.addAttribute("reserveListDay4",reserveListDay4);
-				model.addAttribute("reserveListDay5",reserveListDay5);
-				model.addAttribute("today",format.format(todayDate));
+				//model.addAttribute("reserveListDay1",reserveListDay1);
+				//model.addAttribute("reserveListDay2",reserveListDay2);
+				//model.addAttribute("reserveListDay3",reserveListDay3);
+				//model.addAttribute("reserveListDay4",reserveListDay4);
+				//model.addAttribute("reserveListDay5",reserveListDay5);
+				//model.addAttribute("today",format.format(todayDate));
 				model.addAttribute("monday",monday);
 				model.addAttribute("tuesday",tuesday);
 				model.addAttribute("wednesday",wednesday);

@@ -60,7 +60,7 @@
 		<selectKey keyProperty="rNo" resultType="int" order="AFTER">
 			INSERT INTO QAREPORT(title, content, category, categoryName, inspector, attendees, createUser, createName, createDate)
 			VALUES
-			(#{title}, #{content}, #{category}, getCodeName('QAREPORTCATEGORY', #{category}), #{inspector}, #{attendees}, #{createUser}, getUserName(#{createUser}), sysdate())
+			(#{title}, #{content}, #{category}, FN_GET_CODE_NAME('QAREPORTCATEGORY', #{category}), #{inspector}, #{attendees}, #{createUser}, getUserName(#{createUser}), sysdate())
 			select LAST_INSERT_ID() rNo
 		</selectKey>
 	</insert>
@@ -72,7 +72,7 @@
 				title			= #{title},
 				content			= #{content},
 				category		= #{category},
-				categoryName	= getCodeName('QAREPORTCATEGORY', #{category}),
+				categoryName	= FN_GET_CODE_NAME('QAREPORTCATEGORY', #{category}),
 				inspector		= #{inspector},
 				attendees		= #{attendees},
 				changeUser		= #{changeUser},

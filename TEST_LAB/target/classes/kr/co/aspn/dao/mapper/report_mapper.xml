@@ -31,7 +31,7 @@
 		SELECT		rNo
 					,rNo as reportKey
 					,category1
-					,getCodeName('REPORTCATEGORY1', category1) as category1Name
+					,FN_GET_CODE_NAME('REPORTCATEGORY1', category1) as category1Name
 					, title
 					, prdTitle
 					, userName
@@ -42,7 +42,7 @@
 					, testTitle
 					, seminarTitle
 					, subCategory
-					, ifnull(getCodeName(category1, subCategory), '') as subCategoryName
+					, ifnull(FN_GET_CODE_NAME(category1, subCategory), '') as subCategoryName
 					, regularTitle
 		FROM
 				(
@@ -97,9 +97,9 @@
 		, b.content
 		, b.adviserPrd
 		, b.category1
-		, getCodeName('REPORTCATEGORY1', b.category1) as category1Name
+		, FN_GET_CODE_NAME('REPORTCATEGORY1', b.category1) as category1Name
 		, b.subCategory
-		, getCodeName(b.category1, b.subCategory) as subCategoryName
+		, FN_GET_CODE_NAME(b.category1, b.subCategory) as subCategoryName
 		, DATE_FORMAT(b.regDate,'%Y-%m-%d') as regDate
 		, b.state
 		, b.modUserId  

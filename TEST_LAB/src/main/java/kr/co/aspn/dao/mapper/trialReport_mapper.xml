@@ -50,7 +50,7 @@
 			 ,DATE_FORMAT(T.releasePlanDate,'%Y-%m-%d') AS releasePlanDate
 			 ,DATE_FORMAT(T.releaseRealDate,'%Y-%m-%d') AS releaseRealDate
 			 ,T.result
-			 ,getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,FN_GET_CODE_NAME('TRIALPRODREPORT2', T.result) AS resultName
 			 ,T.apprNo1
 			 ,T.apprNo2
 			 ,T.state
@@ -311,7 +311,7 @@
 				,DATE_FORMAT(T.releasePlanDate,'%Y-%m-%d') AS releasePlanDate
 				,DATE_FORMAT(T.releaseRealDate,'%Y-%m-%d') AS releaseRealDate
 				,T.result
-				,getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+				,FN_GET_CODE_NAME('TRIALPRODREPORT2', T.result) AS resultName
 				,T.apprNo1
 				,T.apprNo2
 				,T.state
@@ -363,7 +363,7 @@
 			 ,DATE_FORMAT(T.releasePlanDate,'%Y-%m-%d') AS releasePlanDate
 			 ,DATE_FORMAT(T.releaseRealDate,'%Y-%m-%d') AS releaseRealDate
 			 ,T.result
-			 ,getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,FN_GET_CODE_NAME('TRIALPRODREPORT2', T.result) AS resultName
 			 ,T.apprNo1
 			 ,T.apprNo2
 			 ,T.state
@@ -415,7 +415,7 @@
 			 ,DATE_FORMAT(T.releasePlanDate,'%Y-%m-%d') AS releasePlanDate
 			 ,DATE_FORMAT(T.releaseRealDate,'%Y-%m-%d') AS releaseRealDate
 			 ,T.result
-			 ,getCodeName('TRIALPRODREPORT2', T.result) AS resultName
+			 ,FN_GET_CODE_NAME('TRIALPRODREPORT2', T.result) AS resultName
 			 ,T.apprNo1
 			 ,T.apprNo2
 			 ,T.state
