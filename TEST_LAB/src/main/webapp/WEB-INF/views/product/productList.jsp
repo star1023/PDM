@@ -246,6 +246,10 @@
 		$("#viewCount").val("").prop("selected", true);
 		$("#viewCount_label").html("전체");
 	}
+	
+	function paging( pageNo ) {
+		fn_loadList(pageNo);
+	}
 </script>
 
 <input type="hidden" name="pageNo" id="pageNo" value="${paramVO.pageNo}">
