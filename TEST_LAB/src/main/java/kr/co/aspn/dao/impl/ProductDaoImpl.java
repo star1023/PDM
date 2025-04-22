@@ -201,5 +201,29 @@ public class ProductDaoImpl implements ProductDao {
 	public void deleteProductNew(HashMap<String, Object> map) throws Exception {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.delete("product.deleteProductNew", map);
+	}
+
+	@Override
+	public void insertProductImporvePurpose(ArrayList<HashMap<String, Object>> imporvePurList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("product.insertProductImporvePurpose", imporvePurList);
+	}
+
+	@Override
+	public List<Map<String, String>> selectImporvePurposeList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("product.selectImporvePurposeList", param);
+	}
+
+	@Override
+	public Map<String, Object> selectAddInfoCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("product.selectAddInfoCount", param);
+	}
+
+	@Override
+	public void deleteProductImporvePurpose(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("product.deleteProductImporvePurpose", map);
 	}		
 }

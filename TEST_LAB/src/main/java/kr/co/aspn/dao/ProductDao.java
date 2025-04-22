@@ -68,4 +68,12 @@ public interface ProductDao {
 	void deleteAddInfo(HashMap<String, Object> map) throws Exception;
 
 	void deleteProductNew(HashMap<String, Object> map) throws Exception;
+
+	void insertProductImporvePurpose(ArrayList<HashMap<String, Object>> imporvePurList) throws Exception;
+
+	List<Map<String, String>> selectImporvePurposeList(Map<String, Object> param);
+
+	Map<String, Object> selectAddInfoCount(Map<String, Object> param);
+
+	void deleteProductImporvePurpose(HashMap<String, Object> map) throws Exception;
 }

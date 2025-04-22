@@ -78,8 +78,12 @@ public class ProductController {
 		//lab_product 테이블 조회, lab_file 테이블 조회
 		Map<String, Object> productData = productService.selectProductData(param);
 		model.addAttribute("productData", productData);
+		Map<String, Object> addInfoCount = productService.selectAddInfoCount(param);
+		model.addAttribute("addInfoCount", addInfoCount);
 		List<Map<String, String>> addInfoList = productService.selectAddInfo(param);
 		model.addAttribute("addInfoList", addInfoList);
+		List<Map<String, String>> imporvePurposeList = productService.selectImporvePurposeList(param);
+		model.addAttribute("imporvePurposeList", imporvePurposeList);
 		List<Map<String, String>> newDataList = productService.selectNewDataList(param);
 		model.addAttribute("newDataList", newDataList);
 		model.addAttribute("productMaterialData", productService.selectProductMaterial(param));
@@ -312,11 +316,16 @@ public class ProductController {
 			logger.debug("param : {} ",param.toString());
 			Map<String, Object> productData = productService.selectProductData(param);
 			model.addAttribute("productData", productData);
+			Map<String, Object> addInfoCount = productService.selectAddInfoCount(param);
+			model.addAttribute("addInfoCount", addInfoCount);
 			List<Map<String, String>> addInfoList = productService.selectAddInfo(param);
 			model.addAttribute("addInfoList", addInfoList);
+			List<Map<String, String>> imporvePurposeList = productService.selectImporvePurposeList(param);
+			model.addAttribute("imporvePurposeList", imporvePurposeList);
 			List<Map<String, String>> newDataList = productService.selectNewDataList(param);
 			model.addAttribute("newDataList", newDataList);
 			model.addAttribute("productMaterialData", productService.selectProductMaterial(param));
+			
 			return "/product/versionUpProductForm";
 		} catch( Exception e ) {
 			logger.error(StringUtil.getStackTrace(e, this.getClass()));
@@ -344,8 +353,10 @@ public class ProductController {
 	@ResponseBody
 	public Map<String, Object> insertNewVersionProductTmpAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
-			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -372,12 +383,20 @@ public class ProductController {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
+			
+			System.err.println(productType);
+			System.err.println(itemImproveArr);
+			System.err.println(itemExistArr);
+			System.err.println(itemNoteArr);
+			System.err.println(improveArr);
+			
 			System.err.println(fileType);
 			System.err.println(fileTypeText);
 			System.err.println(docType);
 			System.err.println(docTypeText);
 			Collections.reverse(productType);
-			System.err.println(productType);
+			
+			
 			System.err.println(rowIdArr);
 			System.err.println(itemTypeArr);
 			System.err.println(itemMatIdxArr);
@@ -389,8 +408,10 @@ public class ProductController {
 			System.err.println(itemDescArr);
 			System.err.println(file);
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("purposeArr", purposeArr);
-			listMap.put("featureArr", featureArr);
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
@@ -425,8 +446,10 @@ public class ProductController {
 	@ResponseBody
 	public Map<String, Object> insertNewVersionProductAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
-			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -470,8 +493,10 @@ public class ProductController {
 			System.err.println(itemDescArr);
 			System.err.println(file);
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("purposeArr", purposeArr);
-			listMap.put("featureArr", featureArr);
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
@@ -560,6 +585,12 @@ public class ProductController {
 		//lab_product 테이블 조회, lab_file 테이블 조회
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 		returnMap.put("productData", productService.selectProductData(param));
+		Map<String, Object> addInfoCount = productService.selectAddInfoCount(param);
+		returnMap.put("addInfoCount", addInfoCount);
+		List<Map<String, String>> addInfoList = productService.selectAddInfo(param);
+		returnMap.put("addInfoList", addInfoList);
+		List<Map<String, String>> newDataList = productService.selectNewDataList(param);
+		returnMap.put("newDataList", newDataList);
 		returnMap.put("productMaterialData", productService.selectProductMaterial(param));
 		return returnMap;
 	}
@@ -570,8 +601,12 @@ public class ProductController {
 			logger.debug("param : {} ",param.toString());
 			Map<String, Object> productData = productService.selectProductData(param);
 			model.addAttribute("productData", productData);
+			Map<String, Object> addInfoCount = productService.selectAddInfoCount(param);
+			model.addAttribute("addInfoCount", addInfoCount);
 			List<Map<String, String>> addInfoList = productService.selectAddInfo(param);
 			model.addAttribute("addInfoList", addInfoList);
+			List<Map<String, String>> imporvePurposeList = productService.selectImporvePurposeList(param);
+			model.addAttribute("imporvePurposeList", imporvePurposeList);
 			List<Map<String, String>> newDataList = productService.selectNewDataList(param);
 			model.addAttribute("newDataList", newDataList);
 			model.addAttribute("productMaterialData", productService.selectProductMaterial(param));
@@ -613,6 +648,12 @@ public class ProductController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -658,6 +699,13 @@ public class ProductController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			
+			
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
@@ -693,6 +741,13 @@ public class ProductController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			
+			
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -738,6 +793,12 @@ public class ProductController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);

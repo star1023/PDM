@@ -658,8 +658,10 @@ public class ProductServiceImpl implements ProductService {
 		// TODO Auto-generated method stub
 		int productIdx;
 		try {
-			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
-			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
+			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
+			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
+			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -704,25 +706,45 @@ public class ProductServiceImpl implements ProductService {
 			System.err.println(param);
 			productDao.insertNewVersionProduct(param);
 			
-			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
-			if( purposeArr.size() > 0 ) {
-				for( int i = 0 ; i < purposeArr.size() ; i++ ) {
-					HashMap<String,Object> purposeData = new HashMap<String,Object>();
-					purposeData.put("idx", productIdx);
-					purposeData.put("infoType", "PUR");
-					purposeData.put("infoText", purposeArr.get(i));
-					addInfoList.add(purposeData);
-				}				
+			//개선목적
+			ArrayList<HashMap<String,Object>> imporvePurList = new ArrayList<HashMap<String,Object>>();
+			for( int i = 0 ; i < itemImproveArr.size() ; i++ ) {
+				HashMap<String,Object> newMap = new HashMap<String,Object>();
+				newMap.put("idx", productIdx);
+				newMap.put("displayOrder", i+1);
+				try{
+					newMap.put("improve", itemImproveArr.get(i));
+				} catch(Exception e) {
+					newMap.put("improve", "");
+				}
+				
+				try{
+					newMap.put("exist", itemExistArr.get(i));
+				} catch(Exception e) {
+					newMap.put("exist", "");
+				}
+				
+				try{
+					newMap.put("note", itemNoteArr.get(i));
+				} catch(Exception e) {
+					newMap.put("note", "");
+				}
+				imporvePurList.add(newMap);
 			}
 			
-			if( featureArr.size() > 0 ) {
-				for( int i = 0 ; i < featureArr.size() ; i++ ) {
-					HashMap<String,Object> featureData = new HashMap<String,Object>();
-					featureData.put("idx", productIdx);
-					featureData.put("infoType", "FEA");
-					featureData.put("infoText", featureArr.get(i));
-					addInfoList.add(featureData);
-				}
+			if( imporvePurList != null && imporvePurList.size() > 0 ) {
+				productDao.insertProductImporvePurpose(imporvePurList);
+			}
+			
+			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
+			if( improveArr.size() > 0 ) {
+				for( int i = 0 ; i < improveArr.size() ; i++ ) {
+					HashMap<String,Object> purposeData = new HashMap<String,Object>();
+					purposeData.put("idx", productIdx);
+					purposeData.put("infoType", "IMP");
+					purposeData.put("infoText", improveArr.get(i));
+					addInfoList.add(purposeData);
+				}				
 			}
 			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
@@ -889,8 +911,12 @@ public class ProductServiceImpl implements ProductService {
 		// TODO Auto-generated method stub
 		int productIdx;
 		try {
-			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
-			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
+			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
+			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
+			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
+			
+			
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -936,25 +962,45 @@ public class ProductServiceImpl implements ProductService {
 			System.err.println(param);
 			productDao.insertNewVersionProduct(param);
 			
-			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
-			if( purposeArr.size() > 0 ) {
-				for( int i = 0 ; i < purposeArr.size() ; i++ ) {
-					HashMap<String,Object> purposeData = new HashMap<String,Object>();
-					purposeData.put("idx", productIdx);
-					purposeData.put("infoType", "PUR");
-					purposeData.put("infoText", purposeArr.get(i));
-					addInfoList.add(purposeData);
-				}				
+			//개선목적
+			ArrayList<HashMap<String,Object>> imporvePurList = new ArrayList<HashMap<String,Object>>();
+			for( int i = 0 ; i < itemImproveArr.size() ; i++ ) {
+				HashMap<String,Object> newMap = new HashMap<String,Object>();
+				newMap.put("idx", productIdx);
+				newMap.put("displayOrder", i+1);
+				try{
+					newMap.put("improve", itemImproveArr.get(i));
+				} catch(Exception e) {
+					newMap.put("improve", "");
+				}
+				
+				try{
+					newMap.put("exist", itemExistArr.get(i));
+				} catch(Exception e) {
+					newMap.put("exist", "");
+				}
+				
+				try{
+					newMap.put("note", itemNoteArr.get(i));
+				} catch(Exception e) {
+					newMap.put("note", "");
+				}
+				imporvePurList.add(newMap);
 			}
 			
-			if( featureArr.size() > 0 ) {
-				for( int i = 0 ; i < featureArr.size() ; i++ ) {
-					HashMap<String,Object> featureData = new HashMap<String,Object>();
-					featureData.put("idx", productIdx);
-					featureData.put("infoType", "FEA");
-					featureData.put("infoText", featureArr.get(i));
-					addInfoList.add(featureData);
-				}
+			if( imporvePurList != null && imporvePurList.size() > 0 ) {
+				productDao.insertProductImporvePurpose(imporvePurList);
+			}
+			
+			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
+			if( improveArr.size() > 0 ) {
+				for( int i = 0 ; i < improveArr.size() ; i++ ) {
+					HashMap<String,Object> purposeData = new HashMap<String,Object>();
+					purposeData.put("idx", productIdx);
+					purposeData.put("infoType", "IMP");
+					purposeData.put("infoText", improveArr.get(i));
+					addInfoList.add(purposeData);
+				}				
 			}
 			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
@@ -1160,6 +1206,12 @@ public class ProductServiceImpl implements ProductService {
 		try{
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			
+			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
+			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
+			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
+			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
+			
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -1200,9 +1252,42 @@ public class ProductServiceImpl implements ProductService {
 			//제품 수정
 			productDao.updateProductData(param);
 			
-			//추가 정보를 삭제한다.
 			HashMap<String,Object> map = new HashMap<String,Object>(); 
 			map.put("productIdx", productIdx);
+			//개선목적 삭제
+			productDao.deleteProductImporvePurpose(map);
+			
+			//개선목적
+			ArrayList<HashMap<String,Object>> imporvePurList = new ArrayList<HashMap<String,Object>>();
+			for( int i = 0 ; i < itemImproveArr.size() ; i++ ) {
+				HashMap<String,Object> newMap = new HashMap<String,Object>();
+				newMap.put("idx", productIdx);
+				newMap.put("displayOrder", i+1);
+				try{
+					newMap.put("improve", itemImproveArr.get(i));
+				} catch(Exception e) {
+					newMap.put("improve", "");
+				}
+				
+				try{
+					newMap.put("exist", itemExistArr.get(i));
+				} catch(Exception e) {
+					newMap.put("exist", "");
+				}
+				
+				try{
+					newMap.put("note", itemNoteArr.get(i));
+				} catch(Exception e) {
+					newMap.put("note", "");
+				}
+				imporvePurList.add(newMap);
+			}
+			
+			if( imporvePurList != null && imporvePurList.size() > 0 ) {
+				productDao.insertProductImporvePurpose(imporvePurList);
+			}
+			
+			//추가 정보를 삭제한다.			
 			productDao.deleteAddInfo(map);
 			
 			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
@@ -1224,6 +1309,16 @@ public class ProductServiceImpl implements ProductService {
 					featureData.put("infoText", featureArr.get(i));
 					addInfoList.add(featureData);
 				}
+			}
+			
+			if( improveArr.size() > 0 ) {
+				for( int i = 0 ; i < improveArr.size() ; i++ ) {
+					HashMap<String,Object> purposeData = new HashMap<String,Object>();
+					purposeData.put("idx", productIdx);
+					purposeData.put("infoType", "IMP");
+					purposeData.put("infoText", improveArr.get(i));
+					addInfoList.add(purposeData);
+				}				
 			}
 			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
@@ -1403,6 +1498,12 @@ public class ProductServiceImpl implements ProductService {
 		try{
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			
+			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
+			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
+			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
+			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
+			
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -1438,9 +1539,42 @@ public class ProductServiceImpl implements ProductService {
 			productDao.updateProductData(param);
 			
 			
-			//추가 정보를 삭제한다.
 			HashMap<String,Object> map = new HashMap<String,Object>(); 
 			map.put("productIdx", productIdx);
+			//개선목적 삭제
+			productDao.deleteProductImporvePurpose(map);
+			
+			//개선목적 등록
+			ArrayList<HashMap<String,Object>> imporvePurList = new ArrayList<HashMap<String,Object>>();
+			for( int i = 0 ; i < itemImproveArr.size() ; i++ ) {
+				HashMap<String,Object> newMap = new HashMap<String,Object>();
+				newMap.put("idx", productIdx);
+				newMap.put("displayOrder", i+1);
+				try{
+					newMap.put("improve", itemImproveArr.get(i));
+				} catch(Exception e) {
+					newMap.put("improve", "");
+				}
+				
+				try{
+					newMap.put("exist", itemExistArr.get(i));
+				} catch(Exception e) {
+					newMap.put("exist", "");
+				}
+				
+				try{
+					newMap.put("note", itemNoteArr.get(i));
+				} catch(Exception e) {
+					newMap.put("note", "");
+				}
+				imporvePurList.add(newMap);
+			}
+			
+			if( imporvePurList != null && imporvePurList.size() > 0 ) {
+				productDao.insertProductImporvePurpose(imporvePurList);
+			}
+			
+			//추가 정보를 삭제한다.			
 			productDao.deleteAddInfo(map);
 			
 			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
@@ -1462,6 +1596,16 @@ public class ProductServiceImpl implements ProductService {
 					featureData.put("infoText", featureArr.get(i));
 					addInfoList.add(featureData);
 				}
+			}
+			
+			if( improveArr.size() > 0 ) {
+				for( int i = 0 ; i < improveArr.size() ; i++ ) {
+					HashMap<String,Object> purposeData = new HashMap<String,Object>();
+					purposeData.put("idx", productIdx);
+					purposeData.put("infoType", "IMP");
+					purposeData.put("infoText", improveArr.get(i));
+					addInfoList.add(purposeData);
+				}				
 			}
 			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
@@ -1632,5 +1776,17 @@ public class ProductServiceImpl implements ProductService {
 			e.printStackTrace();
 			throw e;
 		}
+	}
+
+	@Override
+	public List<Map<String, String>> selectImporvePurposeList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return productDao.selectImporvePurposeList(param);
+	}
+
+	@Override
+	public Map<String, Object> selectAddInfoCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return productDao.selectAddInfoCount(param);
 	}	
 }

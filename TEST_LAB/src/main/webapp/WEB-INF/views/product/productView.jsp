@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@ page import="kr.co.aspn.util.*" %>
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
@@ -496,14 +497,16 @@
 				<div class="title2" style="width: 20%; display: inline-block;">						
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
 						<colgroup>
 							<col  />							
 						</colgroup>
 						<tbody>
 							<tr>
 								<td>
+									<div class="ellipsis_txt tgnl">
 									${productData.data.TITLE}
+									</div>
 									<input type="hidden" name="idx" id="idx" value="${productData.data.PRODUCT_IDX}"/>
 									<input type="hidden" name="docNo" id="docNo" value="${productData.data.DOC_NO}"/>
 									<input type="hidden" name="currentVersionNo" id="currentVersionNo" value="${productData.data.VERSION_NO}"/>
@@ -518,25 +521,28 @@
 				<div class="title2" style="width: 20%; display: inline-block;">
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
 						<colgroup>
 							<col  />							
 						</colgroup>
 						<tbody>
 							<tr>
 								<td>
+									<div class="ellipsis_txt tgnl">
 									${productData.data.NAME}
+									</div>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 				
+				<c:if test="${addInfoCount.PUR_CNT > 0 }">
 				<div class="title2"  style="width: 80%;"><span class="txt">개발 목적</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
 						<colgroup>
 							<col  />							
 						</colgroup>
@@ -545,7 +551,9 @@
 								<c:if test="${addInfoList.INFO_TYPE == 'PUR' }">
 								<tr id="purpose_tr_${status.count}">
 									<td>
+										<div class="ellipsis_txt tgnl">
 										${addInfoList.INFO_TEXT}
+										</div>
 									</td>
 								</tr>
 								</c:if>
@@ -553,13 +561,14 @@
 						</tbody>
 					</table>
 				</div>
+				</c:if>
 				
-				
+				<c:if test="${addInfoCount.FEA_CNT > 0 }">
 				<div class="title2"  style="width: 80%;"><span class="txt">제품 특징</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
 						<colgroup>
 							<col  />							
 						</colgroup>
@@ -568,7 +577,9 @@
 								<c:if test="${addInfoList.INFO_TYPE == 'FEA' }">
 								<tr id="feature_tr_${status.count}">
 									<td>
+										<div class="ellipsis_txt tgnl">
 										${addInfoList.INFO_TEXT}
+										</div>
 									</td>
 								</tr>
 								</c:if>
@@ -576,6 +587,70 @@
 						</tbody>
 					</table>
 				</div>
+				</c:if>
+				
+				<c:if test="${fn:length(imporvePurposeList) > 0 }">
+					<div class="title2" style="float: left; margin-top: 30px;">
+						<span class="txt">개선 목적</span>
+					</div>
+					<table id="improve_pur_Table" class="tbl01">
+						<colgroup>
+							<col width="30%">
+							<col width="30%">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th>개선</th>
+								<th>기존</th>
+								<th>비고</th>
+							</tr>
+						</thead>
+						<tbody id="improve_pur_tbody" name="improve_pur_tbody">
+							<c:forEach items="${imporvePurposeList}" var="imporvePurposeList" varStatus="status">
+								<tr id="improve_pur_tr__${status.count}" class="temp_color">
+									<td>
+										${imporvePurposeList.IMPROVE}
+									</td>
+									<td>
+										${imporvePurposeList.EXIST}
+									</td>
+									<td>
+										${imporvePurposeList.NOTE}
+									</td>
+								</tr>
+							</c:forEach>	
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
+				</c:if>
+				
+				<c:if test="${addInfoCount.IMP_CNT > 0 }">
+				<div class="title2"  style="width: 80%;"><span class="txt">개선 사항</span></div>
+				<div class="title2" style="width: 20%; display: inline-block;">
+				</div>
+				<div class="main_tbl">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
+						<colgroup>
+							<col  />							
+						</colgroup>
+						<tbody id="feature_tbody" name="feature_tbody">
+							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
+								<c:if test="${addInfoList.INFO_TYPE == 'IMP' }">
+								<tr id="feature_tr_${status.count}">
+									<td>
+										<div class="ellipsis_txt tgnl">
+										${addInfoList.INFO_TEXT}
+										</div>
+									</td>
+								</tr>
+								</c:if>
+							</c:forEach>
+						</tbody>
+					</table>
+				</div>
+				</c:if>
 				
 				
 				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
@@ -627,14 +702,16 @@
 				<div class="title2" style="width: 20%; display: inline-block;">
 				</div>
 				<div class="main_tbl">
-					<table class="insert_proc01">
+					<table class="tbl05" style="border-top: 2px solid #4b5165;">
 						<colgroup>
 							<col  />							
 						</colgroup>
 						<tbody>
 							<tr>
 								<td>
+									<div class="ellipsis_txt tgnl">
 									${productData.data.SCHEDULE_DATE}
+									</div>
 								</td>
 							</tr>
 						</tbody>
@@ -671,7 +748,7 @@
 							<col width="35%" />
 						</colgroup>
 						<tbody>
-							<c:if test="${productData.data.STATUS == 'REG' }">
+							<c:if test="${productData.data.IS_LAST == 'Y' and productData.data.STATUS == 'REG' }">
 							<tr>
 								<th style="border-left: none;">결재라인</th>
 								<td colspan="3">

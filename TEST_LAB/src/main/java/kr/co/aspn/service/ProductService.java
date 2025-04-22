@@ -53,4 +53,8 @@ public interface ProductService {
 	void updateProductTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	int insertNewVersionProductTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	List<Map<String, String>> selectImporvePurposeList(Map<String, Object> param);
+
+	Map<String, Object> selectAddInfoCount(Map<String, Object> param);
 }

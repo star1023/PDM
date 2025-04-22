@@ -1319,14 +1319,60 @@
 			},
 			dataType:"json",
 			success:function(result) {
-				//console.log(result);
+				console.log(result);
 				var data = result.productData.data;
+				var addInfoCount = result.addInfoCount;
+				var addInfoList = result.addInfoList;
+				var newDataList = result.newDataList;
 				var fileList = result.productData.fileList;
 				var fileType = result.productData.fileType;
 				var materialList = result.productMaterialData;
 				
-				$("#productSapCode").val(data.SAP_CODE);
+				console.log(data);
+				console.log(addInfoCount);
+				console.log(addInfoList);
+				console.log(newDataList);
 				$("#productName").val(data.NAME);
+				
+				if( addInfoCount.PUR_CNT > 0 ) {
+					$("#purpose_tbody").html("");
+					addInfoList.forEach(function(item){
+						if( item.INFO_TYPE == 'PUR' ){
+							$("#purpose_add_btn").trigger("click");
+							var trObj = $("#purpose_tbody tr:last");
+							trObj.find("input[name='purpose']").val(item.INFO_TEXT);
+						}
+					});
+				}
+				
+				if( addInfoCount.FEA_CNT > 0 ) {
+					$("#feature_tbody").html("");
+					addInfoList.forEach(function(item){
+						if( item.INFO_TYPE == 'FEA' ){
+							$("#feature_add_btn").trigger("click");
+							var trObj = $("#feature_tbody tr:last");
+							trObj.find("input[name='feature']").val(item.INFO_TEXT);
+						}
+					});
+				}
+				
+				if( newDataList.length > 0 ) {
+					$("#new_tbody").html("");
+					newDataList.forEach(function(item){
+						$("#new_add_btn").trigger("click");
+						var trObj = $("#new_tbody tr:last");
+						trObj.find("input[name='itemName']").val(item.PRODUCT_NAME);
+						trObj.find("input[name='itemStandard']").val(item.PACKAGE_STANDARD);
+						trObj.find("input[name='itemSupplier']").val(item.SUPPLIER);
+						trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
+						trObj.find("input[name='itemNote']").val(item.NOTE);
+					});
+				}
+				
+				$("#scheduleDate").val(data.SCHEDULE_DATE);	
+				
+				
+				$("#productSapCode").val(data.SAP_CODE);				
 				$("#weight").val(data.TOTAL_WEIGHT);
 				$("#standard").val(data.STANDARD);
 				$("#keepCondition").val(data.KEEP_CONDITION);
@@ -1899,7 +1945,7 @@
 				
 				<div class="title2"  style="width: 80%;"><span class="txt">개발 목적</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
-					<button class="btn_con_search" onClick="fn_addCol('purpose')">
+					<button class="btn_con_search" onClick="fn_addCol('purpose')" id="purpose_add_btn">
 						<img src="/resources/images/icon_s_write.png" />추가 
 					</button>
 					<button class="btn_con_search" onClick="fn_delCol('purpose')">
@@ -1938,7 +1984,7 @@
 				
 				<div class="title2"  style="width: 80%;"><span class="txt">제품 특징</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
-					<button class="btn_con_search" onClick="fn_addCol('feature')">
+					<button class="btn_con_search" onClick="fn_addCol('feature')" id="feature_add_btn">
 						<img src="/resources/images/icon_s_write.png" />추가 
 					</button>
 					<button class="btn_con_search" onClick="fn_delCol('feature')">
@@ -1986,7 +2032,7 @@
 					<div id="matHeaderDiv" class="table_header07">
 						<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
 						<span class="table_header_btn_box">
-							<button class="btn_add_tr" onclick="fn_addCol('new')"></button><button class="btn_del_tr" onclick="fn_delCol('new')"></button>
+							<button class="btn_add_tr" onclick="fn_addCol('new')" id="new_add_btn"></button><button class="btn_del_tr" onclick="fn_delCol('new')"></button>
 						</span>
 					</div>
 					<table id="new_Table" class="tbl05">

@@ -715,19 +715,26 @@ var selectedArr = new Array();
 			formData.append("title",$("#title").val());
 			formData.append("productName",$("#productName").val());
 			
-			var purposeArr = new Array();
-			$('tr[id^=purpose_tr]').toArray().forEach(function(purposeRow){
+			var itemImproveArr = new Array();
+			var itemExistArr = new Array();
+			var itemNoteArr = new Array();
+			$('tr[id^=improve_pur_tr]').toArray().forEach(function(purposeRow){
 				var rowId = $(purposeRow).attr('id');
-				purposeArr.push($('#'+ rowId + ' input[name=purpose]').val());
+				itemImproveArr.push($('#'+ rowId + ' input[name=itemImprove]').val());
+				itemExistArr.push($('#'+ rowId + ' input[name=itemExist]').val());
+				itemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
 			});		
-			formData.append("purposeArr", purposeArr);		
+			formData.append("itemImproveArr", itemImproveArr);
+			formData.append("itemExistArr", itemExistArr);	
+			formData.append("itemNoteArr", itemNoteArr);	
 			
-			var featureArr = new Array();
-			$('tr[id^=feature_tr]').toArray().forEach(function(featureRow){
-				var rowId = $(featureRow).attr('id');
-				featureArr.push($('#'+ rowId + ' input[name=feature]').val());
-			});
-			formData.append("featureArr", featureArr);	
+			
+			var improveArr = new Array();
+			$('tr[id^=improve_tr]').toArray().forEach(function(purposeRow){
+				var rowId = $(purposeRow).attr('id');
+				improveArr.push($('#'+ rowId + ' input[name=improve]').val());
+			});		
+			formData.append("improveArr", improveArr);		
 			
 			var newItemNameArr = new Array();
 			var newItemStandardArr = new Array();
@@ -952,19 +959,26 @@ var selectedArr = new Array();
 			formData.append("title",$("#title").val());
 			formData.append("productName",$("#productName").val());
 			
-			var purposeArr = new Array();
-			$('tr[id^=purpose_tr]').toArray().forEach(function(purposeRow){
+			var itemImproveArr = new Array();
+			var itemExistArr = new Array();
+			var itemNoteArr = new Array();
+			$('tr[id^=improve_pur_tr]').toArray().forEach(function(purposeRow){
 				var rowId = $(purposeRow).attr('id');
-				purposeArr.push($('#'+ rowId + ' input[name=purpose]').val());
+				itemImproveArr.push($('#'+ rowId + ' input[name=itemImprove]').val());
+				itemExistArr.push($('#'+ rowId + ' input[name=itemExist]').val());
+				itemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
 			});		
-			formData.append("purposeArr", purposeArr);		
+			formData.append("itemImproveArr", itemImproveArr);
+			formData.append("itemExistArr", itemExistArr);	
+			formData.append("itemNoteArr", itemNoteArr);	
 			
-			var featureArr = new Array();
-			$('tr[id^=feature_tr]').toArray().forEach(function(featureRow){
-				var rowId = $(featureRow).attr('id');
-				featureArr.push($('#'+ rowId + ' input[name=feature]').val());
-			});
-			formData.append("featureArr", featureArr);	
+			
+			var improveArr = new Array();
+			$('tr[id^=improve_tr]').toArray().forEach(function(purposeRow){
+				var rowId = $(purposeRow).attr('id');
+				improveArr.push($('#'+ rowId + ' input[name=improve]').val());
+			});		
+			formData.append("improveArr", improveArr);		
 			
 			var newItemNameArr = new Array();
 			var newItemStandardArr = new Array();
@@ -1639,12 +1653,86 @@ var selectedArr = new Array();
 					</table>
 				</div>
 				
-				<div class="title2"  style="width: 80%;"><span class="txt">개발 목적</span></div>
+				<div id="">
+					<div class="title2" style="float: left; margin-top: 30px;">
+						<span class="txt">개선목적</span>
+					</div>
+					<div id="matHeaderDiv" class="table_header07">
+						<span class="table_order_btn"><button class="btn_up" onclick="moveUp(this)"></button><button class="btn_down" onclick="moveDown(this)"></button></span>
+						<span class="table_header_btn_box">
+							<button class="btn_add_tr" onclick="fn_addCol('improve_pur')"></button><button class="btn_del_tr" onclick="fn_delCol('improve_pur')"></button>
+						</span>
+					</div>
+					<table id="improve_pur_Table" class="tbl05">
+						<colgroup>
+							<col width="20">
+							<col width="30%">
+							<col width="30%">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th></th>
+								<th>개선</th>
+								<th>기존</th>
+								<th>비고</th>
+							</tr>
+						</thead>
+						<tbody id="improve_pur_tbody" name="improve_pur_tbody">
+							<c:forEach items="${imporvePurposeList}" var="imporvePurposeList" varStatus="status">
+							<tr id="improve_pur_tr_${status.count}" class="temp_color">
+								<td>
+									<input type="checkbox" id="improve_pur_${status.count}"><label for="improve_pur_${status.count}"><span></span></label>
+								</td>
+								<td>
+									<input type="text" name="itemImprove" style="width: 100%" class="req code_tbl" value="${imporvePurposeList.IMPROVE}"/>
+								</td>
+								<td>
+									<input type="text" name="itemExist" style="width: 100%" value="${imporvePurposeList.EXIST}"/>
+								</td>
+								<td><input type="text" name="itemNote" style="width: 100%" class="" value="${imporvePurposeList.NOTE}"/></td>
+							</tr>
+							</c:forEach>	
+							<c:if test="${fn:length(imporvePurposeList) == 0 }">
+							<tr id="improve_pur_tr_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="improve_pur_1"><label for="improve_pur_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text" name="itemImprove" style="width: 100%" class="req code_tbl"/>
+								</td>
+								<td>
+									<input type="text" name="itemExist" style="width: 100%"/>
+								</td>
+								<td><input type="text" name="itemNote" style="width: 100%" class=""/></td>
+							</tr>
+							</c:if>
+						</tbody>
+						<tbody id="improve_pur_tbody_temp" name="improve_pur_tbody_temp" style="display:none">
+							<tr id="improve_pur_tmp_tr_1" class="temp_color">
+								<td>
+									<input type="checkbox" id="improve_pur_1"><label for="improve_pur_1"><span></span></label>
+								</td>
+								<td>
+										<input type="text" name="itemImprove" style="width: 100%" class="req code_tbl"/>
+									</td>
+									<td>
+										<input type="text" name="itemExist" style="width: 100%"/>
+									</td>
+									<td><input type="text" name="itemNote" style="width: 100%" class=""/></td>
+							</tr>
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
+				</div>
+				
+				<div class="title2"  style="width: 80%;"><span class="txt">개선 사항</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
-					<button class="btn_con_search" onClick="fn_addCol('purpose')">
+					<button class="btn_con_search" onClick="fn_addCol('improve')">
 						<img src="/resources/images/icon_s_write.png" />추가 
 					</button>
-					<button class="btn_con_search" onClick="fn_delCol('purpose')">
+					<button class="btn_con_search" onClick="fn_delCol('improve')">
 						<img src="/resources/images/icon_s_del.png" />삭제 
 					</button>
 				</div>
@@ -1654,100 +1742,44 @@ var selectedArr = new Array();
 							<col width="20" />
 							<col  />							
 						</colgroup>
-						<tbody id="purpose_tbody" name="purpose_tbody">
-							<c:set var="count" value="0" />
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'PUR' }">
-								<c:set var="count" value="${count + 1}" />
-								<tr id="purpose_tr_${status.count}">
-									<td>
-										<input type="checkbox" id="purpose_${status.count}"><label for="purpose_${status.count}"><span></span></label>
-									</td>
-									<td>
-										<input type="text"  style="width:99%; float: left" class="req" name="purpose" value="${addInfoList.INFO_TEXT}"/>
-									</td>
-								</tr>
-								</c:if>
-							</c:forEach>
-							<c:if test="${count == 0 }">
-								<tr id="purpose_tr_1">
-									<td>
-										<input type="checkbox" id="purpose_1"><label for="purpose_1"><span></span></label>
-									</td>
-									<td>
-										<input type="text"  style="width:99%; float: left" class="req" name="purpose"/>
-									</td>
-								</tr>
-							</c:if>
-						</tbody>
-						<tbody id="purpose_tbody_temp" name="purpose_tbody_temp" style="display:none">
-							<tr id="purpose_tmp_tr_1"> 
+						<tbody id="improve_tbody" name="improve_tbody">
+						<c:set var="count" value="0" />
+						<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
+							<c:if test="${addInfoList.INFO_TYPE == 'IMP' }">
+							<c:set var="count" value="${count + 1}" />
+							<tr id="improve_tr_${status.count}">
 								<td>
-									<input type="checkbox" id="purpose_1"><label for="purpose_1"><span></span></label>
+									<input type="checkbox" id="improve_${status.count}"><label for="improve_${status.count}"><span></span></label>
 								</td>
 								<td>
-									<input type="text"  style="width:99%; float: left" class="req" name="purpose"/>
+									<input type="text"  style="width:99%; float: left" class="req" name="improve" value="${addInfoList.INFO_TEXT}"/>
+								</td>
+							</tr>
+							</c:if>
+						</c:forEach>
+						<c:if test="${count == 0 }">
+							<tr id="improve_tr_1">
+								<td>
+									<input type="checkbox" id="improve_1"><label for="improve_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="improve"/>
+								</td>
+							</tr>
+						</c:if>	
+						</tbody>
+						<tbody id="improve_tbody_temp" name="improve_tbody_temp" style="display:none">
+							<tr id="improve_tmp_tr_1"> 
+								<td>
+									<input type="checkbox" id="improve_1"><label for="improve_1"><span></span></label>
+								</td>
+								<td>
+									<input type="text"  style="width:99%; float: left" class="req" name="improve"/>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				
-				
-				<div class="title2"  style="width: 80%;"><span class="txt">제품 특징</span></div>
-				<div class="title2" style="width: 20%; display: inline-block;">
-					<button class="btn_con_search" onClick="fn_addCol('feature')">
-						<img src="/resources/images/icon_s_write.png" />추가 
-					</button>
-					<button class="btn_con_search" onClick="fn_delCol('feature')">
-						<img src="/resources/images/icon_s_del.png" />삭제 
-					</button>
-				</div>
-				<div class="main_tbl">
-					<table class="insert_proc01">
-						<colgroup>
-							<col width="20" />
-							<col  />							
-						</colgroup>
-						<tbody id="feature_tbody" name="feature_tbody">
-							<c:set var="count" value="0" />
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'FEA' }">
-								<c:set var="count" value="${count + 1}" />
-								<tr id="feature_tr_${status.count}">
-									<td>
-										<input type="checkbox" id="feature_${status.count}"><label for="feature_${status.count}"><span></span></label>
-									</td>
-									<td>
-										<input type="text"  style="width:99%; float: left" class="req" name="feature" value="${addInfoList.INFO_TEXT}"/>
-									</td>
-								</tr>
-								</c:if>
-							</c:forEach>
-							<c:if test="${count == 0 }">
-								<tr id="feature_tr_1">
-									<td>
-										<input type="checkbox" id="feature_1"><label for="feature_1"><span></span></label>
-									</td>
-									<td>
-										<input type="text"  style="width:99%; float: left" class="req" name="feature"/>
-									</td>
-								</tr>
-							</c:if>
-						</tbody>
-						<tbody id="feature_tbody_temp" name="feature_tbody_temp" style="display:none">
-							<tr id="feature_tmp_tr_1"> 
-								<td>
-									<input type="checkbox" id="feature_1"><label for="feature_1"><span></span></label>
-								</td>
-								<td>
-									<input type="text"  style="width:99%; float: left" class="req" name="feature"/>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				
 				
 				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">

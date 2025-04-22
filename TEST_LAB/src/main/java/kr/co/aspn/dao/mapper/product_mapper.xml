@@ -785,4 +785,54 @@
 		WHERE 1 = 1
 			AND PRODUCT_IDX = #{productIdx}
 	</delete>
+	
+	<insert id="insertProductImporvePurpose" parameterType="list">
+		INSERT
+		INTO lab_product_imporve_purpose(
+			IMPROVE_IDX
+			, PRODUCT_IDX
+			, DISPLAY_ORDER
+			, IMPROVE
+			, EXIST
+			, NOTE
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( FN_NEXTVAL('lab_product_imporve_purpose_seq'), #{item.idx}, #{item.displayOrder}, #{item.improve}, #{item.exist}, #{item.note} )
+		</foreach>
+	</insert>
+	
+	<select id="selectImporvePurposeList" parameterType="map" resultType="hashmap">
+		SELECT
+			IMPROVE_IDX
+			, PRODUCT_IDX
+			, DISPLAY_ORDER
+			, IMPROVE
+			, EXIST
+			, NOTE
+		FROM
+			lab_product_imporve_purpose
+		WHERE 1 = 1		
+			AND PRODUCT_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC
+	</select>
+	
+	<select id="selectAddInfoCount" parameterType="map" resultType="hashmap">
+		SELECT
+			SUM(CASE WHEN tmp.INFO_TYPE = 'PUR' THEN tmp.cnt ELSE 0 END) AS PUR_CNT
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'FEA' THEN tmp.cnt ELSE 0 END) AS FEA_CNT 
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'IMP' THEN tmp.cnt ELSE 0 END) AS IMP_CNT 
+		FROM (
+			SELECT INFO_TYPE, COUNT(INFO_TYPE) AS cnt FROM lab_product_add_info lpai 
+			WHERE 1 = 1
+ 				AND PRODUCT_IDX = #{idx}
+ 			GROUP BY INFO_TYPE
+ 		)tmp	
+	</select>
+	
+	<delete id="deleteProductImporvePurpose" parameterType="map">
+		DELETE
+		FROM lab_product_imporve_purpose
+		WHERE 1 = 1
+			AND PRODUCT_IDX = #{productIdx}
+	</delete>
 </mapper>
