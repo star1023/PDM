@@ -18,6 +18,7 @@
 
 <link href="../resources/css/tree.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="../resources/js/jstree.js"></script>
+<script type="text/javascript" src="/resources/js/appr/apprClass.js?v=<%= System.currentTimeMillis()%>"></script>
 <script type="text/javascript">
 var selectedArr = new Array();
 	$(document).ready(function(){
@@ -43,6 +44,8 @@ var selectedArr = new Array();
 			showButtonPanel: true,
 			showAnim: ""
 		});
+		
+		fn.autoComplete($("#keyword"));
 	});
 	
 	function fn_closeErpMatRayer(){
@@ -1213,6 +1216,7 @@ var selectedArr = new Array();
 	    }	    
 	}
 	
+	/*
 	$(function() {
 		// 자동 완성 설정
 		jQuery('#keyword').autocomplete({
@@ -1371,7 +1375,7 @@ var selectedArr = new Array();
 			$(obj).parent().remove();
 		}
 	}
-	
+	*/
 	
 	function fn_apprSubmit(){
 		if( $("#apprLine option").length == 0 ) {
@@ -1403,14 +1407,9 @@ var selectedArr = new Array();
 		closeDialog('approval_dialog');
 	}
 	
+	/*
 	function fn_apprOpen() {
 		fn_loadApprovalLine();
-		/*
-		$("#apprLine option").each(function(){
-			console.log($(this).text());
-			console.log($(this).val());
-		});
-		*/
 		openDialog('approval_dialog')
 	}
 	function fn_apprCancel(){
@@ -1539,7 +1538,7 @@ var selectedArr = new Array();
 			});
 		}
 	}
-	
+	*/
 	function tabChange(tabId) {
 		if( tabId == 'tab1' ) {
 			$("#tab1_div").show();
@@ -1941,7 +1940,7 @@ var selectedArr = new Array();
 								<th style="border-left: none;">결재라인</th>
 								<td colspan="3">
 									<input class="" id="apprTxtFull" name="apprTxtFull" type="text" style="width: 450px; float: left" readonly>
-									<button class="btn_small_search ml5" onclick="fn_apprOpen()" style="float: left">결재</button>
+									<button class="btn_small_search ml5" onclick="apprClass.openApprovalDialog()" style="float: left">결재</button>
 								</td>
 							</tr>
 							<tr>
@@ -2477,6 +2476,7 @@ var selectedArr = new Array();
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
+	<input type="hidden" id="docType" value="TRIP"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />
@@ -2489,7 +2489,7 @@ var selectedArr = new Array();
 		<h5 style="position:relative">
 			<span class="title">개발완료보고서 결재 상신</span>
 			<div  class="top_btn_box">
-				<ul><li><button class="btn_madal_close" onClick="fn_apprCancel(); return false;"></button></li></ul>
+				<ul><li><button class="btn_madal_close" onClick="apprClass.apprCancel(); return false;"></button></li></ul>
 			</div>
 		</h5>
 		<div class="list_detail">
@@ -2513,15 +2513,15 @@ var selectedArr = new Array();
 					<dt style="width:20%">결재자 입력</dt>
 					<dd style="width:80%;" class="ppp">
 						<input type="text" placeholder="결재자명 2자이상 입력후 선택" style="width:198px; float:left;" class="req" id="keyword" name="keyword">
-						<button class="btn_small01 ml5" onclick="fn_approvalAddLine(this); return false;" name="appr_add_btn" id="appr_add_btn">결재자 추가</button>
-						<button class="btn_small02  ml5" onclick="fn_approvalAddLine(this); return false;" name="ref_add_btn" id="ref_add_btn">참조</button>
+						<button class="btn_small01 ml5" onclick="apprClass.approvalAddLine(this); return false;" name="appr_add_btn" id="appr_add_btn">결재자 추가</button>
+						<button class="btn_small02  ml5" onclick="apprClass.approvalAddLine(this); return false;" name="ref_add_btn" id="ref_add_btn">참조</button>
 						<div class="selectbox ml5" style="width:180px;">
-							<label for="apprLineSelect">---- 결재라인 불러오기 ----</label>
-							<select id="apprLineSelect" name="apprLineSelect" onchange="fn_changeApprLine(this);">
+							<label for="apprLineSelect" id="apprLineSelect_label">---- 결재라인 불러오기 ----</label>
+							<select id="apprLineSelect" name="apprLineSelect" onchange="apprClass.changeApprLine(this);">
 								<option value="">---- 결재라인 불러오기 ----</option>
 							</select>
 						</div>
-						<button class="btn_small02  ml5" onclick="fn_deleteApprLine(this); return false;">선택 결재라인 삭제</button>
+						<button class="btn_small02  ml5" onclick="apprClass.deleteApprovalLine(this); return false;">선택 결재라인 삭제</button>
 					</dd>
 				</li>
 				<li  class="mt5">
@@ -2538,8 +2538,8 @@ var selectedArr = new Array();
 						<!-- 현재 추가된 결재선 저장 버튼을 누르면 안보이게 처리 start -->
 						<div class="app_line_edit">
 							저장 결재선라인 입력 :  <input type="text" name="apprLineName" id="apprLineName" class="req" style="width:280px;"/> 
-							<button class="btn_doc" onclick="fn_apprLineSave(this);  return false;"><img src="../resources/images/icon_doc11.png"> 저장</button> 
-							<button class="btn_doc" onclick="fn_apprLineSaveCancel(this); return false;"><img src="../resources/images/icon_doc04.png">취소</button>
+							<button class="btn_doc" onclick="apprClass.approvalLineSave(this);  return false;"><img src="../resources/images/icon_doc11.png"> 저장</button> 
+							<button class="btn_doc" onclick="apprClass.apprLineSaveCancel(this); return false;"><img src="../resources/images/icon_doc04.png">취소</button>
 						</div>
 						<!-- 현재 추가된 결재선 저장 버튼 눌렀을때 보이게 처리 close -->
 					</dd>
@@ -2548,7 +2548,7 @@ var selectedArr = new Array();
 		</div>
 		<div class="btn_box_con4" style="padding:15px 0 20px 0">
 			<button class="btn_admin_red" onclick="fn_apprSubmit(); return false;">결재등록</button> 
-			<button class="btn_admin_gray" onclick="fn_apprCancel(); return false;">결재삭제</button>
+			<button class="btn_admin_gray" onclick="apprClass.apprCancel(); return false;">결재삭제</button>
 		</div>
 	</div>
 </div>
