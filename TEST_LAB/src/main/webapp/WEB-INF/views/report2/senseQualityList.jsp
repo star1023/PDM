@@ -9,8 +9,8 @@ $(document).ready(function(){
 	fn_loadList(1);
 });
 
-function fn_loadList(pageNo) {
-	var URL = "../report2/selectDesignListAjax";
+function fn_loadList(pageNo) {	
+	var URL = "../report2/selectSenseQualityListAjax";
 	var viewCount = $("#viewCount").selectedValues()[0];
 	if( viewCount == '' ) {
 		viewCount = "10";
@@ -30,26 +30,19 @@ function fn_loadList(pageNo) {
 		},
 		dataType:"json",
 		success:function(data) {
+			console.log(data);
 			var html = "";
 			if( data.totalCount > 0 ) {
 				$("#list").html(html);
 				data.list.forEach(function (item) {
 					html += "<tr>";
-					html += "	<td><a href=\"#\" onClick=\"fn_view('"+item.DESIGN_IDX+"')\">"+nvl(item.PRODUCT_NAME,'&nbsp;')+"</a></td>";
-					html += "	<td><div class=\"ellipsis_txt tgnl\"><a href=\"#\" onClick=\"fn_view('"+item.DESIGN_IDX+"')\">"+nvl(item.TITLE,'&nbsp;')+"</a></div></td>";
+					html += "	<td><a href=\"#\" onClick=\"fn_view('"+item.REPORT_IDX+"')\">"+nvl(item.PRODUCT_NAME,'&nbsp;')+"</a></td>";
+					html += "	<td><div class=\"ellipsis_txt tgnl\"><a href=\"#\" onClick=\"fn_view('"+item.REPORT_IDX+"')\">"+nvl(item.TITLE,'&nbsp;')+"</a></div></td>";
 					html += "	<td>"+nvl(item.STATUS_TXT,'&nbsp;')+"</td>";
-					html += "	<td>"+nvl(item.DOC_OWNER_NAME,'&nbsp;')+"</td>";
+					html += "	<td>"+nvl(item.REG_USER_NAME,'&nbsp;')+"</td>";
 					html += "	<td>";
-					if( item.IS_LAST == 'Y' ) {
-						html += "		<li style=\"float:none; display:inline\">";
-						html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.DESIGN_IDX+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
-						if( item.STATUS == 'COND_APPR' ) {
-							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.DESIGN_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
-						}
-						html += "		</li>";
-					}
 					html += "	</td>";
-					html += "</tr>"		
+					html += "</tr>"
 				});				
 			} else {
 				$("#list").html(html);
@@ -75,21 +68,21 @@ function fn_search() {
 }
 
 function fn_insertForm() {
-	window.location.href = "../report2/designInsert";
+	window.location.href = "../report2/senseQualityInsert";
 }
 
 function fn_view(idx) {
-	window.location.href = "../report2/designView?idx="+idx;
+	window.location.href = "../report2/senseQualityView?idx="+idx;
 }
 
 function fn_update(idx) {
-	location.href = '/report2/designUpdateForm?idx='+idx;
+	location.href = '/report2/senseQualityUpdateForm?idx='+idx;
 }
 
 function fn_viewHistory(idx) {
 	var URL = "../report2/selectHistoryAjax";
 	$.ajax({
-		type:"POST",
+		type:"POST", 
 		url:URL,
 		data:{
 			"idx" : idx
@@ -126,14 +119,14 @@ function fn_viewHistory(idx) {
 
 <input type="hidden" name="pageNo" id="pageNo" value="${paramVO.pageNo}">
 <div class="wrap_in" id="fixNextTag">
-	<span class="path">상품설계변경보고서&nbsp;&nbsp;
+	<span class="path">관능&품질평가 테스트 결과보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;
 		<a href="#">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 	<!-- 상세 페이지  start-->
-		<h2 style="position:relative"><span class="title_s">Design Change Report</span>
-			<span class="title">상품설계변경보고서</span>
+		<h2 style="position:relative"><span class="title_s">Sense & Quality Test Report</span>
+			<span class="title">관능&품질평가 테스트 결과보고서</span>
 			<div  class="top_btn_box">
 				<ul>
 					<li>
@@ -225,7 +218,7 @@ function fn_viewHistory(idx) {
 				</div>
 			</div>
 			<div class="btn_box_con"> 
-				<button class="btn_admin_red" onclick="javascript:fn_insertForm();">상품설계변경보고서 생성</button>
+				<button class="btn_admin_red" onclick="javascript:fn_insertForm();">보고서 생성</button>
 			</div>
 	 		<hr class="con_mode"/><!-- 신규 추가 꼭 데려갈것 !-->
 		</div>

@@ -42,5 +42,11 @@ public interface Report2Service {
 	int insertBusinessTripPlan(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param);
+
+	int insertSenseQuality(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	Map<String, Object> selectSenseQualityList(Map<String, Object> param) throws Exception;
+
+	Map<String, Object> selectSenseQualityData(Map<String, Object> param); 
 	
 }

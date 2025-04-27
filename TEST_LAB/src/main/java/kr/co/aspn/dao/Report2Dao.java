@@ -1,5 +1,7 @@
 package kr.co.aspn.dao;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +56,18 @@ public interface Report2Dao {
 	void insertBusinessTripPlan(Map<String, Object> param) throws Exception;
 
 	Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param);
+
+	int selectSenseQualitySeq();
+
+	void insertSenseQualityReport(Map<String, Object> param) throws Exception;
+
+	void insertSenseQualityContents(ArrayList<HashMap<String, Object>> contentsList) throws Exception;
+
+	void insertSenseQualityAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception;
+
+	int selectSenseQualityCount(Map<String, Object> param);
+
+	List<Map<String, Object>> selectSenseQualityList(Map<String, Object> param);
 
 	
 }

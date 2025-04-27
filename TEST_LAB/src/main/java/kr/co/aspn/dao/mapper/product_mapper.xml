@@ -172,7 +172,15 @@
 			, #{keepCondition}
 			, #{expireDate}
 			, #{newMat}
-			, (SELECT ifnull(MAX(lp.VERSION_NO),0)+1 FROM lab_product lp WHERE 1 = 1 AND PRODUCT_CODE = #{productCode})
+			<choose>
+				<when test="productCode != null and productCode !='' ">
+				, (SELECT ifnull(MAX(lp.VERSION_NO),0)+1 FROM lab_product lp WHERE 1 = 1 AND PRODUCT_CODE = #{productCode})	
+				</when>
+				<otherwise>
+				, 1
+				</otherwise>
+			</choose>
+			
 			<if test="productType1 != null and productType1 !='' ">
 			, #{productType1}
 			</if>

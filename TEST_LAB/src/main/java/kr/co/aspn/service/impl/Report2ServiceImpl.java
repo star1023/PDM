@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.json.simple.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -641,5 +642,153 @@ public class Report2ServiceImpl implements Report2Service {
 	public Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return reportDao.selectBusinessTripPlanData(param);
+	}
+
+
+	@Override
+	public int insertSenseQuality(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception {
+		// TODO Auto-generated method stub
+		int reportIdx = 0;
+		try {
+			JSONArray contentsDivArr = (JSONArray)listMap.get("contentsDivArr");
+			JSONArray contentsResultArr = (JSONArray)listMap.get("contentsResultArr");
+			JSONArray contentsNoteArr = (JSONArray)listMap.get("contentsNoteArr");
+			JSONArray resultArr = (JSONArray)listMap.get("resultArr");
+			//1. key value 조회
+			reportIdx = reportDao.selectSenseQualitySeq();	//key value 조회
+			param.put("idx", reportIdx);
+			param.put("status", "REG");
+			
+			//2. lab_sense_quality_report 등록
+			reportDao.insertSenseQualityReport(param);
+			
+			//3. lab_sense_quality_contents 등록
+			ArrayList<HashMap<String,Object>> contentsList = new ArrayList<HashMap<String,Object>>();
+			
+			Calendar cal = Calendar.getInstance();
+	        Date day = cal.getTime();    //시간을 꺼낸다.
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
+	        String toDay = sdf.format(day);
+			String path = config.getProperty("upload.file.path.images");
+			path += "/"+toDay; 			
+			for( int i = 0 ; i < contentsDivArr.size() ; i++ ) {
+				HashMap<String,Object> contentsMap = new HashMap<String,Object>();
+				contentsMap.put("idx", reportIdx);
+				contentsMap.put("displayOrder", i+1);
+				
+				try{
+					contentsMap.put("contentsDiv", contentsDivArr.get(i));
+				} catch(Exception e) {
+					contentsMap.put("contentsDiv", "");
+				}
+				
+				try{
+					contentsMap.put("contentsResult", contentsResultArr.get(i));
+				} catch(Exception e) {
+					contentsMap.put("contentsResult", "");
+				}
+				
+				try {
+					MultipartFile multipartFile = file[i];
+					if( file != null && file.length > 0 ) {
+						if( !multipartFile.isEmpty() ) {
+							String fileIdx = FileUtil.getUUID();
+							String result = FileUtil.upload3(multipartFile,path,fileIdx);
+							contentsMap.put("orgFileName", multipartFile.getOriginalFilename());
+							contentsMap.put("filePath", "/"+toDay);
+							contentsMap.put("changeFileName", result);
+						} else {
+							contentsMap.put("orgFileName", "");
+							contentsMap.put("filePath", "");
+							contentsMap.put("changeFileName", "");
+						}
+					} else {
+						contentsMap.put("orgFileName", "");
+						contentsMap.put("filePath", "");
+						contentsMap.put("changeFileName", "");
+					}
+				} catch( Exception e ) {
+					contentsMap.put("orgFileName", "");
+					contentsMap.put("filePath", "");
+					contentsMap.put("changeFileName", "");
+				}
+				
+				contentsList.add(contentsMap);
+			}			
+			reportDao.insertSenseQualityContents(contentsList);
+			
+			
+			//4. lab_sense_quality_add_info 등록
+			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
+			if( contentsNoteArr != null && contentsNoteArr.size() > 0 ) {
+				for( int i = 0 ; i < contentsNoteArr.size() ; i++ ) {
+					HashMap<String,Object> contentsNoteData = new HashMap<String,Object>();
+					contentsNoteData.put("idx", reportIdx);
+					contentsNoteData.put("infoType", "NOTE");
+					contentsNoteData.put("infoText", contentsNoteArr.get(i));
+					addInfoList.add(contentsNoteData);
+				}				
+			}
+			
+			if( resultArr != null && resultArr.size() > 0 ) {
+				for( int i = 0 ; i < resultArr.size() ; i++ ) {
+					HashMap<String,Object> resultData = new HashMap<String,Object>();
+					resultData.put("idx", reportIdx);
+					resultData.put("infoType", "RESULT");
+					resultData.put("infoText", resultArr.get(i));
+					addInfoList.add(resultData);
+				}				
+			}
+			
+			if( addInfoList != null && addInfoList.size() > 0 ) {
+				//등록한다.
+				reportDao.insertSenseQualityAddInfo(addInfoList);
+			}
+		} catch( Exception e ) {
+			throw e;
+		}
+		return reportIdx;
+	}
+
+
+	@Override
+	public Map<String, Object> selectSenseQualityList(Map<String, Object> param) throws Exception{
+		// TODO Auto-generated method stub
+		int totalCount = reportDao.selectSenseQualityCount(param);
+		
+		int viewCount = 10;
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt((String)param.get("pageNo"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			pageNo = 1;
+		}
+		
+		try {
+			viewCount = Integer.parseInt((String)param.get("viewCount"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			viewCount = 10;
+		}
+		
+		// 페이징: 페이징 정보 SET
+		PageNavigator navi = new PageNavigator(param, viewCount, totalCount);
+		
+		List<Map<String, Object>> designList = reportDao.selectSenseQualityList(param);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("pageNo", pageNo);
+		map.put("totalCount", totalCount);
+		map.put("list", designList);	
+		map.put("navi", navi);
+		return map;
+	}
+
+
+	@Override
+	public Map<String, Object> selectSenseQualityData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return null;
 	}	
 }
