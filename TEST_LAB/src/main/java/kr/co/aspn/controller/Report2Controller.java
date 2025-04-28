@@ -13,6 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import kr.co.aspn.common.auth.Auth;
 import kr.co.aspn.common.auth.AuthUtil;
@@ -362,5 +367,88 @@ public class Report2Controller {
 			returnMap.put("MESSAGE",e.getMessage());
 		}
 		return returnMap;
+	}
+	
+	@RequestMapping(value = "/senseQualityList")
+	public String senseQualityList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		try {
+			logger.debug("param : {} ",param.toString());
+			return "/report2/senseQualityList";
+		} catch( Exception e ) {
+			logger.error(StringUtil.getStackTrace(e, this.getClass()));
+			throw e;
+		}
+	}
+	
+	@RequestMapping("/selectSenseQualityListAjax")
+	@ResponseBody
+	public Map<String, Object> selectSenseQualityListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		Map<String, Object> returnMap = reportService.selectSenseQualityList(param);
+		return returnMap;
+	}
+	
+	
+	@RequestMapping(value = "/senseQualityInsert")
+	public String senseQualityInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		try {
+			logger.debug("param : {} ",param.toString());
+			return "/report2/senseQualityInsert";
+		} catch( Exception e ) {
+			logger.error(StringUtil.getStackTrace(e, this.getClass()));
+			throw e;
+		}
+	}
+	
+	@RequestMapping("/insertSenseQualityAjax")
+	@ResponseBody
+	public Map<String, Object> insertSenseQualityAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			//, @RequestParam(value = "contentsDivArr", required = false) List<String> contentsDivArr
+			//, @RequestParam(value = "contentsResultArr", required = false) List<String> contentsResultArr
+			//, @RequestParam(value = "contentsNoteArr", required = false) List<String> contentsNoteArr
+			//, @RequestParam(value = "resultArr", required = false) List<String> resultArr
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray contentsDivArr = (JSONArray) parser.parse((String)param.get("contentsDivArr"));
+			JSONArray contentsResultArr = (JSONArray) parser.parse((String)param.get("contentsResultArr"));
+			JSONArray contentsNoteArr = (JSONArray) parser.parse((String)param.get("contentsNoteArr"));
+			JSONArray resultArr = (JSONArray) parser.parse((String)param.get("resultArr"));
+			
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(contentsDivArr);
+			System.err.println(contentsResultArr);
+			System.err.println(contentsNoteArr);
+			System.err.println(resultArr);
+			System.err.println(file);
+			
+			HashMap<String, Object> listMap = new HashMap<String, Object>();			
+			
+			listMap.put("contentsDivArr", contentsDivArr);
+			listMap.put("contentsResultArr", contentsResultArr);
+			listMap.put("contentsNoteArr", contentsNoteArr);
+			listMap.put("resultArr", resultArr);
+			//int reportIdx = 0;
+			int reportIdx = reportService.insertSenseQuality(param, listMap, file);
+			returnMap.put("IDX", reportIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/senseQualityView")
+	public String senseQualityView(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
+		Map<String, Object> senseQualityData = reportService.selectSenseQualityData(param);
+		model.addAttribute("senseQualityData", senseQualityData);
+		return "/report2/senseQualityView";
 	}
 }

@@ -1,5 +1,7 @@
 package kr.co.aspn.dao.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -150,5 +152,41 @@ public class Report2DaoImpl implements Report2Dao {
 	public Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("report2.selectBusinessTripPlanData", param);
+	}
+
+	@Override
+	public int selectSenseQualitySeq() {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectSenseQualitySeq");
+	}
+
+	@Override
+	public void insertSenseQualityReport(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertSenseQualityReport", param);
+	}
+
+	@Override
+	public void insertSenseQualityContents(ArrayList<HashMap<String, Object>> contentsList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertSenseQualityContents", contentsList);
+	}
+
+	@Override
+	public void insertSenseQualityAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertSenseQualityAddInfo", addInfoList);
+	}
+
+	@Override
+	public int selectSenseQualityCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectSenseQualityCount",param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectSenseQualityList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectSenseQualityList", param);
 	}	
 }
