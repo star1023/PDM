@@ -60,7 +60,7 @@
 		if( viewCount == '' ) {
 			viewCount = "10";
 		}
-		$("#list").html("<tr><td align='center' colspan='8'>조회중입니다.</td></tr>");
+		$("#list").html("<tr><td align='center' colspan='9'>조회중입니다.</td></tr>");
 		$('.page_navi').html("");
 		
 		$.ajax({
@@ -83,9 +83,9 @@
 					$("#list").html(html);
 					data.list.forEach(function (item) {
 						if( item.IS_LAST == 'Y' ) {
-							html += "<tr id=\"product_"+item.DOC_NO+"_"+item.VERSION_NO+"\">";	
+							html += "<tr id=\"menu_"+item.DOC_NO+"_"+item.VERSION_NO+"\">";	
 						} else {
-							html += "<tr id=\"product_"+item.DOC_NO+"_"+item.VERSION_NO+"\" class=\"m_version\" style=\"display: none\">";
+							html += "<tr id=\"menu_"+item.DOC_NO+"_"+item.VERSION_NO+"\" class=\"m_version\" style=\"display: none\">";
 						}
 						
 						html += "	<td>";
@@ -98,12 +98,13 @@
 						
 						html += "	<td>"+nvl(item.MENU_CODE,'&nbsp;')+"</td>";
 						html += "	<td><div class=\"ellipsis_txt tgnl\"><a href=\"#\" onClick=\"fn_view('"+item.MENU_IDX+"')\">"+nvl(item.NAME,'&nbsp;')+"</a></div></td>";
+						html += "	<td>"+nvl(item.VERSION_NO,'&nbsp;')+"</td>";
 						html += "	<td><div class=\"ellipsis_txt tgnl\"><a href=\"#\" onClick=\"fn_view('"+item.MENU_IDX+"')\">"+nvl(item.TITLE,'&nbsp;')+"</a></div></td>";
 						html += "	<td><div class=\"ellipsis_txt tgnl\">";
 						if( chkNull(item.CATEGORY_NAME1) ) {
 							html += item.CATEGORY_NAME1;
 						}
-						if( chkNull(item.CATEGORY_NAME2) ) { 
+						if( chkNull(item.CATEGORY_NAME2) ) {
 							html += " > "+item.CATEGORY_NAME2;
 						}
 						if( chkNull(item.CATEGORY_NAME3) ) {
@@ -115,8 +116,13 @@
 						html += "	<td>";
 						if( item.IS_LAST == 'Y' ) {
 							html += "		<li style=\"float:none; display:inline\">";
-							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_versionUp('"+item.MENU_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">개정</button>";
+							//if( item.STATUS == 'COMP' ) {
+								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_versionUp('"+item.MENU_IDX+"')\"><img src=\"/resources/images/icon_doc02.png\">개정</button>";
+							//}
 							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.MENU_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
+							if( item.STATUS == 'TMP' || item.STATUS == 'COND_APPR' ) {
+								html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.MENU_IDX+"', '"+item.DOC_NO+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
+							}
 							html += "		</li>";
 						}
 						html += "	</td>";
@@ -124,7 +130,7 @@
 					});				
 				} else {
 					$("#list").html(html);
-					html += "<tr><td align='center' colspan='8'>데이터가 없습니다.</td></tr>";
+					html += "<tr><td align='center' colspan='9'>데이터가 없습니다.</td></tr>";
 				}			
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
@@ -133,7 +139,7 @@
 			error:function(request, status, errorThrown){
 				var html = "";
 				$("#list").html(html);
-				html += "<tr><td align='center' colspan='8'>오류가 발생하였습니다.</td></tr>";
+				html += "<tr><td align='center' colspan='9'>오류가 발생하였습니다.</td></tr>";
 				$("#list").html(html);
 				$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
 				$('#pageNo').val(data.navi.pageNo);
@@ -154,7 +160,7 @@
 	}
 	
 	function fn_viewHistory(idx, docNo) {
-		var URL = "../menu/selectMenuHistoryAjax";
+		var URL = "../menu/selectHistoryAjax";
 		$.ajax({
 			type:"POST",
 			url:URL,
@@ -169,13 +175,23 @@
 				var html = "";
 				data.forEach(function (item) {
 					html += "<li>";
-					html += item.NAME+"("+item.MENU_CODE+")이(가)";
+					if( item.NAME != '' ) {
+						html += item.NAME;
+					}
+					if( item.MENU_CODE != '' ) {
+						html += "("+item.MENU_CODE+")이(가)";
+					}
+					
 					if( item.HISTORY_TYPE == 'I' ) {
 						html += " 생성되었습니다.(버젼 : "+item.VERSION_NO+")";
 					} else if( item.HISTORY_TYPE == 'V' ) {
 						html += " 개정되었습니다.(버젼 : "+item.VERSION_NO+")";
 					} else if( item.HISTORY_TYPE == 'D' ) {
 						html += " 삭제되었습니다.";
+					} else if( item.HISTORY_TYPE == 'U' ) {
+						html += " 수정되었습니다.";
+					} else if( item.HISTORY_TYPE == 'T' ) {
+						html += " 임시저장 되었습니다.";
 					} 
 					html += "<br/><span>"+item.USER_NAME+"</span>&nbsp;&nbsp;<span class=\"date\">"+item.REG_DATE+"</span>";
 					html += "</li>"; 
@@ -189,6 +205,10 @@
 		});
 	}
 	
+	function fn_update(idx, docNo) {
+		location.href = '/menu/menuUpdateForm?idx='+idx;
+	}
+	
 	function showChildVersion(imgElement){
 		var docNo = $(imgElement).parent().parent().attr('id').split('_')[1];
 		var elementImg = $(imgElement).attr('src').split('/')[$(imgElement).attr('src').split('/').length-1];
@@ -197,10 +217,10 @@
 		
 		if(elementImg == addImg){
 			$(imgElement).attr('src', $(imgElement).attr('src').replace('_add_', '_m_')); 
-			$('tr[id*=product_'+docNo+']').show();
+			$('tr[id*=menu_'+docNo+']').show();
 		} else {
 			$(imgElement).attr('src', $(imgElement).attr('src').replace('_m_', '_add_'));
-			$('tr[id*=product_'+docNo+']').toArray().forEach(function(v, i){
+			$('tr[id*=menu_'+docNo+']').toArray().forEach(function(v, i){
 				if(i != 0){
 					$(v).hide();
 				}
@@ -226,6 +246,10 @@
 		$("#viewCount").val("").prop("selected", true);
 		$("#viewCount_label").html("전체");
 	}
+	
+	function paging( pageNo ) {
+		fn_loadList(pageNo);
+	}
 </script>
 
 <input type="hidden" name="pageNo" id="pageNo" value="${paramVO.pageNo}">
@@ -237,7 +261,7 @@
 	</span>
 	<section class="type01">
 	<!-- 상세 페이지  start-->
-		<h2 style="position:relative"><span class="title_s">Menu Complete List</span>
+		<h2 style="position:relative"><span class="title_s">Complete List</span>
 			<span class="title">메뉴완료보고서</span>
 			<div  class="top_btn_box">
 				<ul>
@@ -265,15 +289,15 @@
 								<label for="searchType" id="searchType_label">선택</label> 
 								<select name="searchType" id="searchType">
 									<option value="">선택</option>
-									<option value="searchName">제품명</option>
-									<option value="searchProductCode">제품코드</option>
+									<option value="searchName">메뉴명</option>
+									<option value="searchMenuCode">메뉴코드</option>
 								</select>
 							</div>
 							<input type="text" name="searchValue" id="searchValue" value="" style="width:180px; margin-left:5px;">
 						</dd>
 					</li>
 					<li>
-						<dt>제품구분</dt>
+						<dt>메뉴구분</dt>
 						<dd >
 							<div class="selectbox" style="width:100px;" id="searchCategory1_div">  
 								<label for="searchCategory1" id="searchCategory1_label">선택</label> 
@@ -325,6 +349,7 @@
 						<col width="45px">
 						<col width="10%">
 						<col width="15%">
+						<col width="4%">	
 						<col />
 						<col width="20%">
 						<col width="8%">
@@ -334,10 +359,11 @@
 					<thead id="list_header">
 						<tr>
 							<th>&nbsp;</th>
-							<th>제품코드</th>
-							<th>제품명</th>
+							<th>메뉴코드</th>
+							<th>메뉴명</th>
+							<th>버젼</th>
 							<th>제목</th>
-							<th>제품구분</th>
+							<th>메뉴구분</th>
 							<th>문서상태</th>
 							<th>담당자</th>
 							<th></th>

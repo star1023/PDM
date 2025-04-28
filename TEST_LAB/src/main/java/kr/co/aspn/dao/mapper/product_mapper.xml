@@ -275,7 +275,7 @@
 		WHERE 1 = 1
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
-			<include refid="menu.whereProductList" />
+			<include refid="product.whereProductList" />
 	</select>
 	<select id="selectProductList" parameterType="map" resultType="hashmap">
 	/* product.selectProductList */
@@ -328,7 +328,7 @@
 					WHERE 1 = 1
 						AND IS_DELETE = 'N'
 						AND IS_LAST = 'Y'
-						<include refid="menu.whereProductList" />
+						<include refid="product.whereProductList" />
 				) tmp
 				WHERE rnum between #{startRow} AND #{endRow}
 			)
@@ -638,7 +638,7 @@
 						AND IS_DELETE = 'N'
 						AND IS_LAST = 'Y'
 						AND DOC_OWNER = #{userId}
-						<include refid="menu.whereSearchProductList" />
+						<include refid="product.whereSearchProductList" />
 				) tmp
 			)
 		ORDER BY DOC_NO DESC, VERSION_NO DESC, PRODUCT_IDX DESC		

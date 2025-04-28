@@ -17,9 +17,9 @@ public class MenuDaoImpl implements MenuDao {
 	private SqlSessionTemplate sqlSessionTemplate;
 	
 	@Override
-	public String selectProductCode() {
+	public String selectMenuCode() {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectProductCode");
+		return sqlSessionTemplate.selectOne("menu.selectMenuCode");
 	}
 	
 	@Override
@@ -41,84 +41,6 @@ public class MenuDaoImpl implements MenuDao {
 	}
 
 	@Override
-	public int selectProductDataCount(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectProductDataCount", param);
-	}
-
-	@Override
-	public int selectProductSeq() {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectProductSeq");
-	}
-
-	@Override
-	public void insertProduct(Map<String, Object> param) throws Exception {
-		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertProduct", param);
-	}
-
-	@Override
-	public void insertProductMaterial(Map<String, Object> param) throws Exception {
-		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertProductMaterial", param);
-	}
-
-	@Override
-	public int selectProductCount(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectProductCount", param);
-	}
-
-	@Override
-	public List<Map<String, Object>> selectProductList(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectProductList", param);
-	}
-
-	@Override
-	public Map<String, String> selectProductData(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectProductData", param);
-	}
-
-	@Override
-	public List<Map<String, String>> selectProductMaterial(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectProductMaterial", param);
-	}
-
-	@Override
-	public List<Map<String, String>> selectHistory(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectHistory", param);
-	}
-
-	@Override
-	public void updateProduct(Map<String, Object> param) throws Exception {
-		// TODO Auto-generated method stub
-		sqlSessionTemplate.update("menu.updateProduct", param);
-	}
-
-	@Override
-	public void insertNewVersionProduct(Map<String, Object> param) throws Exception {
-		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertNewVersionProduct", param);
-	}
-
-	@Override
-	public int selectMenuCount(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectMenuCount", param);
-	}
-
-	@Override
-	public List<Map<String, Object>> selectMenuList(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectMenuList", param);
-	}
-
-	@Override
 	public int selectMenuDataCount(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("menu.selectMenuDataCount", param);
@@ -135,6 +57,12 @@ public class MenuDaoImpl implements MenuDao {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.insert("menu.insertMenu", param);
 	}
+	
+	@Override
+	public void insertAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("menu.insertAddInfo", addInfoList);
+	}	
 
 	@Override
 	public void insertMenuMaterial(Map<String, Object> param) throws Exception {
@@ -143,9 +71,15 @@ public class MenuDaoImpl implements MenuDao {
 	}
 
 	@Override
-	public List<Map<String, String>> selectMenuHistory(Map<String, Object> param) {
+	public int selectMenuCount(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectMenuHistory", param);
+		return sqlSessionTemplate.selectOne("menu.selectMenuCount", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectMenuList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("menu.selectMenuList", param);
 	}
 
 	@Override
@@ -161,21 +95,21 @@ public class MenuDaoImpl implements MenuDao {
 	}
 
 	@Override
-	public void updateMenuVersion(Map<String, Object> param) throws Exception {
+	public List<Map<String, String>> selectHistory(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		sqlSessionTemplate.update("menu.updateMenuVersion", param);
+		return sqlSessionTemplate.selectList("menu.selectHistory", param);
+	}
+
+	@Override
+	public void updateMenuIsLast(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("menu.updateMenuIsLast", param);
 	}
 
 	@Override
 	public void insertNewVersionMenu(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.insert("menu.insertNewVersionMenu", param);
-	}
-
-	@Override
-	public void insertCookManual(Map<String, Object> param) {
-		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertCookManual", param);
 	}
 
 	@Override
@@ -197,9 +131,9 @@ public class MenuDaoImpl implements MenuDao {
 	}
 
 	@Override
-	public List<Map<String, Object>> selectSearchProduct(Map<String, Object> param) {
+	public List<Map<String, Object>> selectSearchMenu(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectSearchProduct", param);
+		return sqlSessionTemplate.selectList("menu.selectSearchMenu", param);
 	}
 
 	@Override
@@ -209,50 +143,86 @@ public class MenuDaoImpl implements MenuDao {
 	}
 
 	@Override
-	public List<Map<String, Object>> searchUser(Map<String, Object> param) {
+	public Map<String, Object> selectFileData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.searchUser", param);
+		return sqlSessionTemplate.selectOne("menu.selectFileData", param);
 	}
 
 	@Override
-	public int selectLineSeq() {
+	public void deleteFileData(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectLineSeq");
+		sqlSessionTemplate.delete("menu.deleteFileData", param);
 	}
 
 	@Override
-	public void insertApprLine(Map<String, Object> param) throws Exception {
+	public void deleteMenuMaterial(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertApprLine", param);
+		sqlSessionTemplate.delete("menu.deleteMenuMaterial", param);
 	}
 
 	@Override
-	public void insertApprLineItem(Map<String, Object> param) throws Exception {
+	public void deleteFileType(HashMap<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		sqlSessionTemplate.insert("menu.insertApprLineItem", param);
+		sqlSessionTemplate.delete("menu.deleteFileType", param);
 	}
 
 	@Override
-	public List<Map<String, Object>> selectApprovalLine(Map<String, Object> param) {
+	public void updateMenuData(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectApprovalLine", param);
+		sqlSessionTemplate.update("menu.updateMenuData", param);
 	}
 
 	@Override
-	public List<Map<String, Object>> selectApprovalLineItem(Map<String, Object> param) {
+	public List<Map<String, String>> selectAddInfo(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectList("menu.selectApprovalLineItem", param);
+		return sqlSessionTemplate.selectList("menu.selectAddInfo", param);
 	}
 
 	@Override
-	public void deleteApprLine(Map<String, Object> param) throws Exception {
+	public void insertMenuNew(ArrayList<HashMap<String, Object>> newList) throws Exception {
 		// TODO Auto-generated method stub
-		sqlSessionTemplate.update("menu.deleteApprLine", param);
+		sqlSessionTemplate.insert("menu.insertMenuNew", newList);
 	}
 
 	@Override
-	public int selectApprSeq() {
+	public List<Map<String, String>> selectNewDataList(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return sqlSessionTemplate.selectOne("menu.selectApprSeq");
-	}	
+		return sqlSessionTemplate.selectList("menu.selectNewDataList", param);
+	}
+
+	@Override
+	public void deleteAddInfo(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("menu.deleteAddInfo", map);
+	}
+
+	@Override
+	public void deleteMenuNew(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("menu.deleteMenuNew", map);
+	}
+
+	@Override
+	public void insertMenuImporvePurpose(ArrayList<HashMap<String, Object>> imporvePurList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("menu.insertMenuImporvePurpose", imporvePurList);
+	}
+
+	@Override
+	public List<Map<String, String>> selectImporvePurposeList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("menu.selectImporvePurposeList", param);
+	}
+
+	@Override
+	public Map<String, Object> selectAddInfoCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("menu.selectAddInfoCount", param);
+	}
+
+	@Override
+	public void deleteMenuImporvePurpose(HashMap<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("menu.deleteMenuImporvePurpose", map);
+	}
 }

@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,50 +42,51 @@ public class MenuController {
 	@Autowired
 	MenuService menuService;
 	
-	@RequestMapping(value = "/productList")
-	public String productList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+	@RequestMapping(value = "/menuList")
+	public String menuList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
 		try {
 			logger.debug("param : {} ",param.toString());
-			return "/menu/productList";
+			return "/menu/menuList";
 		} catch( Exception e ) {
 			logger.error(StringUtil.getStackTrace(e, this.getClass()));
 			throw e;
 		}
 	}
 	
-	@RequestMapping("/selectProductListAjax")
+	@RequestMapping("/selectMenuListAjax")
 	@ResponseBody
-	public Map<String, Object> selectProductListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		Map<String, Object> returnMap = menuService.selectProductList(param);
+	public Map<String, Object> selectMenuListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Map<String, Object> returnMap = menuService.selectMenuList(param);
 		return returnMap;
 	}
 	
-	@RequestMapping(value = "/productInsert")
+	@RequestMapping(value = "/menuInsert")
 	public String compInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
 		try {
 			logger.debug("param : {} ",param.toString());
-			return "/menu/productInsert";
+			return "/menu/menuInsert";
 		} catch( Exception e ) {
 			logger.error(StringUtil.getStackTrace(e, this.getClass()));
 			throw e;
 		}
 	}
 	
-	@RequestMapping("/productView")
-	public String productView(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		Map<String, Object> productData = menuService.selectProductData(param);
-		model.addAttribute("productData", productData);
-		//lab_product_materisl 테이블 조회
-		model.addAttribute("productMaterialData", menuService.selectProductMaterial(param));
+	@RequestMapping("/menuView")
+	public String menuView(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
+		//lab_menu 테이블 조회, lab_file 테이블 조회
+		Map<String, Object> menuData = menuService.selectMenuData(param);
+		model.addAttribute("menuData", menuData);
+		Map<String, Object> addInfoCount = menuService.selectAddInfoCount(param);
+		model.addAttribute("addInfoCount", addInfoCount);
+		List<Map<String, String>> addInfoList = menuService.selectAddInfo(param);
+		model.addAttribute("addInfoList", addInfoList);
+		List<Map<String, String>> imporvePurposeList = menuService.selectImporvePurposeList(param);
+		model.addAttribute("imporvePurposeList", imporvePurposeList);
+		List<Map<String, String>> newDataList = menuService.selectNewDataList(param);
+		model.addAttribute("newDataList", newDataList);
+		model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
 		
-		return "/menu/productView";
-	}
-	
-	@RequestMapping(value = "/improveList")
-	public String improveList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ){
-		
-		return "";
+		return "/menu/menuView";
 	}
 	
 	@RequestMapping("/selectNewCodeAjax")
@@ -93,7 +95,7 @@ public class MenuController {
 			, @RequestParam(required=false) Map<String, Object> param) throws Exception {
 		Calendar cal = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
-		String selectCode = menuService.selectProductCode();
+		String selectCode = menuService.selectMenuCode();
 		return sdf.format(cal.getTime())+""+selectCode;
 	}
 	
@@ -119,18 +121,26 @@ public class MenuController {
 		return menuService.selectMaterialList(param);
 	}
 	
-	@RequestMapping("/selectProductCountAjax")
+	@RequestMapping("/selectMenuCountAjax")
 	@ResponseBody
-	public Map<String, Object> selectProductCountAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		Map<String, Object> returnMap = menuService.selectProductDataCount(param);
+	public Map<String, Object> selectMenuCountAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Map<String, Object> returnMap = menuService.selectMenuDataCount(param);
 		return returnMap;
 	}
 	
-	@RequestMapping("/insertProductAjax")
+	@RequestMapping("/insertTmpMenuAjax")
 	@ResponseBody
-	public Map<String, String> insertProductAjax(HttpServletRequest request, HttpServletResponse response
+	public Map<String, Object> insertTmpMenuAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "productType", required = false) List<String> productType
+			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
+			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
+			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
 			, @RequestParam(value = "docType", required = false) List<String> docType
@@ -139,6 +149,7 @@ public class MenuController {
 			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
 			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
 			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
 			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
 			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
 			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
@@ -146,20 +157,30 @@ public class MenuController {
 			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
 			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
-		Map<String, String> returnMap = new HashMap<String, String>();
+		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
+			
+			System.err.println(purposeArr);
+			System.err.println(featureArr);
+			System.err.println(newItemNameArr);
+			System.err.println(newItemStandardArr);
+			System.err.println(newItemSupplierArr);
+			System.err.println(newItemKeepExpArr);
+			System.err.println(newItemNoteArr);
+			
 			System.err.println(fileType);
 			System.err.println(fileTypeText);
 			System.err.println(docType);
 			System.err.println(docTypeText);
-			Collections.reverse(productType);
-			System.err.println(productType);
+			Collections.reverse(menuType);
+			System.err.println(menuType);
 			System.err.println(tempFile);
 			System.err.println(rowIdArr);
 			System.err.println(itemMatIdxArr);
+			System.err.println(itemMatCodeArr);
 			System.err.println(itemSapCodeArr);
 			System.err.println(itemNameArr);
 			System.err.println(itemStandardArr);
@@ -167,8 +188,17 @@ public class MenuController {
 			System.err.println(itemUnitPriceArr);
 			System.err.println(itemDescArr);
 			System.err.println(file);
+			
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("productType", productType);
+			listMap.put("purposeArr", purposeArr);
+			listMap.put("featureArr", featureArr);
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
+			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
 			listMap.put("docType", docType);
@@ -177,13 +207,103 @@ public class MenuController {
 			listMap.put("rowIdArr", rowIdArr);
 			listMap.put("itemTypeArr", itemTypeArr);
 			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
 			listMap.put("itemSapCodeArr", itemSapCodeArr);
 			listMap.put("itemNameArr", itemNameArr);
 			listMap.put("itemStandardArr", itemStandardArr);
 			listMap.put("itemKeepExpArr", itemKeepExpArr);
 			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
 			listMap.put("itemDescArr", itemDescArr);
-			menuService.insertProduct(param, listMap, file);
+			
+			int menuIdx = menuService.insertTmpMenu(param, listMap, file);
+			returnMap.put("IDX", menuIdx);
+			returnMap.put("RESULT", "S");
+			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/insertMenuAjax")
+	@ResponseBody
+	public Map<String, Object> insertMenuAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
+			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
+			, @RequestParam(value = "menuType", required = false) List<String> menuType
+			, @RequestParam(value = "fileType", required = false) List<String> fileType
+			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
+			, @RequestParam(value = "docType", required = false) List<String> docType
+			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
+			, @RequestParam(value = "tempFile", required = false) List<String> tempFile
+			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
+			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
+			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
+			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
+			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
+			, @RequestParam(value = "itemKeepExpArr", required = false) List<String> itemKeepExpArr
+			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
+			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(fileType);
+			System.err.println(fileTypeText);
+			System.err.println(docType);
+			System.err.println(docTypeText);
+			Collections.reverse(menuType);
+			System.err.println(menuType);
+			System.err.println(tempFile);
+			System.err.println(rowIdArr);
+			System.err.println(itemMatIdxArr);
+			System.err.println(itemMatCodeArr);
+			System.err.println(itemSapCodeArr);
+			System.err.println(itemNameArr);
+			System.err.println(itemStandardArr);
+			System.err.println(itemKeepExpArr);
+			System.err.println(itemUnitPriceArr);
+			System.err.println(itemDescArr);
+			System.err.println(file);
+			HashMap<String, Object> listMap = new HashMap<String, Object>();
+			listMap.put("purposeArr", purposeArr);
+			listMap.put("featureArr", featureArr);
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
+			listMap.put("menuType", menuType);
+			listMap.put("fileType", fileType);
+			listMap.put("fileTypeText", fileTypeText);
+			listMap.put("docType", docType);
+			listMap.put("docTypeText", docTypeText);
+			listMap.put("tempFile", tempFile);
+			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
+			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
+			listMap.put("itemSapCodeArr", itemSapCodeArr);
+			listMap.put("itemNameArr", itemNameArr);
+			listMap.put("itemStandardArr", itemStandardArr);
+			listMap.put("itemKeepExpArr", itemKeepExpArr);
+			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
+			listMap.put("itemDescArr", itemDescArr);
+			int menuIdx = menuService.insertMenu(param, listMap, file);
+			returnMap.put("IDX", menuIdx);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
@@ -192,18 +312,23 @@ public class MenuController {
 		return returnMap;
 	}
 	
-	@RequestMapping(value = "/versionUpProductForm")
-	public String versionUpProductForm( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) throws Exception{
+	@RequestMapping(value = "/versionUpMenuForm")
+	public String versionUpMenuForm( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) throws Exception{
 		try {
 			logger.debug("param : {} ",param.toString());
-			Map<String, Object> productData = menuService.selectProductData(param);
-			model.addAttribute("productData", productData);
-			//Map<String, String> data = (Map<String, String>)productData.get("data");
-			//lab_product_materisl 테이블 조회
-			//if( data.get("IS_NEW_MATERIAL") != null && "Y".equals(data.get("IS_NEW_MATERIAL")) ) {
-				model.addAttribute("productMaterialData", menuService.selectProductMaterial(param));
-			//}
-			return "/menu/versionUpProductForm";
+			Map<String, Object> menuData = menuService.selectMenuData(param);
+			model.addAttribute("menuData", menuData);
+			Map<String, Object> addInfoCount = menuService.selectAddInfoCount(param);
+			model.addAttribute("addInfoCount", addInfoCount);
+			List<Map<String, String>> addInfoList = menuService.selectAddInfo(param);
+			model.addAttribute("addInfoList", addInfoList);
+			List<Map<String, String>> imporvePurposeList = menuService.selectImporvePurposeList(param);
+			model.addAttribute("imporvePurposeList", imporvePurposeList);
+			List<Map<String, String>> newDataList = menuService.selectNewDataList(param);
+			model.addAttribute("newDataList", newDataList);
+			model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
+			
+			return "/menu/versionUpMenuForm";
 		} catch( Exception e ) {
 			logger.error(StringUtil.getStackTrace(e, this.getClass()));
 			throw e;
@@ -226,11 +351,20 @@ public class MenuController {
 		return returnMap;
 	}
 	
-	@RequestMapping("/insertNewVersionProductAjax")
+	@RequestMapping("/insertNewVersionMenuTmpAjax")
 	@ResponseBody
-	public Map<String, String> insertNewVersionProductAjax(HttpServletRequest request, HttpServletResponse response
+	public Map<String, Object> insertNewVersionMenuTmpAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "productType", required = false) List<String> productType
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
 			, @RequestParam(value = "docType", required = false) List<String> docType
@@ -238,6 +372,7 @@ public class MenuController {
 			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
 			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
 			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
 			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
 			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
 			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
@@ -245,17 +380,25 @@ public class MenuController {
 			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
 			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
-		Map<String, String> returnMap = new HashMap<String, String>();
+		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
+			
+			System.err.println(menuType);
+			System.err.println(itemImproveArr);
+			System.err.println(itemExistArr);
+			System.err.println(itemNoteArr);
+			System.err.println(improveArr);
+			
 			System.err.println(fileType);
 			System.err.println(fileTypeText);
 			System.err.println(docType);
 			System.err.println(docTypeText);
-			Collections.reverse(productType);
-			System.err.println(productType);
+			Collections.reverse(menuType);
+			
+			
 			System.err.println(rowIdArr);
 			System.err.println(itemTypeArr);
 			System.err.println(itemMatIdxArr);
@@ -267,7 +410,16 @@ public class MenuController {
 			System.err.println(itemDescArr);
 			System.err.println(file);
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("productType", productType);
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
 			listMap.put("docType", docType);
@@ -275,168 +427,45 @@ public class MenuController {
 			listMap.put("rowIdArr", rowIdArr);
 			listMap.put("itemTypeArr", itemTypeArr);
 			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
 			listMap.put("itemSapCodeArr", itemSapCodeArr);
 			listMap.put("itemNameArr", itemNameArr);
 			listMap.put("itemStandardArr", itemStandardArr);
 			listMap.put("itemKeepExpArr", itemKeepExpArr);
 			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
 			listMap.put("itemDescArr", itemDescArr);
-			menuService.insertNewVersionProduct(param, listMap, file);
+			int menuIdx = menuService.insertNewVersionMenuTmp(param, listMap, file);
+			returnMap.put("IDX", menuIdx);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
 			returnMap.put("MESSAGE",e.getMessage());
 		}
 		return returnMap;
-	}
-	
-	
-	@RequestMapping(value = "/menuList")
-	public String menuList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
-		try {
-			logger.debug("param : {} ",param.toString());
-			return "/menu/menuList";
-		} catch( Exception e ) {
-			logger.error(StringUtil.getStackTrace(e, this.getClass()));
-			throw e;
-		}
-	}
-	
-	@RequestMapping("/selectMenuListAjax")
-	@ResponseBody
-	public Map<String, Object> selectMenuListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		Map<String, Object> returnMap = menuService.selectMenuList(param);
-		return returnMap;
-	}
-	
-	@RequestMapping(value = "/menuInsert")
-	public String menuInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
-		try {
-			logger.debug("param : {} ",param.toString());
-			return "/menu/menuInsert";
-		} catch( Exception e ) {
-			logger.error(StringUtil.getStackTrace(e, this.getClass()));
-			throw e;
-		}
-	}
-	
-	@RequestMapping("/selectMenuDataCountAjax")
-	@ResponseBody
-	public Map<String, Object> selectMenuDataCountAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		Map<String, Object> returnMap = menuService.selectMenuDataCount(param);
-		return returnMap;
-	}
-	
-	@RequestMapping("/insertMenuAjax")
-	@ResponseBody
-	public Map<String, String> insertMenuAjax(HttpServletRequest request, HttpServletResponse response
-			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "menuType", required = false) List<String> menuType
-			, @RequestParam(value = "fileType", required = false) List<String> fileType
-			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
-			, @RequestParam(value = "docType", required = false) List<String> docType
-			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
-			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
-			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
-			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
-			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
-			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
-			, @RequestParam(value = "itemKeepExpArr", required = false) List<String> itemKeepExpArr
-			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
-			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
-			, @RequestParam(required=false) MultipartFile... file) throws Exception {
-		Map<String, String> returnMap = new HashMap<String, String>();
-		try {
-			Auth auth = AuthUtil.getAuth(request);
-			param.put("userId", auth.getUserId());
-			System.err.println(param);
-			System.err.println(fileType);
-			System.err.println(fileTypeText);
-			System.err.println(docType);
-			System.err.println(docTypeText);
-			Collections.reverse(menuType);
-			System.err.println(menuType);
-			System.err.println(rowIdArr);
-			System.err.println(itemMatIdxArr);
-			System.err.println(itemSapCodeArr);
-			System.err.println(itemNameArr);
-			System.err.println(itemStandardArr);
-			System.err.println(itemKeepExpArr);
-			System.err.println(itemUnitPriceArr);
-			System.err.println(itemDescArr);
-			System.err.println(file);
-			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("menuType", menuType);
-			listMap.put("fileType", fileType);
-			listMap.put("fileTypeText", fileTypeText);
-			listMap.put("docType", docType);
-			listMap.put("docTypeText", docTypeText);
-			listMap.put("rowIdArr", rowIdArr);
-			listMap.put("itemMatIdxArr", itemMatIdxArr);
-			listMap.put("itemSapCodeArr", itemSapCodeArr);
-			listMap.put("itemNameArr", itemNameArr);
-			listMap.put("itemStandardArr", itemStandardArr);
-			listMap.put("itemKeepExpArr", itemKeepExpArr);
-			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
-			listMap.put("itemDescArr", itemDescArr);
-			menuService.insertMenu(param, listMap, file);
-			returnMap.put("RESULT", "S");			
-		} catch( Exception e ) {
-			returnMap.put("RESULT", "E");
-			returnMap.put("MESSAGE",e.getMessage());
-		}
-		return returnMap;
-	}
-	
-	@RequestMapping("/selectMenuHistoryAjax")
-	@ResponseBody
-	public List<Map<String, String>> selectMenuHistoryAjax(HttpServletRequest request, HttpServletResponse response
-			, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		return menuService.selectMenuHistory(param);
-	}
-	
-	@RequestMapping("/menuView")
-	public String menuView(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		Map<String, Object> menuData = menuService.selectMenuData(param);
-		model.addAttribute("menuData", menuData);
-		Map<String, String> data = (Map<String, String>)menuData.get("data");
-		//lab_product_materisl 테이블 조회
-		if( data.get("IS_NEW_MATERIAL") != null && "Y".equals(data.get("IS_NEW_MATERIAL")) ) {
-			model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
-		}		
-		return "/menu/menuView";
-	}
-	
-	@RequestMapping(value = "/versionUpMenuForm")
-	public String versionUpMenuForm( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) throws Exception{
-		try {
-			logger.debug("param : {} ",param.toString());
-			Map<String, Object> menuData = menuService.selectMenuData(param);
-			model.addAttribute("menuData", menuData);
-			Map<String, String> data = (Map<String, String>)menuData.get("data");
-			//lab_product_materisl 테이블 조회
-			if( data.get("IS_NEW_MATERIAL") != null && "Y".equals(data.get("IS_NEW_MATERIAL")) ) {
-				model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
-			}
-			return "/menu/versionUpMenuForm";
-		} catch( Exception e ) {
-			logger.error(StringUtil.getStackTrace(e, this.getClass()));
-			throw e;
-		}
 	}
 	
 	@RequestMapping("/insertNewVersionMenuAjax")
 	@ResponseBody
-	public Map<String, String> insertNewVersionMenuAjax(HttpServletRequest request, HttpServletResponse response
+	public Map<String, Object> insertNewVersionMenuAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
 			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
 			, @RequestParam(value = "docType", required = false) List<String> docType
 			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
 			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
 			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
 			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
 			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
 			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
@@ -444,7 +473,7 @@ public class MenuController {
 			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
 			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
-		Map<String, String> returnMap = new HashMap<String, String>();
+		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
@@ -456,6 +485,7 @@ public class MenuController {
 			Collections.reverse(menuType);
 			System.err.println(menuType);
 			System.err.println(rowIdArr);
+			System.err.println(itemTypeArr);
 			System.err.println(itemMatIdxArr);
 			System.err.println(itemSapCodeArr);
 			System.err.println(itemNameArr);
@@ -465,20 +495,32 @@ public class MenuController {
 			System.err.println(itemDescArr);
 			System.err.println(file);
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
 			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
 			listMap.put("docType", docType);
 			listMap.put("docTypeText", docTypeText);
 			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
 			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
 			listMap.put("itemSapCodeArr", itemSapCodeArr);
 			listMap.put("itemNameArr", itemNameArr);
 			listMap.put("itemStandardArr", itemStandardArr);
 			listMap.put("itemKeepExpArr", itemKeepExpArr);
 			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
 			listMap.put("itemDescArr", itemDescArr);
-			menuService.insertNewVersionMenu(param, listMap, file);
+			int menuIdx = menuService.insertNewVersionMenu(param, listMap, file);
+			returnMap.put("IDX", menuIdx);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
@@ -486,6 +528,7 @@ public class MenuController {
 		}
 		return returnMap;
 	}
+	
 	
 	
 	@RequestMapping(value = "/pdfConversion")
@@ -528,47 +571,166 @@ public class MenuController {
 		return menuService.selectErpMaterialData(param);
 	}
 	
-	@RequestMapping("/selectSearchProductAjax")
+	@RequestMapping("/selectSearchMenuAjax")
 	@ResponseBody
-	public Map<String, Object> selectSearchProductAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+	public Map<String, Object> selectSearchMenuAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
 		Auth auth = AuthUtil.getAuth(request);
 		param.put("userId", auth.getUserId());
 		System.err.println(param);
-		Map<String, Object> returnMap = menuService.selectSearchProduct(param);
+		Map<String, Object> returnMap = menuService.selectSearchMenu(param);
 		return returnMap;
 	}
 	
-	@RequestMapping("/selectProductDataAjax")
+	@RequestMapping("/selectMenuDataAjax")
 	@ResponseBody
-	public Map<String, Object> selectProductDataAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
+	public Map<String, Object> selectMenuDataAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
+		//lab_menu 테이블 조회, lab_file 테이블 조회
 		Map<String, Object> returnMap = new HashMap<String, Object>();
-		returnMap.put("productData", menuService.selectProductData(param));
-		returnMap.put("productMaterialData", menuService.selectProductMaterial(param));
+		returnMap.put("menuData", menuService.selectMenuData(param));
+		Map<String, Object> addInfoCount = menuService.selectAddInfoCount(param);
+		returnMap.put("addInfoCount", addInfoCount);
+		List<Map<String, String>> addInfoList = menuService.selectAddInfo(param);
+		returnMap.put("addInfoList", addInfoList);
+		List<Map<String, String>> newDataList = menuService.selectNewDataList(param);
+		returnMap.put("newDataList", newDataList);
+		returnMap.put("menuMaterialData", menuService.selectMenuMaterial(param));
 		return returnMap;
 	}
 	
-	@RequestMapping("/searchUserAjax")
-	@ResponseBody
-	public List<Map<String, Object>> searchUserAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		System.err.println(param);
-		List<Map<String, Object>> list = menuService.searchUser(param);
-		return list;
+	@RequestMapping(value = "/menuUpdateForm")
+	public String menuUpdateForm( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) throws Exception{
+		try {
+			logger.debug("param : {} ",param.toString());
+			Map<String, Object> menuData = menuService.selectMenuData(param);
+			model.addAttribute("menuData", menuData);
+			Map<String, Object> addInfoCount = menuService.selectAddInfoCount(param);
+			model.addAttribute("addInfoCount", addInfoCount);
+			List<Map<String, String>> addInfoList = menuService.selectAddInfo(param);
+			model.addAttribute("addInfoList", addInfoList);
+			List<Map<String, String>> imporvePurposeList = menuService.selectImporvePurposeList(param);
+			model.addAttribute("imporvePurposeList", imporvePurposeList);
+			List<Map<String, String>> newDataList = menuService.selectNewDataList(param);
+			model.addAttribute("newDataList", newDataList);
+			model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
+			return "/menu/menuUpdateForm";
+		} catch( Exception e ) {
+			logger.error(StringUtil.getStackTrace(e, this.getClass()));
+			throw e;
+		}
 	}
 	
-	@RequestMapping("/insertApprLineAjax")
+	@RequestMapping(value = "/deleteFileAjax", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, String> insertApprLineAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response
-			, @RequestParam Map<String, Object> param
-			, @RequestParam(value = "apprLine", required = false) List<String> apprLine
-			, ModelMap model) throws Exception{
+	public Map<String, Object> deleteFileAjax(HttpServletResponse respose, HttpServletRequest request, @RequestParam Map<String, Object> param) throws Exception{
+		Map<String, Object> map = new HashMap<String, Object>();
+		try {
+			Map<String, Object> fileData = menuService.selectFileData(param);
+			System.err.println("파일 데이터 : "+fileData);
+			String path = (String)fileData.get("FILE_PATH");
+			String fileName = (String)fileData.get("FILE_NAME");
+
+			String fullPath = path+"/"+fileName;
+			File file = new File(fullPath);
+			if(file.exists() == true){		
+				file.delete();				// 해당 경로의 파일이 존재하면 파일 삭제
+				System.err.println("파일삭제");
+			}
+			menuService.deleteFileData(param);
+			map.put("RESULT", "S");
+		} catch( Exception e ) {
+			map.put("RESULT", "E");
+			map.put("MESSAGE", e.getMessage());
+		}
+		return map;
+	}
+	
+	@RequestMapping("/updateTmpMenuAjax")
+	@ResponseBody
+	public Map<String, String> updateTmpMenuAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
+			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
+			, @RequestParam(value = "menuType", required = false) List<String> menuType
+			, @RequestParam(value = "fileType", required = false) List<String> fileType
+			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
+			, @RequestParam(value = "docType", required = false) List<String> docType
+			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
+			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
+			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
+			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
+			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
+			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
+			, @RequestParam(value = "itemKeepExpArr", required = false) List<String> itemKeepExpArr
+			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
+			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, String> returnMap = new HashMap<String, String>();
 		try {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
-			param.put("apprLine", apprLine);
-			menuService.insertApprLine(param);
+			System.err.println(param);
+			System.err.println(fileType);
+			System.err.println(fileTypeText);
+			System.err.println(docType);
+			System.err.println(docTypeText);
+			Collections.reverse(menuType);
+			System.err.println(menuType);
+			System.err.println(rowIdArr);
+			System.err.println(itemTypeArr);
+			System.err.println(itemMatIdxArr);
+			System.err.println(itemSapCodeArr);
+			System.err.println(itemNameArr);
+			System.err.println(itemStandardArr);
+			System.err.println(itemKeepExpArr);
+			System.err.println(itemUnitPriceArr);
+			System.err.println(itemDescArr);
+			System.err.println(file);
+			HashMap<String, Object> listMap = new HashMap<String, Object>();
+			listMap.put("purposeArr", purposeArr);
+			listMap.put("featureArr", featureArr);
+			
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			
+			
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
+			listMap.put("menuType", menuType);
+			listMap.put("fileType", fileType);
+			listMap.put("fileTypeText", fileTypeText);
+			listMap.put("docType", docType);
+			listMap.put("docTypeText", docTypeText);
+			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
+			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
+			listMap.put("itemSapCodeArr", itemSapCodeArr);
+			listMap.put("itemNameArr", itemNameArr);
+			listMap.put("itemStandardArr", itemStandardArr);
+			listMap.put("itemKeepExpArr", itemKeepExpArr);
+			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
+			listMap.put("itemDescArr", itemDescArr);
+			menuService.updateMenuTmp(param, listMap, file);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
@@ -577,60 +739,93 @@ public class MenuController {
 		return returnMap;
 	}
 	
-	@RequestMapping("/selectApprovalLineAjax")
+	@RequestMapping("/updateMenuAjax")
 	@ResponseBody
-	public List<Map<String, Object>> selectApprovalLineAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		Auth auth = AuthUtil.getAuth(request);
-		param.put("userId", auth.getUserId());
-		System.err.println(param);
-		List<Map<String, Object>> list = menuService.selectApprovalLine(param);
-		return list;
-	}
-	
-	@RequestMapping("/selectApprovalLineItemAjax")
-	@ResponseBody
-	public List<Map<String, Object>> selectApprovalLineItemAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		System.err.println(param);
-		List<Map<String, Object>> list = menuService.selectApprovalLineItem(param);
-		return list;
-	}
-	
-	@RequestMapping("/deleteApprLineAjax")
-	@ResponseBody
-	public Map<String, String> deleteApprLineAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
-		//lab_product 테이블 조회, lab_file 테이블 조회
-		System.err.println(param);
-		
+	public Map<String, String> updateMenuAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
+			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			
+			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
+			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
+			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
+			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			
+			
+			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
+			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
+			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
+			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
+			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
+			, @RequestParam(value = "menuType", required = false) List<String> menuType
+			, @RequestParam(value = "fileType", required = false) List<String> fileType
+			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
+			, @RequestParam(value = "docType", required = false) List<String> docType
+			, @RequestParam(value = "docTypeText", required = false) List<String> docTypeText
+			, @RequestParam(value = "rowIdArr", required = false) List<String> rowIdArr
+			, @RequestParam(value = "itemTypeArr", required = false) List<String> itemTypeArr
+			, @RequestParam(value = "itemMatIdxArr", required = false) List<String> itemMatIdxArr
+			, @RequestParam(value = "itemMatCodeArr", required = false) List<String> itemMatCodeArr
+			, @RequestParam(value = "itemSapCodeArr", required = false) List<String> itemSapCodeArr
+			, @RequestParam(value = "itemNameArr", required = false) List<String> itemNameArr
+			, @RequestParam(value = "itemStandardArr", required = false) List<String> itemStandardArr
+			, @RequestParam(value = "itemKeepExpArr", required = false) List<String> itemKeepExpArr
+			, @RequestParam(value = "itemUnitPriceArr", required = false) List<String> itemUnitPriceArr
+			, @RequestParam(value = "itemDescArr", required = false) List<String> itemDescArr
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, String> returnMap = new HashMap<String, String>();
 		try {
-			menuService.deleteApprLine(param);
-			returnMap.put("RESULT", "S");			
-		} catch( Exception e ) {
-			returnMap.put("RESULT", "E");
-			returnMap.put("MESSAGE",e.getMessage());
-		}
-		return returnMap;
-	}
-	
-	@RequestMapping("/insertApprAjax")
-	@ResponseBody
-	public Map<String, String> insertApprAjax(HttpSession session,HttpServletRequest request, HttpServletResponse response
-			, @RequestParam Map<String, Object> param
-			, @RequestParam(value = "apprLine", required = false) List<String> apprLine
-			, @RequestParam(value = "refLine", required = false) List<String> refLine
-			, ModelMap model) throws Exception{
-		Map<String, String> returnMap = new HashMap<String, String>();
-		try {
-			System.err.println("param : "+param);
-			System.err.println("apprLine : "+apprLine);
-			System.err.println("refLine : "+refLine);
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
-			param.put("apprLine", apprLine);
-			param.put("refLine", refLine);
-			menuService.insertAppr(param);
+			System.err.println(param);
+			System.err.println(fileType);
+			System.err.println(fileTypeText);
+			System.err.println(docType);
+			System.err.println(docTypeText);
+			Collections.reverse(menuType);
+			System.err.println(menuType);
+			System.err.println(rowIdArr);
+			System.err.println(itemTypeArr);
+			System.err.println(itemMatIdxArr);
+			System.err.println(itemSapCodeArr);
+			System.err.println(itemNameArr);
+			System.err.println(itemStandardArr);
+			System.err.println(itemKeepExpArr);
+			System.err.println(itemUnitPriceArr);
+			System.err.println(itemDescArr);
+			System.err.println(file);
+			HashMap<String, Object> listMap = new HashMap<String, Object>();
+			listMap.put("purposeArr", purposeArr);
+			listMap.put("featureArr", featureArr);
+			
+			listMap.put("itemImproveArr", itemImproveArr);
+			listMap.put("itemExistArr", itemExistArr);
+			listMap.put("itemNoteArr", itemNoteArr);
+			listMap.put("improveArr", improveArr);
+			
+			listMap.put("newItemNameArr", newItemNameArr);
+			listMap.put("newItemStandardArr", newItemStandardArr);
+			listMap.put("newItemSupplierArr", newItemSupplierArr);
+			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
+			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
+			listMap.put("menuType", menuType);
+			listMap.put("fileType", fileType);
+			listMap.put("fileTypeText", fileTypeText);
+			listMap.put("docType", docType);
+			listMap.put("docTypeText", docTypeText);
+			listMap.put("rowIdArr", rowIdArr);
+			listMap.put("itemTypeArr", itemTypeArr);
+			listMap.put("itemMatIdxArr", itemMatIdxArr);
+			listMap.put("itemMatCodeArr", itemMatCodeArr);
+			listMap.put("itemSapCodeArr", itemSapCodeArr);
+			listMap.put("itemNameArr", itemNameArr);
+			listMap.put("itemStandardArr", itemStandardArr);
+			listMap.put("itemKeepExpArr", itemKeepExpArr);
+			listMap.put("itemUnitPriceArr", itemUnitPriceArr);
+			listMap.put("itemDescArr", itemDescArr);
+			menuService.updateMenu(param, listMap, file);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
