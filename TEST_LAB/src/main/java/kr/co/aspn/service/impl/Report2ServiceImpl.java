@@ -643,7 +643,113 @@ public class Report2ServiceImpl implements Report2Service {
 		// TODO Auto-generated method stub
 		return reportDao.selectBusinessTripPlanData(param);
 	}
+	
+	@Override
+	public int insertSenseQualityTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file)
+			throws Exception {
+		// TODO Auto-generated method stub
+		int reportIdx = 0;
+		try {
+			JSONArray contentsDivArr = (JSONArray)listMap.get("contentsDivArr");
+			JSONArray contentsResultArr = (JSONArray)listMap.get("contentsResultArr");
+			JSONArray contentsNoteArr = (JSONArray)listMap.get("contentsNoteArr");
+			JSONArray resultArr = (JSONArray)listMap.get("resultArr");
+			//1. key value 조회
+			reportIdx = reportDao.selectSenseQualitySeq();	//key value 조회
+			param.put("idx", reportIdx);
+			
+			//2. lab_sense_quality_report 등록
+			reportDao.insertSenseQualityReport(param);
+			
+			//3. lab_sense_quality_contents 등록
+			ArrayList<HashMap<String,Object>> contentsList = new ArrayList<HashMap<String,Object>>();
+			
+			Calendar cal = Calendar.getInstance();
+	        Date day = cal.getTime();    //시간을 꺼낸다.
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
+	        String toDay = sdf.format(day);
+			String path = config.getProperty("upload.file.path.images");
+			path += "/"+toDay; 			
+			for( int i = 0 ; i < contentsDivArr.size() ; i++ ) {
+				HashMap<String,Object> contentsMap = new HashMap<String,Object>();
+				contentsMap.put("idx", reportIdx);
+				contentsMap.put("displayOrder", i+1);
+				
+				try{
+					contentsMap.put("contentsDiv", contentsDivArr.get(i));
+				} catch(Exception e) {
+					contentsMap.put("contentsDiv", "");
+				}
+				
+				try{
+					contentsMap.put("contentsResult", contentsResultArr.get(i));
+				} catch(Exception e) {
+					contentsMap.put("contentsResult", "");
+				}
+				
+				try {
+					MultipartFile multipartFile = file[i];
+					if( file != null && file.length > 0 ) {
+						if( !multipartFile.isEmpty() ) {
+							String fileIdx = FileUtil.getUUID();
+							String result = FileUtil.upload3(multipartFile,path,fileIdx);
+							contentsMap.put("orgFileName", multipartFile.getOriginalFilename());
+							contentsMap.put("filePath", "/"+toDay);
+							contentsMap.put("changeFileName", result);
+						} else {
+							contentsMap.put("orgFileName", "");
+							contentsMap.put("filePath", "");
+							contentsMap.put("changeFileName", "");
+						}
+					} else {
+						contentsMap.put("orgFileName", "");
+						contentsMap.put("filePath", "");
+						contentsMap.put("changeFileName", "");
+					}
+				} catch( Exception e ) {
+					contentsMap.put("orgFileName", "");
+					contentsMap.put("filePath", "");
+					contentsMap.put("changeFileName", "");
+				}
+				
+				contentsList.add(contentsMap);
+			}			
+			reportDao.insertSenseQualityContents(contentsList);
+			
+			
+			//4. lab_sense_quality_add_info 등록
+			ArrayList<HashMap<String,Object>> addInfoList = new ArrayList<HashMap<String,Object>>();
+			if( contentsNoteArr != null && contentsNoteArr.size() > 0 ) {
+				for( int i = 0 ; i < contentsNoteArr.size() ; i++ ) {
+					HashMap<String,Object> contentsNoteData = new HashMap<String,Object>();
+					contentsNoteData.put("idx", reportIdx);
+					contentsNoteData.put("infoType", "NOTE");
+					contentsNoteData.put("infoText", contentsNoteArr.get(i));
+					addInfoList.add(contentsNoteData);
+				}				
+			}
+			
+			if( resultArr != null && resultArr.size() > 0 ) {
+				for( int i = 0 ; i < resultArr.size() ; i++ ) {
+					HashMap<String,Object> resultData = new HashMap<String,Object>();
+					resultData.put("idx", reportIdx);
+					resultData.put("infoType", "RESULT");
+					resultData.put("infoText", resultArr.get(i));
+					addInfoList.add(resultData);
+				}				
+			}
+			
+			if( addInfoList != null && addInfoList.size() > 0 ) {
+				//등록한다.
+				reportDao.insertSenseQualityAddInfo(addInfoList);
+			}
 
+		} catch( Exception e ) {
+			e.printStackTrace();
+			throw e;
+		}
+		return reportIdx;
+	}	
 
 	@Override
 	public int insertSenseQuality(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception {
@@ -657,7 +763,7 @@ public class Report2ServiceImpl implements Report2Service {
 			//1. key value 조회
 			reportIdx = reportDao.selectSenseQualitySeq();	//key value 조회
 			param.put("idx", reportIdx);
-			param.put("status", "REG");
+			//param.put("status", "REG");
 			
 			//2. lab_sense_quality_report 등록
 			reportDao.insertSenseQualityReport(param);
@@ -789,6 +895,31 @@ public class Report2ServiceImpl implements Report2Service {
 	@Override
 	public Map<String, Object> selectSenseQualityData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
-		return null;
+		//1. lab_sense_quality_report 조회
+		Map<String, Object> reportMap = reportDao.selectSenseQualityReport(param);
+		//2. lab_sense_quality_contents 조회
+		List<Map<String, Object>> contentsList = reportDao.selectSenseQualityContensts(param);
+		
+		int totalCount = contentsList.size();
+		int modCount = totalCount/3;
+		if( totalCount % 3 > 0  ) {
+			modCount++;
+		}
+		
+		//3. lab_sense_quality_add_info 조회
+		param.put("infoType", "NOTE");
+		List<Map<String, Object>> infoNoteList = reportDao.selectSenseQualityInfo(param);		
+		param.put("infoType", "RESULT");
+		List<Map<String, Object>> infoResultList = reportDao.selectSenseQualityInfo(param);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("reportMap", reportMap);
+		map.put("contentsList", contentsList);
+		map.put("totalCount", totalCount);
+		map.put("modCount", modCount);
+		map.put("infoNoteList", infoNoteList);
+		map.put("infoResultList", infoResultList);
+		
+		return map;
 	}	
 }

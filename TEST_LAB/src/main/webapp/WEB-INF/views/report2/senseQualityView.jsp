@@ -7,7 +7,7 @@
 <% 
 	int rowLimit = 3;
 %>
-<title>상품설계변경 보고서 생성</title>
+<title>상품설계변경 보고서 조회</title>
 <style>
 .positionCenter{
 	position: absolute;
@@ -344,6 +344,10 @@ table{font-size: 12px}
 			});
 		}
 	}
+	
+	function fn_update(idx) {
+		location.href = '/report2/senseQualityUpdate?idx='+idx;
+	}
 
 	function fn_goList() {
 		location.href = '/report2/senseQualityList';
@@ -478,61 +482,40 @@ table{font-size: 12px}
 					<tbody>
 						<tr>
 							<th style="border-left: none;">제목</th>
-							<td colspan="3"><input type="text" name="title" id="title" style="width: 90%;" class="req" /></td>
+							<td colspan="3">
+								${senseQualityData.reportMap.TITLE}
+							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">업체명</th>
 							<td colspan="3">
-								<input type="text"  style="width:200px; float: left" class="req" name="companyName" id="companyName" placeholder="업체명을 입력하세요."/>
+								${senseQualityData.reportMap.COMPANY_NAME}
 							</td>
 						</tr>
 						<tr>	
 							<th style="border-left: none;">제품명</th>
 							<td>
-								<input type="text"  style="width:90%; float: left" class="req" name="productName" id="productName" placeholder="제품명을 입력하세요."/>
+								${senseQualityData.reportMap.PRODUCT_NAME}
 							</td>
 							<th style="border-left: none;">ERP코드</th>
 							<td>
-								<input type="text"  style="width:200px; float: left" class="req" name="productSapCode" id="productSapCode" placeholder="코드를 조회 하세요." readonly/>
-								<button class="btn_small_search ml5" onclick="openDialog('dialog_erpMaterial')" style="float: left">조회</button>
-								<button class="btn_small_search ml5" onclick="fn_initForm()" style="float: left">초기화</button>
+								
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">테스트 목적</th>
 							<td colspan="3">
-								<input type="text"  style="width:100%; float: left" class="req" name="testPurpose" id="testPurpose"/>
+								${senseQualityData.reportMap.TEST_PURPOSE}
 							</td>
 						</tr>
-						<tr>
-							<th style="border-left: none;">결재라인</th>
-							<td colspan="3">
-								<input class="" id="apprTxtFull" name="apprTxtFull" type="text" style="width: 450px; float: left" readonly>
-								<button class="btn_small_search ml5" onclick="apprClass.openApprovalDialog()" style="float: left">결재</button>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">참조자</th>
-							<td colspan="3">
-								<div id="refTxtFull" name="refTxtFull"></div>								
-							</td>
-						</tr>						
 					</tbody>
 				</table>
 			</div>
-			
-			<div class="title2"  style="width: 85%;"><span class="txt">세부내용</span></div>
-			<div class="title2" style="width: 15%; display: inline-block;">
-				<button class="btn_con_search" onClick="fn_addContents()" id="feature_add_btn">
-					<img src="/resources/images/icon_s_write.png" />추가 
-				</button>
-				<button class="btn_con_search" onClick="fn_delContents()">
-					<img src="/resources/images/icon_s_del.png" />삭제 
-				</button>
-			</div>
+
+			<div class="title2"  style="width: 100%;"><span class="txt">세부내용</span></div>
 			<div id="contents_div_1">
 				 <table style="width: 100%"  id="table1" class="intable lineall mb5" >
-				 	<colgroup>
+				 	<colgroup>	
 			            <col width="10%">
 			            <col width="26%">
 			            <col width="26%">
@@ -541,75 +524,77 @@ table{font-size: 12px}
 			        </colgroup>
 			        <tr>
 			        	<td rowspan="2">구분</td>
-			        	<td colspan="4" align="center"><input style="border: none; width:40%; height: 30px;" class="" type="text" id="contentsHeader" data-gubun="" name="contentsHeader" value="" placeholder="내용을 입력해주세요."/></td>
+			        	<td colspan="4" align="center">
+			        		${senseQualityData.reportMap.CONTENTS_HEADER}
+			        	</td>
 			        </tr>
 			        <tr id="contents_div_tr_1">
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>	
+				        <c:set var="startNo" value="0"/>
+				        <c:set var="endNo" value="2"/>
+				        <c:set var="count" value="0" />
+			        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">	
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
+			        	<td>${contentsList.CONTENTS_DIV}</td>
+			        	</c:if>			        	
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
+			        	<td>&nbsp;</td>
+			        	</c:forEach>
+			        	</c:if>		
 			        	<td>비고</td>		        	
 			        </tr>
 			        <tr>
 			        	<td rowspan="2" class="hftitle">사진</td>			        	
 			        </tr>
 			        <tr>
+			        	<c:set var="count" value="0" />
+			        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
 			        	<td style="height: 250px">
-			        		<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput1" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="1">
-									<label for="fileImageInput1" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
+			        		<p><img id="preview" src="/picture${contentsList.FILE_PATH}/${contentsList.ORG_FILE_NAME}" style="border:1px solid #e1e1e1; border-radius:5px; width:278px; height:223px;"></p>
 			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput2" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="2">
-									<label for="fileImageInput2" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput3" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="3">
-									<label for="fileImageInput3" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td rowspan="2" class="hftitle">
-			        		<textarea style="border: ; width:98%; height: 99%;" id="contentsNote" name="contentsNote"></textarea>
+			            </c:if>
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
+			        	<td style="height: 250px">
+			        		&nbsp;
+			        	</td>
+			        	</c:forEach>
+			        	</c:if>	
+			            <td rowspan="2" class="">
+			        		<p style="white-space: pre-line; text-align:left;">${senseQualityData.infoNoteList[0].INFO_TEXT}</p>
 			        	</td>
 			        </tr>
 			        
 			        <tr>
 			        	<td class="hftitle"> 결과 </td>
+			        	<c:set var="count" value="0" />
+			      		<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
 			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
+			        		<p style="white-space: pre-line; text-align:left;">${contentsList.CONTENTS_RESULT}</p>
 			        	</td>
+			        	</c:if>
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
 			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
+			        		&nbsp;
 			        	</td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
+			        	</c:forEach>
+			        	</c:if>	
 			        </tr>
-			      </table> <!-- 첨부파일 고정 -->
+			      </table> 
 			</div>
-			<% for( int i = 1 ; i <= rowLimit ; i++) { %>
-			<div id="contents_div_<%=(i+1)%>" style="display:none">
+			<c:forEach var="no" begin="1" end="${senseQualityData.modCount-1}">
+			<c:set var="startNo" value="${no*3}"/>
+			<c:set var="endNo" value="${no*3+2}"/>
+			<div id="contents_div_${no+1}">
 				 <table style="width: 100%"  id="table1" class="intable lineall mb5" >
 				 	<colgroup>
 			            <col width="10%">
@@ -618,202 +603,81 @@ table{font-size: 12px}
 			            <col width="26%">
 			            <col width="12%">			            
 			        </colgroup>
-			        <tr  id="contents_div_tr_<%=(i+1)%>">
+			        <tr  id="contents_div_tr_${no+1}">
 			        	<td >구분</td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>	
+			        	<c:set var="count" value="0" />
+			        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">	
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
+			        	<td>${contentsList.CONTENTS_DIV}</td>
+			        	</c:if>
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
+			        	<td>&nbsp;</td>
+			        	</c:forEach>
+			        	</c:if>
 			        	<td>비고</td>		        	
 			        </tr>
 			        <tr>
-			        	<td class="hftitle">사진</td>			        	
+			        	<td class="hftitle">사진</td>
+			        	<c:set var="count" value="0" />
+			        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
 			        	<td style="height: 250px">
-			        		<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput<%=((i-1)*3+4)%>" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="<%=((i-1)*3+4)%>">
-									<label for="fileImageInput<%=((i-1)*3+4)%>" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
+			        		<p><img id="preview" src="/picture${contentsList.FILE_PATH}/${contentsList.ORG_FILE_NAME}" style="border:1px solid #e1e1e1; border-radius:5px; width:278px; height:223px;"></p>
 			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput<%=((i-1)*3+5)%>" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="<%=((i-1)*3+5)%>">
-									<label for="fileImageInput<%=((i-1)*3+5)%>" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput<%=((i-1)*3+6)%>" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="<%=((i-1)*3+6)%>">
-									<label for="fileImageInput<%=((i-1)*3+6)%>" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td rowspan="2" class="hftitle">
-			        		<textarea style="border: ; width:98%; height: 99%;" id="contentsNote" name="contentsNote"></textarea>
+			            </c:if>
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
+			        	<td style="height: 250px">&nbsp;</td>
+			        	</c:forEach>
+			        	</c:if>
+			            <td rowspan="2" class="">
+			        		<p style="white-space: pre-line; text-align:left;">${senseQualityData.infoNoteList[no].INFO_TEXT}</p>
 			        	</td>
 			        </tr>
 			        
 			        <tr>
 			        	<td class="hftitle"> 결과 </td>
+			        	<c:set var="count" value="0" />
+			        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+			        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+			        	<c:set var="count" value="${count + 1}" />
 			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
+			        		<p style="white-space: pre-line; text-align:left;">${contentsList.CONTENTS_RESULT}</p>
 			        	</td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
+			        	</c:if>
+			        	</c:forEach>
+			        	<c:if test="${count < 3 }">
+			        	<c:forEach var="cnt" begin="1" end="${3-count}">
+			        	<td>&nbsp;</td>
+			        	</c:forEach>
+			        	</c:if>
 			        </tr>
 			      </table> 
 			</div>
-			<% } %>
-			<!-- 
-			<div id="contents_div_3" style="display:none">
-				 <table style="width: 100%"  id="table1" class="intable lineall mb5" >
-				 	<colgroup>
-			            <col width="10%">
-			            <col width="26%">
-			            <col width="26%">
-			            <col width="26%">
-			            <col width="12%">			            
-			        </colgroup>
-			        <tr  id="contents_div_tr_3">
-			        	<td >구분</td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>
-			        	<td><input style="border: none; width:98%; height: 30px;" class="" type="text" id="contentsDiv" data-gubun="" name="contentsDiv" value="" placeholder="내용을 입력해주세요."/></td>	
-			        	<td>비고</td>		        	
-			        </tr>
-			        <tr>
-			        	<td class="hftitle">사진</td>			        	
-			        	<td style="height: 250px">
-			        		<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput4" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="7">
-									<label for="fileImageInput4" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput5" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="8">
-									<label for="fileImageInput5" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td style="height: 120px">
-			            	<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
-							<p class="pt10">
-								<div class="add_file2" style="width:100%; align:center;" onclick="fn_fileDivClick(event)">
-									<input type="file" name="file" id="fileImageInput6" accept="image/*" style="display:none;" onchange="fn_changeImageFile(this, event)" data-order="9">
-									<label for="fileImageInput6" style="cursor: pointer;">이미지파일 등록 <img src="/resources/images/icon_add_file.png"></label>
-								</div>	
-							</p>
-							<div style=" z-index:3; position:relative;right:-255px; top:-238px; width: 25px; height: 25px;">
-								<img src="/resources/images/btn_table_header01_del02.png" onClick="fn_deleteImageFile(this, event)">
-							</div>
-			            </td>
-			            <td rowspan="2" class="hftitle">
-			        		<textarea style="border: ; width:98%; height: 99%;" id="contentsNote" name="contentsNote"></textarea>
-			        	</td>
-			        </tr>
-			        
-			        <tr>
-			        	<td class="hftitle"> 결과 </td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
-			        	<td>
-			        		<textarea style="border: ; width:98%; height: 80px;" id="contentsResult" name="contentsResult"></textarea>			        		
-			        	</td>
-			        </tr>
-			      </table> 
-			</div>
-			 -->
-			<div class="title2"  style="width: 80%;"><span class="txt">결론</span></div>
-			<div class="title2" style="width: 20%; display: inline-block;">
-				<button class="btn_con_search" onClick="fn_addCol('result')" id="feature_add_btn">
-					<img src="/resources/images/icon_s_write.png" />추가 
-				</button>
-				<button class="btn_con_search" onClick="fn_delCol('result')">
-					<img src="/resources/images/icon_s_del.png" />삭제 
-				</button>
-			</div>
+			</c:forEach>
+
+			<div class="title2"><span class="txt">결론</span></div>
 			<div class="main_tbl">
 				<table class="insert_proc01">
 					<colgroup>
-						<col width="20" />
 						<col  />							
 					</colgroup>
 					<tbody id="result_tbody" name="result_tbody">
-						<tr id="result_tr_1">
+					<c:forEach items="${senseQualityData.infoResultList}" var="infoResultList" varStatus="status">
+						<tr id="result_tr_${status.count}">
 							<td>
-								<input type="checkbox" id="result_1"><label for="result_1"><span></span></label>
+								${infoResultList.INFO_TEXT}
 							</td>
-							<td>
-								<input type="text"  style="width:99%; float: left" class="req" name="result" value="가."/>
-							</td>
-						</tr>
-					</tbody>
-					<tbody id="result_tbody_temp" name="result_tbody_temp" style="display:none">
-						<tr id="result_tmp_tr_1"> 
-							<td>
-								<input type="checkbox" id="result_1"><label for="result_1"><span></span></label>
-							</td>
-							<td>
-								<input type="text"  style="width:99%; float: left" class="req" name="result"/>
-							</td>
-						</tr>
-					</tbody>
+						</tr>						
+					</c:forEach>	
+					</tbody>					
 				</table>
 			</div>
-			
-			<!-- 
-			<div class="title2 mt20"  style="width:90%;"><span class="txt">파일첨부</span></div>
-			<div class="title2 mt20" style="width:10%; display: inline-block;">
-				<button class="btn_con_search" onClick="openDialog('dialog_attatch')">
-					<img src="/resources/images/icon_s_file.png" />파일첨부 
-				</button>
-			</div>
-			<div class="con_file" style="">
-				<ul>
-					<li class="point_img">
-						<dt>첨부파일</dt><dd>
-							<ul id="attatch_file">
-							</ul>
-						</dd>
-					</li>
-				</ul>
-			</div>
-			 -->
 			 	
 			<div class="main_tbl">
 				<div class="btn_box_con5">
@@ -824,6 +688,9 @@ table{font-size: 12px}
 					<button class="btn_admin_red">임시/템플릿저장</button>
 					<button class="btn_admin_navi">임시저장</button>
 					 -->
+					<c:if test="${senseQualityData.reportMap.STATUS == 'TMP'}">
+					<button class="btn_admin_navi" onclick="fn_update('${senseQualityData.reportMap.REPORT_IDX}')">수정</button>
+					</c:if> 
 					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
 					<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
 				</div>

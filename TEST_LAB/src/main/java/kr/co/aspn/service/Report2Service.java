@@ -47,6 +47,8 @@ public interface Report2Service {
 
 	Map<String, Object> selectSenseQualityList(Map<String, Object> param) throws Exception;
 
-	Map<String, Object> selectSenseQualityData(Map<String, Object> param); 
+	Map<String, Object> selectSenseQualityData(Map<String, Object> param);
+
+	int insertSenseQualityTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 	
 }

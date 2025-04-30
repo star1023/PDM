@@ -679,7 +679,7 @@
 			, FILE_PATH
 		)values
 		<foreach collection="list" item="item" separator=",">
-		( FN_NEXTVAL('lab_sense_quality_contents_seq'), #{item.idx}, #{item.displayOrder}, #{item.contentsDiv}, #{item.contentsResult}, #{item.orgFileName}, #{item.filePath}, #{item.changeFileName} )
+		( FN_NEXTVAL('lab_sense_quality_contents_seq'), #{item.idx}, #{item.displayOrder}, #{item.contentsDiv}, #{item.contentsResult}, #{item.orgFileName}, #{item.changeFileName}, #{item.filePath} )
 		</foreach>
 	</insert>
 	
@@ -728,6 +728,7 @@
 			tmp.*
 			, FN_GET_USER_NAME(tmp.REG_USER) as REG_USER_NAME
 			, CASE 
+				WHEN tmp.STATUS = 'TMP' THEN '임시저장'
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
 				WHEN tmp.STATUS = 'COMP' THEN '완료'
@@ -755,5 +756,55 @@
 				<include refid="report2.whereBusinessTripPlan" />
 		)tmp
 		WHERE rnum between #{startRow} and #{endRow}
+	</select>
+	
+	<select id="selectSenseQualityReport" parameterType="map" resultType="hashmap">
+		SELECT
+			REPORT_IDX
+			, TITLE
+			, COMPANY_NAME
+			, PRODUCT_NAME
+			, TEST_PURPOSE
+			, CONTENTS_HEADER
+			, IS_DELETE
+			, REG_USER
+			, REG_DATE
+			, STATUS
+		FROM 
+			lab_sense_quality_report
+		WHERE 1 = 1
+			AND REPORT_IDX = #{idx}	
+	</select>
+	
+	<select id="selectSenseQualityContensts" parameterType="map" resultType="hashmap">
+		SELECT
+			CONTENTS_IDX
+			, REPORT_IDX
+			, DISPLAY_ORDER
+			, CONTENTS_DIV
+			, CONTENTS_RESULT
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+		FROM 
+			lab_sense_quality_contents
+		WHERE 1 = 1
+			AND REPORT_IDX = #{idx}	
+		ORDER BY DISPLAY_ORDER ASC	
+	</select>
+	
+	<select id="selectSenseQualityInfo" parameterType="map" resultType="hashmap">
+		SELECT
+			INFO_IDX
+			, REPORT_IDX
+			, INFO_TYPE
+			, INFO_TEXT
+		FROM 
+			lab_sense_quality_add_info
+		WHERE 1 = 1
+			AND REPORT_IDX = #{idx}	
+		<if test="infoType != null and infoType != '' ">
+			AND INFO_TYPE = #{infoType}
+		</if>	
 	</select>
 </mapper>

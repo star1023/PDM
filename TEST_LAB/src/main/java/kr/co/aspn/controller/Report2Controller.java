@@ -401,6 +401,45 @@ public class Report2Controller {
 		}
 	}
 	
+	@RequestMapping("/insertSenseQualityTmpAjax")
+	@ResponseBody
+	public Map<String, Object> insertSenseQualityTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray contentsDivArr = (JSONArray) parser.parse((String)param.get("contentsDivArr"));
+			JSONArray contentsResultArr = (JSONArray) parser.parse((String)param.get("contentsResultArr"));
+			JSONArray contentsNoteArr = (JSONArray) parser.parse((String)param.get("contentsNoteArr"));
+			JSONArray resultArr = (JSONArray) parser.parse((String)param.get("resultArr"));
+			
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(contentsDivArr);
+			System.err.println(contentsResultArr);
+			System.err.println(contentsNoteArr);
+			System.err.println(resultArr);
+			System.err.println(file);
+			
+			HashMap<String, Object> listMap = new HashMap<String, Object>();			
+			
+			listMap.put("contentsDivArr", contentsDivArr);
+			listMap.put("contentsResultArr", contentsResultArr);
+			listMap.put("contentsNoteArr", contentsNoteArr);
+			listMap.put("resultArr", resultArr);
+			int reportIdx = reportService.insertSenseQualityTmp(param, listMap, file);
+			returnMap.put("IDX", reportIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
 	@RequestMapping("/insertSenseQualityAjax")
 	@ResponseBody
 	public Map<String, Object> insertSenseQualityAjax(HttpServletRequest request, HttpServletResponse response
@@ -450,5 +489,60 @@ public class Report2Controller {
 		Map<String, Object> senseQualityData = reportService.selectSenseQualityData(param);
 		model.addAttribute("senseQualityData", senseQualityData);
 		return "/report2/senseQualityView";
+	}
+	
+	@RequestMapping("/senseQualityUpdate")
+	public String senseQualityUpdate(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
+		Map<String, Object> senseQualityData = reportService.selectSenseQualityData(param);
+		model.addAttribute("senseQualityData", senseQualityData);
+		return "/report2/senseQualityUpdate";
+	}
+	
+	@RequestMapping("/updateSenseQualityTmpAjax")
+	@ResponseBody
+	public Map<String, Object> updateSenseQualityTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray contentsDivArr = (JSONArray) parser.parse((String)param.get("contentsDivArr"));
+			JSONArray contentsResultArr = (JSONArray) parser.parse((String)param.get("contentsResultArr"));
+			JSONArray contentsNoteArr = (JSONArray) parser.parse((String)param.get("contentsNoteArr"));
+			JSONArray resultArr = (JSONArray) parser.parse((String)param.get("resultArr"));
+			
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(contentsDivArr);
+			System.err.println(contentsResultArr);
+			System.err.println(contentsNoteArr);
+			System.err.println(resultArr);
+			System.err.println(file);
+			for( int i = 0 ; i < contentsDivArr.size() ; i++ ) {
+				MultipartFile multipartFile = file[i];
+				if( file != null && file.length > 0 ) {
+					if( !multipartFile.isEmpty() ) {
+						System.err.println(multipartFile.getOriginalFilename());
+					}
+				}
+			}
+			
+			
+			HashMap<String, Object> listMap = new HashMap<String, Object>();			
+			
+			listMap.put("contentsDivArr", contentsDivArr);
+			listMap.put("contentsResultArr", contentsResultArr);
+			listMap.put("contentsNoteArr", contentsNoteArr);
+			listMap.put("resultArr", resultArr);
+			//int reportIdx = reportService.insertSenseQualityTmp(param, listMap, file);
+			//returnMap.put("IDX", reportIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
 	}
 }

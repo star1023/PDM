@@ -188,5 +188,23 @@ public class Report2DaoImpl implements Report2Dao {
 	public List<Map<String, Object>> selectSenseQualityList(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("report2.selectSenseQualityList", param);
+	}
+
+	@Override
+	public Map<String, Object> selectSenseQualityReport(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectSenseQualityReport",param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectSenseQualityContensts(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectSenseQualityContensts",param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectSenseQualityInfo(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectSenseQualityInfo",param);
 	}	
 }
