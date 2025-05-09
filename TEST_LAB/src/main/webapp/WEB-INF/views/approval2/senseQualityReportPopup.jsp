@@ -352,150 +352,197 @@ function downloadFile(idx){
 				</colgroup>
 				<tbody>
 					<tr>
-						<th style="border-left: none;">제목</th>
+						<th style="border-left: none;">제목</th>								
 						<td colspan="3">
-							${businessTripData.data.TITLE}
+							${senseQualityData.reportMap.TITLE}
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">출장구분</th>								
+						<th style="border-left: none;">업체명</th>
 						<td colspan="3">
-							${businessTripData.data.TRIP_TYPE_TXT}
+							${senseQualityData.reportMap.COMPANY_NAME}
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">출장자</th>								
-						<td colspan="3">
-							<table width="100%">
-								<tr>
-									<td width="35%">소속</td>
-									<td width="35%">직위(직급)</td>
-									<td width="2305%">성명</td>
-								</tr>
-								<tbody id="user_tbody" name="user_tbody">
-								<c:forEach items="${userList}" var="userList" varStatus="status">
-									<tr>
-										<td>
-											${userList.DEPT}
-										</td>
-										<td>
-											${userList.POSITION}
-										</td>
-										<td>
-											${userList.NAME}
-										</td>
-									</tr>
-								</c:forEach>	
-								</tbody>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">출장목적</th>								
-						<td colspan="3">
-							<c:forEach items="${infoList}" var="infoList" varStatus="status">
-							<c:if test="${infoList.INFO_TYPE == 'PUR' }">
-								${infoList.INFO_TEXT}<br>
-							</c:if>
-							</c:forEach>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">출장기간</th>
-						<td colspan="3">
-							${businessTripData.data.TRIP_START_DATE} 
-							<c:if test="${businessTripData.data.TRIP_END_DATE != null && businessTripData.data.TRIP_END_DATE != '' }">
-							~ 
-							${businessTripData.data.TRIP_END_DATE}
-							</c:if>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">출장지</th>
+						<th style="border-left: none;">제품명</th>
 						<td>
-							<c:forEach items="${infoList}" var="infoList" varStatus="status">
-							<c:if test="${infoList.INFO_TYPE == 'DEST' }">
-								${infoList.INFO_TEXT}<br>
-							</c:if>
-							</c:forEach>
+							${senseQualityData.reportMap.PRODUCT_NAME}
 						</td>
-						<th style="border-left: none;">경유지</th>
+						<th style="border-left: none;">ERP코드</th>
 						<td>
-							${businessTripData.data.TRIP_TRANSIT}								
+
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">출장내용</th>
+						<th style="border-left: none;">테스트 목적</th>
 						<td colspan="3">
-							<table width="100%">
-								<tr>
-									<td width="25%">일정</td>
-									<td width="25%">세부내용</td>
-									<td width="25%">장소</td>
-									<td width="25%">비고</td>
-								</tr>
-								<tbody id="contents_tbody" name="contents_tbody">
-								<c:forEach items="${contentsList}" var="contentsList" varStatus="status">	
-									<tr>
-										<td>
-											${contentsList.SCHEDULE}
-										</td>
-										<td>
-											${contentsList.CONTENT}												
-										</td>
-										<td>
-											${contentsList.PLACE}												
-										</td>
-										<td>
-											${contentsList.NOTE}												
-										</td>
-									</tr>
-								</c:forEach>	
-								</tbody>
-							</table>
+							${senseQualityData.reportMap.TEST_PURPOSE}
 						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">업무수행내용</th>
-						<td colspan="3">
-							${businessTripData.data.TRIP_CONTENTS}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">경비</th>
-						<td colspan="3">
-							${businessTripData.data.TRIP_COST}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">초과사유</th>
-						<td colspan="3">
-							${businessTripData.data.OVER_REASON}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">출장효과</th>
-						<td colspan="3">
-							${businessTripData.data.TRIP_EFFECT}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">첨부파일</th>
-						<td colspan="3" class="con_file">
-							<ul>
-								<li class="point_img">
-									<dd>
-										<ul>
-											<c:forEach items="${businessTripData.fileList}" var="fileList" varStatus="status">
-												<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-											</c:forEach>
-										</ul>
-									</dd>
-								</li>
-							</ul>	
-						</td>
-					</tr>
+					</tr>					
 				</tbody>
+			</table>
+		</div>		
+		<br>
+		<div class="main_tbl mt5">		
+			<table style="width: 100%" class="insert_proc01" >
+				<colgroup>
+		            <col width="7%">
+		            <col width="28%">
+		            <col width="28%">
+		            <col width="28%">
+		            <col width="9%">			            
+		        </colgroup>
+		        <tr>
+		        	<td rowspan="2">구분</td>
+		        	<td colspan="4" align="center">
+		        		${senseQualityData.reportMap.CONTENTS_HEADER}
+		        	</td>
+		        </tr>
+		        <tr>
+			        <c:set var="startNo" value="0"/>
+			        <c:set var="endNo" value="2"/>
+			        <c:set var="count" value="0" />
+		        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">	
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td>${contentsList.CONTENTS_DIV}</td>
+		        	</c:if>			        	
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td>&nbsp;</td>
+		        	</c:forEach>
+		        	</c:if>		
+		        	<td>비고</td>		        	
+		        </tr>
+		        <tr>
+		        	<td rowspan="2" class="hftitle">사진</td>			        	
+		        </tr>
+		        <tr>
+		        	<c:set var="count" value="0" />
+		        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td style="height: 250px">
+		        		<p><img id="preview" src="/picture${contentsList.FILE_PATH}/${contentsList.ORG_FILE_NAME}" style="border:1px solid #e1e1e1; border-radius:5px; width:248px; height:213px;"></p>
+		            </td>
+		            </c:if>
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td style="height: 250px">
+		        		&nbsp;
+		        	</td>
+		        	</c:forEach>
+		        	</c:if>	
+		            <td rowspan="2" class="">
+		        		<p style="white-space: pre-line; text-align:left;">${senseQualityData.infoNoteList[0].INFO_TEXT}</p>
+		        	</td>
+		        </tr>
+		        <tr>
+		        	<td class="hftitle"> 결과 </td>
+		        	<c:set var="count" value="0" />
+		      		<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td>
+		        		<p style="white-space: pre-line; text-align:left;">${contentsList.CONTENTS_RESULT}</p>
+		        	</td>
+		        	</c:if>
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td>
+		        		&nbsp;
+		        	</td>
+		        	</c:forEach>
+		        	</c:if>	
+		        </tr>
+			</table>
+			<br>
+			<c:forEach var="no" begin="1" end="${senseQualityData.modCount-1}">
+			<c:set var="startNo" value="${no*3}"/>
+			<c:set var="endNo" value="${no*3+2}"/>
+			<table style="width: 100%" class="insert_proc01" >
+			 	<colgroup>
+		            <col width="7%">
+		            <col width="28%">
+		            <col width="28%">
+		            <col width="28%">
+		            <col width="9%">			            
+		        </colgroup>
+		        <tr  id="contents_div_tr_${no+1}">
+		        	<td >구분</td>
+		        	<c:set var="count" value="0" />
+		        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">	
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td>${contentsList.CONTENTS_DIV}</td>
+		        	</c:if>
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td>&nbsp;</td>
+		        	</c:forEach>
+		        	</c:if>
+		        	<td>비고</td>		        	
+		        </tr>
+		        <tr>
+		        	<td class="hftitle">사진</td>
+		        	<c:set var="count" value="0" />
+		        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td style="height: 250px">
+		        		<p><img id="preview" src="/picture${contentsList.FILE_PATH}/${contentsList.ORG_FILE_NAME}" style="border:1px solid #e1e1e1; border-radius:5px; width:248px; height:213px;"></p>
+		            </td>
+		            </c:if>
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td style="height: 250px">&nbsp;</td>
+		        	</c:forEach>
+		        	</c:if>
+		            <td rowspan="2" class="">
+		        		<p style="white-space: pre-line; text-align:left;">${senseQualityData.infoNoteList[no].INFO_TEXT}</p>
+		        	</td>
+		        </tr>
+		        
+		        <tr>
+		        	<td class="hftitle"> 결과 </td>
+		        	<c:set var="count" value="0" />
+		        	<c:forEach items="${senseQualityData.contentsList}" var="contentsList" varStatus="status">
+		        	<c:if test="${status.index >= startNo && status.index <= endNo}">
+		        	<c:set var="count" value="${count + 1}" />
+		        	<td>
+		        		<p style="white-space: pre-line; text-align:left;">${contentsList.CONTENTS_RESULT}</p>
+		        	</td>
+		        	</c:if>
+		        	</c:forEach>
+		        	<c:if test="${count < 3 }">
+		        	<c:forEach var="cnt" begin="1" end="${3-count}">
+		        	<td>&nbsp;</td>
+		        	</c:forEach>
+		        	</c:if>
+		        </tr>
+		      </table>			
+			</c:forEach>
+		</div>
+		<br>
+		<div class="main_tbl">
+			<table class="insert_proc01">
+				<colgroup>
+					<col  />							
+				</colgroup>
+				<tbody id="result_tbody" name="result_tbody">
+				<c:forEach items="${senseQualityData.infoResultList}" var="infoResultList" varStatus="status">
+					<tr id="result_tr_${status.count}">
+						<td>
+							${infoResultList.INFO_TEXT}
+						</td>
+					</tr>						
+				</c:forEach>	
+				</tbody>					
 			</table>
 		</div>
 	</div>

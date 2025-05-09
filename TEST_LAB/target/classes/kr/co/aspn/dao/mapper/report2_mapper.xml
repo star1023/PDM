@@ -252,16 +252,13 @@
 	<sql id="whereBusinessTrip">
 		<if test="searchType != null and searchType != '' ">
 		<choose>
-			<when test="searchType.equals('searchName')">
-			AND PRODUCT_NAME LIKE CONCAT('%',#{searchValue},'%')
-			</when>
       		<when test="searchType.equals('searchTitle')">
       		AND TITLE LIKE CONCAT('%',#{searchValue},'%')
       		</when>
       	</choose>
 		</if>
 		<if test="searchFileTxt != null and searchFileTxt != '' ">
-			AND DESIGN_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'DESIGN' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+			AND TRIP_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'TRIP' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
 		</if>
 	</sql>
 	
@@ -286,6 +283,7 @@
 				END	AS TRIP_TYPE_TXT
 			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
 			, CASE 
+				WHEN tmp.STATUS = 'TMP' THEN '임시저장'
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
 				WHEN tmp.STATUS = 'COMP' THEN '완료'
@@ -298,15 +296,10 @@
 				, TRIP_IDX
 				, TRIP_TYPE
 				, TITLE
-				, DEPT
-				, POSITION
-				, NAME
-				, TRIP_PURPOSE
 				, TRIP_START_DATE
 				, TRIP_END_DATE
-				, TRIP_DESTINATION
 				, TRIP_TRANSIT
-				, CONTENTS
+				, TRIP_CONTENTS
 				, TRIP_COST
 				, OVER_REASON
 				, TRIP_EFFECT
@@ -336,17 +329,13 @@
 	/*	report2.insertBusinessTrip */
 		INSERT INTO lab_business_trip(
 			TRIP_IDX
+			, PLAN_IDX
 			, TRIP_TYPE
 			, TITLE
-			, DEPT
-			, POSITION
-			, NAME
-			, TRIP_PURPOSE
 			, TRIP_START_DATE
 			, TRIP_END_DATE
-			, TRIP_DESTINATION
 			, TRIP_TRANSIT
-			, CONTENTS
+			, TRIP_CONTENTS
 			, TRIP_COST
 			, OVER_REASON
 			, TRIP_EFFECT
@@ -355,18 +344,14 @@
 			, STATUS
 			, IS_LAST
 			, IS_DELETE
-			, VERSION_NO			
+			, VERSION_NO	
 		)VALUES(
 			#{idx}
+			, #{planIdx}
 			, #{tripType}
 			, #{title}
-			, #{dept}
-			, #{position}
-			, #{name}
-			, #{tripPurpose}
 			, #{tripStartDate}
 			, #{tripEndDate}
-			, #{tripDestination}
 			, #{tripTransit}
 			, #{tripContents}
 			, #{tripCost}
@@ -384,21 +369,17 @@
 	<select id="selectBusinessTripData" parameterType="map" resultType="hashmap">
 		SELECT
 			TRIP_IDX
+			, PLAN_IDX
 			, TRIP_TYPE
 			, CASE 
 				WHEN TRIP_TYPE = 'I' THEN '국내'
 				WHEN TRIP_TYPE = 'O' THEN '해외'
 				END	AS TRIP_TYPE_TXT
 			, TITLE
-			, DEPT
-			, POSITION
-			, NAME
-			, TRIP_PURPOSE
 			, TRIP_START_DATE
 			, TRIP_END_DATE
-			, TRIP_DESTINATION
 			, TRIP_TRANSIT
-			, CONTENTS
+			, TRIP_CONTENTS
 			, TRIP_COST
 			, OVER_REASON
 			, TRIP_EFFECT
@@ -418,17 +399,13 @@
 		UPDATE 
 			lab_business_trip
 		SET 
-			TRIP_TYPE = #{tripType}
+			PLAN_IDX = #{planIdx}
+			, TRIP_TYPE = #{tripType}
 			, TITLE = #{title}
-			, DEPT = #{dept}
-			, POSITION = #{position}
-			, NAME = #{name}
-			, TRIP_PURPOSE = #{tripPurpose}
 			, TRIP_START_DATE = #{tripStartDate}
 			, TRIP_END_DATE = #{tripEndDate}
-			, TRIP_DESTINATION = #{tripDestination}
 			, TRIP_TRANSIT = #{tripTransit}
-			, CONTENTS = #{tripContents}
+			, TRIP_CONTENTS = #{tripContents}
 			, TRIP_COST = #{tripCost}
 			, OVER_REASON = #{overReason}
 			, TRIP_EFFECT = #{tripEffect}
@@ -445,15 +422,9 @@
 			PLAN_IDX
 			, TRIP_TYPE
 			, TITLE
-			, DEPT
-			, POSITION
-			, NAME
-			, TRIP_PURPOSE
 			, TRIP_START_DATE
 			, TRIP_END_DATE
-			, TRIP_DESTINATION
 			, TRIP_TRANSIT
-			, CONTENTS
 			, TRIP_COST
 			, CAL_METHOD
 			, TRIP_EFFECT
@@ -469,7 +440,7 @@
 			AND DOC_OWNER = #{userId}
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
-			AND ( TITLE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_PURPOSE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_DESTINATION LIKE CONCAT('%',#{searchValue},'%') OR CONTENTS LIKE CONCAT('%',#{searchValue},'%') OR TRIP_EFFECT LIKE CONCAT('%',#{searchValue},'%') )
+			AND ( TITLE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_EFFECT LIKE CONCAT('%',#{searchValue},'%') )
 	</select>
 	
 	<sql id="whereBusinessTripPlan">
@@ -507,8 +478,13 @@
 				WHEN tmp.TRIP_TYPE = 'I' THEN '국내'
 				WHEN tmp.TRIP_TYPE = 'O' THEN '해외'
 				END	AS TRIP_TYPE_TXT
+			, CASE 
+				WHEN tmp.TRIP_DIV = 'T' THEN '출장'
+				WHEN tmp.TRIP_DIV = 'R' THEN '시장조사'
+				END	AS TRIP_DIV_TXT	
 			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
 			, CASE 
+				WHEN tmp.STATUS = 'TMP' THEN '임시저장'
 				WHEN tmp.STATUS = 'REG' THEN '등록'
 				WHEN tmp.STATUS = 'APPR' THEN '결재중'
 				WHEN tmp.STATUS = 'COMP' THEN '완료'
@@ -520,16 +496,11 @@
 				row_number() over (order by  PLAN_IDX DESC) as rnum
 				, PLAN_IDX
 				, TRIP_TYPE
+				, TRIP_DIV
 				, TITLE
-				, DEPT
-				, POSITION
-				, NAME
-				, TRIP_PURPOSE
 				, TRIP_START_DATE
 				, TRIP_END_DATE
-				, TRIP_DESTINATION
 				, TRIP_TRANSIT
-				, CONTENTS
 				, TRIP_COST
 				, CAL_METHOD
 				, TRIP_EFFECT
@@ -538,7 +509,7 @@
 				, STATUS
 				, IS_LAST
 				, IS_DELETE
-				, VERSION_NO
+				, VERSION_NO	
 			FROM 	
 				lab_business_trip_plan
 			WHERE 1 = 1
@@ -560,16 +531,11 @@
 		INSERT INTO lab_business_trip_plan(
 			PLAN_IDX
 			, TRIP_TYPE
+			, TRIP_DIV
 			, TITLE
-			, DEPT
-			, POSITION
-			, NAME
-			, TRIP_PURPOSE
 			, TRIP_START_DATE
 			, TRIP_END_DATE
-			, TRIP_DESTINATION
 			, TRIP_TRANSIT
-			, CONTENTS
 			, TRIP_COST
 			, CAL_METHOD
 			, TRIP_EFFECT
@@ -582,16 +548,11 @@
 		)VALUES(
 			#{idx}
 			, #{tripType}
+			, #{tripDiv}
 			, #{title}
-			, #{dept}
-			, #{position}
-			, #{name}
-			, #{tripPurpose}
 			, #{tripStartDate}
 			, #{tripEndDate}
-			, #{tripDestination}
 			, #{tripTransit}
-			, #{tripContents}
 			, #{tripCost}
 			, #{calMethod}
 			, #{tripEffect}
@@ -604,20 +565,69 @@
 		)
 	</insert>
 	
-	<select id="selectBusinessTripPlanData" parameterType="map" resultType="hashmap">
-		SELECT
+	<insert id="insertBusinessTripPlanUser" parameterType="list">
+		/*	report2.insertBusinessTripPlanUser */
+		INSERT
+		INTO lab_business_trip_plan_user(
 			PLAN_IDX
-			, TRIP_TYPE
-			, TITLE
+			, DISPLAY_ORDER
 			, DEPT
 			, POSITION
 			, NAME
-			, TRIP_PURPOSE
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.dept}, #{item.position}, #{item.name} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertBusinessTripPlanAddInfo" parameterType="list">
+		/*	report2.insertBusinessTripPlanAddInfo */
+		INSERT
+		INTO lab_business_trip_plan_add_info(
+			PLAN_IDX
+			, DISPLAY_ORDER
+			, INFO_TYPE
+			, INFO_TEXT
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.infoType}, #{item.infoText} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertBusinessTripPlanContents" parameterType="list">
+		/*	report2.insertBusinessTripPlanContents */
+		INSERT
+		INTO lab_business_trip_plan_contents(
+			PLAN_IDX
+			, DISPLAY_ORDER
+			, SCHEDULE
+			, CONTENT
+			, PLACE
+			, NOTE
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.schedule}, #{item.content}, #{item.place}, #{item.note} )
+		</foreach>
+	</insert>
+	
+	<select id="selectBusinessTripPlanData" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripPlanData */
+		SELECT
+			PLAN_IDX
+			, TRIP_TYPE
+			, CASE 
+				WHEN TRIP_TYPE = 'I' THEN '국내'
+				WHEN TRIP_TYPE = 'O' THEN '해외'
+				END	AS TRIP_TYPE_TXT
+			, TRIP_DIV
+			, CASE 
+				WHEN TRIP_DIV = 'T' THEN '출장'
+				WHEN TRIP_DIV = 'R' THEN '시장조사'
+				END	AS TRIP_DIV_TXT
+			, TITLE
 			, TRIP_START_DATE
 			, TRIP_END_DATE
-			, TRIP_DESTINATION
 			, TRIP_TRANSIT
-			, CONTENTS
 			, TRIP_COST
 			, CAL_METHOD
 			, TRIP_EFFECT
@@ -626,12 +636,101 @@
 			, STATUS
 			, IS_LAST
 			, IS_DELETE
-			, VERSION_NO
+			, VERSION_NO	
 		FROM
 			lab_business_trip_plan
 		WHERE 1 = 1
 			AND PLAN_IDX = #{idx}	
 	</select>
+	
+	<select id="selectBusinessTripPlanUserList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripPlanUserList */
+		SELECT
+			PLAN_IDX
+			, DISPLAY_ORDER
+			, DEPT
+			, POSITION
+			, NAME 
+		FROM 
+			lab_business_trip_plan_user
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC			
+	</select>
+	
+	<select id="selectBusinessTripPlanAddInfoList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripPlanAddInfoList */
+		SELECT
+			PLAN_IDX
+			, DISPLAY_ORDER
+			, INFO_TYPE
+			, INFO_TEXT
+			FROM 
+			lab_business_trip_plan_add_info
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC	
+	</select>
+	
+	<select id="selectBusinessTripPlanContentsList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripPlanContentsList */
+		SELECT
+			PLAN_IDX
+			, DISPLAY_ORDER
+			, SCHEDULE
+			, CONTENT
+			, PLACE
+			, NOTE
+			FROM 
+			lab_business_trip_plan_contents
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC	
+	</select>
+	
+	
+	<update id="updateBusinessTripPlan" parameterType="map">
+		/*	report2.updateBusinessTripPlan */
+		UPDATE
+			lab_business_trip_plan
+		SET
+			TRIP_TYPE = #{tripType}
+			, TRIP_DIV = #{tripDiv}
+			, TITLE = #{title}
+			, TRIP_START_DATE = #{tripStartDate}
+			, TRIP_END_DATE = #{tripEndDate}
+			, TRIP_TRANSIT = #{tripTransit}
+			, TRIP_COST = #{tripCost}
+			, CAL_METHOD = #{calMethod}
+			, TRIP_EFFECT = #{tripEffect}
+			, STATUS = #{status}
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}	
+	</update>
+	
+	<delete id="deleteBusinessTripPlanUser" parameterType="map">
+		/*	report2.deleteBusinessTripPlanUser */
+		DELETE
+		FROM lab_business_trip_plan_user
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+	</delete>
+	
+	<delete id="deleteBusinessTripPlanAddInfo" parameterType="map">
+		/*	report2.deleteBusinessTripPlanAddInfo */
+		DELETE
+		FROM lab_business_trip_plan_add_info
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+	</delete>
+	
+	<delete id="deleteBusinessTripPlanContents" parameterType="map">
+		/*	report2.deleteBusinessTripPlanContents */
+		DELETE
+		FROM lab_business_trip_plan_contents
+		WHERE 1 = 1
+			AND PLAN_IDX = #{idx}
+	</delete>
 	
 	<select id="selectSenseQualitySeq" resultType="int">
 		/*	report2.selectSenseQualitySeq */
@@ -759,6 +858,7 @@
 	</select>
 	
 	<select id="selectSenseQualityReport" parameterType="map" resultType="hashmap">
+		/*	report2.selectSenseQualityReport */
 		SELECT
 			REPORT_IDX
 			, TITLE
@@ -777,6 +877,7 @@
 	</select>
 	
 	<select id="selectSenseQualityContensts" parameterType="map" resultType="hashmap">
+		/*	report2.selectSenseQualityContensts */
 		SELECT
 			CONTENTS_IDX
 			, REPORT_IDX
@@ -794,6 +895,7 @@
 	</select>
 	
 	<select id="selectSenseQualityInfo" parameterType="map" resultType="hashmap">
+		/*	report2.selectSenseQualityInfo */
 		SELECT
 			INFO_IDX
 			, REPORT_IDX
@@ -807,4 +909,198 @@
 			AND INFO_TYPE = #{infoType}
 		</if>	
 	</select>
+	
+	<select id="selectSenseQualityContenstsData" parameterType="map" resultType="hashmap">
+		/*	report2.selectSenseQualityContenstsData */
+		SELECT
+			CONTENTS_IDX
+			, REPORT_IDX
+			, DISPLAY_ORDER
+			, CONTENTS_DIV
+			, CONTENTS_RESULT
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+		FROM
+			lab_sense_quality_contents
+		WHERE 1 = 1
+			AND CONTENTS_IDX = #{contentsIdx}
+	</select>
+	
+	<delete id="deleteSenseQualityContenstsData" parameterType="map">
+		/*	report2.deleteSenseQualityContenstsData */
+		DELETE
+		FROM 
+			lab_sense_quality_contents
+		WHERE 1 = 1
+			AND CONTENTS_IDX = #{contentsIdx}	
+	</delete>
+	
+	<update id="updateSenseQualityReport"  parameterType="map">
+		/*	report2.updateSenseQualityReport */
+		UPDATE 
+			lab_sense_quality_report
+		SET
+			TITLE = #{title}
+			, COMPANY_NAME = #{companyName}
+			, PRODUCT_NAME = #{productName}
+			, TEST_PURPOSE = #{testPurpose}
+			, CONTENTS_HEADER = #{contentsHeader}
+			, STATUS = #{status}
+		WHERE 1 = 1
+			AND REPORT_IDX = #{idx}
+	</update>
+	
+	<delete id="deleteSenseQualityAddInfo" parameterType="map">
+		/*	report2.deleteSenseQualityAddInfo */
+		DELETE 
+		FROM 
+			lab_sense_quality_add_info
+		WHERE 1 = 1
+			AND REPORT_IDX = #{idx}
+	</delete>
+	
+	<update id="updateSenseQualityContent" parameterType="map">
+		/*	report2.updateSenseQualityContent */
+		UPDATE
+			lab_sense_quality_contents
+		SET 
+			CONTENTS_DIV = #{contentsDiv}
+			, CONTENTS_RESULT = #{contentsResult}
+		WHERE 1 = 1
+			AND CONTENTS_IDX = #{contentsIdx}
+	</update>
+	
+	<insert id="insertSenseQualityContent" parameterType="map">
+		/*	report2.insertSenseQualityContent */
+		INSERT
+		INTO lab_sense_quality_contents(
+			CONTENTS_IDX
+			, REPORT_IDX
+			, DISPLAY_ORDER
+			, CONTENTS_DIV
+			, CONTENTS_RESULT
+			, FILE_NAME
+			, ORG_FILE_NAME
+			, FILE_PATH
+		)values
+		( FN_NEXTVAL('lab_sense_quality_contents_seq'), #{idx}, #{displayOrder}, #{contentsDiv}, #{contentsResult}, #{orgFileName}, #{changeFileName}, #{filePath} )
+	</insert>
+	
+	
+	
+	<!--  여기부터 시작 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<insert id="insertBusinessTripUser" parameterType="list">
+		/*	report2.insertBusinessTripUser */
+		INSERT
+		INTO lab_business_trip_user(
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, DEPT
+			, POSITION
+			, NAME
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.dept}, #{item.position}, #{item.name} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertBusinessTripAddInfo" parameterType="list">
+		/*	report2.insertBusinessTripAddInfo */
+		INSERT
+		INTO lab_business_trip_add_info(
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, INFO_TYPE
+			, INFO_TEXT
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.infoType}, #{item.infoText} )
+		</foreach>
+	</insert>
+	
+	<insert id="insertBusinessTripContents" parameterType="list">
+		/*	report2.insertBusinessTripContents */
+		INSERT
+		INTO lab_business_trip_contents(
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, SCHEDULE
+			, CONTENT
+			, PLACE
+			, NOTE
+		)values
+		<foreach collection="list" item="item" separator=",">
+		( #{item.idx}, #{item.displayOrder}, #{item.schedule}, #{item.content}, #{item.place}, #{item.note} )
+		</foreach>
+	</insert>
+	
+	<select id="selectBusinessTripUserList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripUserList */
+		SELECT 
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, DEPT
+			, POSITION
+			, NAME
+		FROM 
+			lab_business_trip_user
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC
+	</select>
+	
+	<select id="selectBusinessTripAddInfoList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripAddInfoList */
+		SELECT
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, INFO_TYPE
+			, INFO_TEXT
+		FROM 
+			lab_business_trip_add_info
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC
+	</select>
+	
+	<select id="selectBusinessTripContentsList" parameterType="map" resultType="hashmap">
+		/*	report2.selectBusinessTripContentsList */
+		SELECT
+			TRIP_IDX
+			, DISPLAY_ORDER
+			, SCHEDULE
+			, CONTENT
+			, PLACE
+			, NOTE
+		FROM
+			lab_business_trip_contents
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+		ORDER BY DISPLAY_ORDER ASC		
+	</select>
+	
+	<delete id="deleteBusinessTripUser" parameterType="map">
+		/*	report2.deleteBusinessTripUser */
+		DELETE
+		FROM lab_business_trip_user
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+	</delete>
+	
+	<delete id="deleteBusinessTripAddInfo" parameterType="map">
+		/*	report2.deleteBusinessTripAddInfo */
+		DELETE
+		FROM lab_business_trip_add_info
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+	</delete>
+	
+	<delete id="deleteBusinessTripContents" parameterType="map">
+		/*	report2.deleteBusinessTripContents */
+		DELETE
+		FROM lab_business_trip_contents
+		WHERE 1 = 1
+			AND TRIP_IDX = #{idx}
+	</delete>
 </mapper>

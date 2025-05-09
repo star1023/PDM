@@ -147,11 +147,71 @@ public class Report2DaoImpl implements Report2Dao {
 		// TODO Auto-generated method stub
 		sqlSessionTemplate.insert("report2.insertBusinessTripPlan", param);
 	}
+	
+	@Override
+	public void insertBusinessTripPlanUser(ArrayList<HashMap<String, Object>> userList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripPlanUser", userList);
+	}
+	
+	@Override
+	public void insertBusinessTripPlanAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripPlanAddInfo", addInfoList);
+	}
+	
+	@Override
+	public void insertBusinessTripPlanContents(ArrayList<HashMap<String, Object>> contentList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripPlanContents", contentList);
+	}
 
 	@Override
 	public Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("report2.selectBusinessTripPlanData", param);
+	}
+	
+	@Override
+	public List<Map<String, Object>> selectBusinessTripPlanUserList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripPlanUserList", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectBusinessTripPlanAddInfoList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripPlanAddInfoList", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectBusinessTripPlanContentsList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripPlanContentsList", param);
+	}
+	
+	@Override
+	public void updateBusinessTripPlan(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("report2.updateBusinessTripPlan", param);
+	}
+
+	@Override
+	public void deleteBusinessTripPlanUser(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripPlanUser", param);
+	}
+
+	@Override
+	public void deleteBusinessTripPlanAddInfo(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripPlanAddInfo", param);
+	}
+
+	@Override
+	public void deleteBusinessTripPlanContents(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripPlanContents", param);
 	}
 
 	@Override
@@ -206,5 +266,98 @@ public class Report2DaoImpl implements Report2Dao {
 	public List<Map<String, Object>> selectSenseQualityInfo(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("report2.selectSenseQualityInfo",param);
-	}	
+	}
+
+	@Override
+	public Map<String, Object> selectSenseQualityContenstsData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectSenseQualityContenstsData",param);
+	}
+
+	@Override
+	public void deleteSenseQualityContenstsData(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteSenseQualityContenstsData",param);
+	}
+
+	@Override
+	public void updateSenseQualityReport(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("report2.updateSenseQualityReport", param);
+	}
+
+	@Override
+	public void deleteSenseQualityAddInfo(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteSenseQualityAddInfo",param);
+	}
+
+	@Override
+	public void updateSenseQualityContent(HashMap<String, Object> dataMap) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("report2.updateSenseQualityContent", dataMap);
+	}
+
+	@Override
+	public void insertSenseQualityContent(HashMap<String, Object> dataMap) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertSenseQualityContent", dataMap);
+	}
+
+	
+	//여기서부터 시작--------------------------------------------------------------------------------------
+	@Override
+	public void insertBusinessTripUser(ArrayList<HashMap<String, Object>> userList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripUser", userList);
+	}
+
+	@Override
+	public void insertBusinessTripAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripAddInfo", addInfoList);
+	}
+
+	@Override
+	public void insertBusinessTripContents(ArrayList<HashMap<String, Object>> contentList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertBusinessTripContents", contentList);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectBusinessTripUserList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripUserList", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectBusinessTripAddInfoList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripAddInfoList", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectBusinessTripContentsList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectBusinessTripContentsList", param);
+	}
+
+	@Override
+	public void deleteBusinessTripUser(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripUser", param);
+	}
+
+	@Override
+	public void deleteBusinessTripAddInfo(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripAddInfo", param);
+	}
+
+	@Override
+	public void deleteBusinessTripContents(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteBusinessTripContents", param);
+	}
+
 }

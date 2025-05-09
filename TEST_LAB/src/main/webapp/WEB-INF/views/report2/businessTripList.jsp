@@ -44,7 +44,7 @@ function fn_loadList(pageNo) {
 					if( item.IS_LAST == 'Y' ) {
 						html += "		<li style=\"float:none; display:inline\">";
 						html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.TRIP_IDX+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
-						if( item.STATUS == 'COND_APPR' ) {
+						if( item.STATUS == 'COND_APPR' || item.STATUS == 'TMP' ) {
 							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.TRIP_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
 						}
 						html += "		</li>";
@@ -80,7 +80,7 @@ function fn_view(idx) {
 }
 
 function fn_update(idx) {
-	location.href = '/report2/businessTripUpdateForm?idx='+idx;
+	location.href = '/report2/businessTripUpdate?idx='+idx;
 }
 
 function fn_viewHistory(idx) {
@@ -101,12 +101,12 @@ function fn_viewHistory(idx) {
 				html += item.TITLE+" 이(가)";
 				if( item.HISTORY_TYPE == 'I' ) {
 					html += " 생성되었습니다.";
-				} else if( item.HISTORY_TYPE == 'V' ) {
-					html += " 개정되었습니다.";
 				} else if( item.HISTORY_TYPE == 'D' ) {
 					html += " 삭제되었습니다.";
 				} else if( item.HISTORY_TYPE == 'U' ) {
 					html += " 수정되었습니다.";
+				} else if( item.HISTORY_TYPE == 'T' ) {
+					html += " 임시저장 되었습니다.";
 				} 
 				html += "<br/><span>"+item.USER_NAME+"</span>&nbsp;&nbsp;<span class=\"date\">"+item.REG_DATE+"</span>";
 				html += "</li>"; 

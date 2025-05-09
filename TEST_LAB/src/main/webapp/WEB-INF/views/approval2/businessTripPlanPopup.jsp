@@ -354,13 +354,13 @@ function downloadFile(idx){
 					<tr>
 						<th style="border-left: none;">제목</th>
 						<td colspan="3">
-							${businessTripData.data.TITLE}
+							${planData.data.TITLE}
 						</td>
 					</tr>
 					<tr>
 						<th style="border-left: none;">출장구분</th>								
 						<td colspan="3">
-							${businessTripData.data.TRIP_TYPE_TXT}
+							${planData.data.TRIP_TYPE_TXT}
 						</td>
 					</tr>
 					<tr>
@@ -403,10 +403,10 @@ function downloadFile(idx){
 					<tr>
 						<th style="border-left: none;">출장기간</th>
 						<td colspan="3">
-							${businessTripData.data.TRIP_START_DATE} 
-							<c:if test="${businessTripData.data.TRIP_END_DATE != null && businessTripData.data.TRIP_END_DATE != '' }">
+							${planData.data.TRIP_START_DATE} 
+							<c:if test="${planData.data.TRIP_END_DATE != null && planData.data.TRIP_END_DATE != '' }">
 							~ 
-							${businessTripData.data.TRIP_END_DATE}
+							${planData.data.TRIP_END_DATE}
 							</c:if>
 						</td>
 					</tr>
@@ -421,11 +421,11 @@ function downloadFile(idx){
 						</td>
 						<th style="border-left: none;">경유지</th>
 						<td>
-							${businessTripData.data.TRIP_TRANSIT}								
+							${planData.data.TRIP_TRANSIT}								
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">출장내용</th>
+						<th style="border-left: none;">업무수행내용</th>
 						<td colspan="3">
 							<table width="100%">
 								<tr>
@@ -456,27 +456,21 @@ function downloadFile(idx){
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">업무수행내용</th>
+						<th style="border-left: none;">예상경비</th>
 						<td colspan="3">
-							${businessTripData.data.TRIP_CONTENTS}
+							<p style="white-space: pre-line; text-align:left;">${planData.data.TRIP_COST}</p>
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">경비</th>
+						<th style="border-left: none;">산출식</th>
 						<td colspan="3">
-							${businessTripData.data.TRIP_COST}
+							<p style="white-space: pre-line; text-align:left;">${planData.data.CAL_METHOD}</p>
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">초과사유</th>
+						<th style="border-left: none;">기대효과</th>
 						<td colspan="3">
-							${businessTripData.data.OVER_REASON}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">출장효과</th>
-						<td colspan="3">
-							${businessTripData.data.TRIP_EFFECT}
+							<p style="white-space: pre-line; text-align:left;">${planData.data.TRIP_EFFECT}</p>
 						</td>
 					</tr>
 					<tr>
@@ -486,7 +480,7 @@ function downloadFile(idx){
 								<li class="point_img">
 									<dd>
 										<ul>
-											<c:forEach items="${businessTripData.fileList}" var="fileList" varStatus="status">
+											<c:forEach items="${planData.fileList}" var="fileList" varStatus="status">
 												<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
 											</c:forEach>
 										</ul>

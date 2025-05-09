@@ -903,7 +903,12 @@
 		        cache: false,
 				dataType:"json",
 				success:function(result) {
-					
+					if( result.RESULT == 'S' ) {
+						alert("임시저장 되었습니다.");
+						fn_list();
+					} else {
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");

@@ -317,7 +317,52 @@ table{font-size: 12px}
 		        cache: false,
 				dataType:"json",
 				success:function(result) {
-					console.log(result);
+					if( result.RESULT == 'S' ) {
+						if( result.IDX > 0 ) {
+							if( $("#apprLine option").length > 0 ) {
+								var apprFormData = new FormData();
+								apprFormData.append("docIdx", result.IDX );
+								apprFormData.append("apprComment", $("#apprComment").val());
+								apprFormData.append("apprLine", $("#apprLine").selectedValues());
+								apprFormData.append("refLine", $("#refLine").selectedValues());
+								apprFormData.append("title", $("#title").val());
+								apprFormData.append("docType", $("#docType").val());
+								apprFormData.append("status", "N");
+								var URL = "../approval2/insertApprAjax";
+								$.ajax({
+									type:"POST",
+									url:URL,
+									dataType:"json",
+									data: apprFormData,
+									processData: false,
+							        contentType: false,
+							        cache: false,
+									success:function(data) {
+										if(data.RESULT == 'S') {
+											alert("결재상신이 완료되었습니다.");
+											fn_goList();
+										} else {
+											alert("결재상신 오류가 발생하였습니다."+data.MESSAGE);
+											fn_goList();
+											return;
+										}
+									},
+									error:function(request, status, errorThrown){
+										alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+										fn_goList();
+									}			
+								});
+							} else {
+								alert($("#title").val()+" 문서가 정상적으로 생성되었습니다.");
+								fn_goList();
+							}
+						} else {
+							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+							fn_goList();
+						}
+					} else {
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
@@ -336,8 +381,6 @@ table{font-size: 12px}
 			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
 			return;
 		} else {
-			//$("#apprLine").removeOption(/./); 
-			//$("#refLine").removeOption(/./); 
 			var apprTxtFull = "";
 			$("#apprLine").selectedTexts().forEach(function( item, index ){
 				console.log(item);
@@ -347,8 +390,6 @@ table{font-size: 12px}
 				apprTxtFull += item;
 			});
 			$("#apprTxtFull").val(apprTxtFull);
-			//apprTxtFull
-			//refTxtFull
 			var refTxtFull = "";
 			$("#refLine").selectedTexts().forEach(function( item, index ){
 				if( refTxtFull != "" ) {
@@ -867,7 +908,7 @@ table{font-size: 12px}
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="TRIP"/>
+	<input type="hidden" id="docType" value="SENSE_QUALITY"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />

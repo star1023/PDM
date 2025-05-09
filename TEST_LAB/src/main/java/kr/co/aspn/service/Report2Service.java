@@ -28,6 +28,8 @@ public interface Report2Service {
 	void updateDesign(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
 	Map<String, Object> selectBusinessTripList(Map<String, Object> param) throws Exception;
+	
+	int insertBusinessTripTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	int insertBusinessTrip(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
@@ -38,10 +40,22 @@ public interface Report2Service {
 	List<Map<String, Object>> searchBusinessTripPlanList(Map<String, Object> param);
 
 	Map<String, Object> selectBusinessTripPlanList(Map<String, Object> param) throws Exception;
+	
+	int insertBusinessTripPlanTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	int insertBusinessTripPlan(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	Map<String, Object> selectBusinessTripPlanData(Map<String, Object> param);
+	
+	List<Map<String, Object>> selectBusinessTripPlanUserList(Map<String, Object> param);
+	
+	List<Map<String, Object>> selectBusinessTripPlanAddInfoList(Map<String, Object> param);
+
+	List<Map<String, Object>> selectBusinessTripPlanContentsList(Map<String, Object> param);
+	
+	void updateBusinessTripPlanTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
+	
+	void updateBusinessTripPlan(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	int insertSenseQuality(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
 
@@ -50,5 +64,25 @@ public interface Report2Service {
 	Map<String, Object> selectSenseQualityData(Map<String, Object> param);
 
 	int insertSenseQualityTmp(Map<String, Object> param, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	void deleteSenseQualityContenstsData(Map<String, Object> param) throws Exception;
+
+	void updateSenseQualityTmp(Map<String, Object> param, HashMap<String, Object> dataListMap, HashMap<String, Object> fileMap, 
+			HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	void updateSenseQuality(Map<String, Object> param, HashMap<String, Object> dataListMap,
+			HashMap<String, Object> fileMap, HashMap<String, Object> listMap, MultipartFile[] file) throws Exception;
+
+	
+	//추가시작 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	List<Map<String, Object>> selectBusinessTripUserList(Map<String, Object> param);
+
+	List<Map<String, Object>> selectBusinessTripAddInfoList(Map<String, Object> param);
+
+	List<Map<String, Object>> selectBusinessTripContentsList(Map<String, Object> param);
+
+	void updateBusinessTripTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
+
+	
 	
 }

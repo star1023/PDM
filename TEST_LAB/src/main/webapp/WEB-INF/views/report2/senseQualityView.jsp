@@ -359,29 +359,37 @@ table{font-size: 12px}
 			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
 			return;
 		} else {
-			//$("#apprLine").removeOption(/./); 
-			//$("#refLine").removeOption(/./); 
-			var apprTxtFull = "";
-			$("#apprLine").selectedTexts().forEach(function( item, index ){
-				console.log(item);
-				if( apprTxtFull != "" ) {
-					apprTxtFull += " > ";
-				}
-				apprTxtFull += item;
+			var formData = new FormData();
+			formData.append("docIdx",'${senseQualityData.reportMap.REPORT_IDX}');
+			formData.append("apprComment", $("#apprComment").val());
+			formData.append("apprLine", $("#apprLine").selectedValues());
+			formData.append("refLine", $("#refLine").selectedValues());
+			formData.append("title", '${senseQualityData.reportMap.TITLE}');
+			formData.append("docType", $("#docType").val());
+			formData.append("status", "N");
+			var URL = "../approval2/insertApprAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				dataType:"json",
+				data: formData,
+				processData: false,
+		        contentType: false,
+		        cache: false,
+				success:function(data) {
+					if(data.RESULT == 'S') {
+						alert("결재상신 되었습니다.");
+						fn_goList();
+					} else {
+						alert("결재상신 오류가 발생하였습니다."+data.MESSAGE);
+						return;
+					}
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
 			});
-			$("#apprTxtFull").val(apprTxtFull);
-			//apprTxtFull
-			//refTxtFull
-			var refTxtFull = "";
-			$("#refLine").selectedTexts().forEach(function( item, index ){
-				if( refTxtFull != "" ) {
-					refTxtFull += ", ";
-				}
-				refTxtFull += item;
-			});
-			$("#refTxtFull").html("&nbsp;"+refTxtFull);
 		}
-		closeDialog('approval_dialog');
 	}
 	
 	function fn_fileDivClick(e){
@@ -461,7 +469,9 @@ table{font-size: 12px}
 			<div class="top_btn_box">
 				<ul>
 					<li>
-						<button class="btn_circle_save" onclick="fn_insert()">&nbsp;</button>
+						<c:if test="${senseQualityData.reportMap.STATUS == 'REG' }">
+						<button class="btn_circle_save" onclick="apprClass.openApprovalDialog()">&nbsp;</button>
+						</c:if>
 					</li>
 				</ul>
 			</div>
@@ -681,7 +691,6 @@ table{font-size: 12px}
 			 	
 			<div class="main_tbl">
 				<div class="btn_box_con5">
-					<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
 				</div>
 				<div class="btn_box_con4">
 					<!-- 
@@ -691,8 +700,7 @@ table{font-size: 12px}
 					<c:if test="${senseQualityData.reportMap.STATUS == 'TMP'}">
 					<button class="btn_admin_navi" onclick="fn_update('${senseQualityData.reportMap.REPORT_IDX}')">수정</button>
 					</c:if> 
-					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
-					<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
+					<button class="btn_admin_gray" onclick="fn_goList()">목록</button>
 				</div>
 				<hr class="con_mode" />
 			</div>
@@ -752,7 +760,7 @@ table{font-size: 12px}
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="TRIP"/>
+	<input type="hidden" id="docType" value="SENSE_QUALITY"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />

@@ -192,7 +192,9 @@
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
 					   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서'
 					   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서' 
+					   WHEN DOC_TYPE = 'PLAN' THEN '출장계획보고서'
 					   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
+					   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -257,7 +259,9 @@
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
 				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'PLAN' THEN '출장계획보고서'
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
+				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -327,7 +331,9 @@
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
 				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서'
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'PLAN' THEN '출장계획보고서' 
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서' 
+				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -384,7 +390,9 @@
 			, CASE WHEN DOC_TYPE = 'PROD' THEN '제품완료보고서'
 				   WHEN DOC_TYPE = 'MENU' THEN '메뉴완료보고서' 
 				   WHEN DOC_TYPE = 'DESIGN' THEN '상품설계변경보고서'
+				   WHEN DOC_TYPE = 'PLAN' THEN '출장계획보고서'
 				   WHEN DOC_TYPE = 'TRIP' THEN '출장결과보고서'
+				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -474,8 +482,14 @@
       		<when test="docType.equals('DESIGN')">
       		lab_design
       		</when>
+      		<when test="docType.equals('PLAN')">
+      		lab_business_trip_plan
+      		</when>
       		<when test="docType.equals('TRIP')">
       		lab_business_trip
+      		</when>
+      		<when test="docType.equals('SENSE_QUALITY')">
+      		lab_sense_quality_report
       		</when>
       	</choose>
 		WHERE 1 = 1
@@ -490,8 +504,14 @@
 	      		<when test="docType.equals('DESIGN')">
 	      		AND DESIGN_IDX = #{docIdx}
 	      		</when>
+	      		<when test="docType.equals('PLAN')">
+	      		AND PLAN_IDX = #{docIdx}
+	      		</when>
 	      		<when test="docType.equals('TRIP')">
 	      		AND TRIP_IDX = #{docIdx}
+	      		</when>
+	      		<when test="docType.equals('SENSE_QUALITY')">
+	      		AND REPORT_IDX = #{docIdx}
 	      		</when>
 	      	</choose>
 	</select>
@@ -520,8 +540,14 @@
       		<when test="docType.equals('DESIGN')">
       		lab_design
       		</when>
+      		<when test="docType.equals('PLAN')">
+      		lab_business_trip_plan
+      		</when>
       		<when test="docType.equals('TRIP')">
       		lab_business_trip
+      		</when>
+      		<when test="docType.equals('SENSE_QUALITY')">
+      		lab_sense_quality_report
       		</when>
       	</choose>
 		SET
@@ -537,8 +563,14 @@
       		<when test="docType.equals('DESIGN')">
       		AND DESIGN_IDX = #{docIdx}
       		</when>
+      		<when test="docType.equals('PLAN')">
+      		AND PLAN_IDX = #{docIdx}
+      		</when>
       		<when test="docType.equals('TRIP')">
       		AND TRIP_IDX = #{docIdx}
+      		</when>
+      		<when test="docType.equals('SENSE_QUALITY')">
+      		AND REPORT_IDX = #{docIdx}
       		</when>
       	</choose>
 	</update>

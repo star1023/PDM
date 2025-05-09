@@ -4,7 +4,7 @@
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="dateUtil" uri="/WEB-INF/tld/dateUtil.tld"%>
-<title>출장계획보고서 생성</title>
+<title>시장조사결과 보고서 생성</title>
 <style>
 .positionCenter{
 	position: absolute;
@@ -14,75 +14,21 @@
 </style>
 
 <link href="../resources/css/mfg.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="/resources/editor/build/ckeditor.js"></script>
 <script type="text/javascript" src="/resources/js/appr/apprClass.js?v=<%= System.currentTimeMillis()%>"></script>
 <script type="text/javascript">
-	var editor1;
-	var editor2;
 	$(document).ready(function(){
-		$("#tripStartDate").datepicker({
+		$("#researchDate").datepicker({
 			showOn: "both",
 			buttonImage: "../resources/images/btn_calendar.png",
 			buttonImageOnly: true,
 			buttonText: "Select date",
 			dateFormat: "yy-mm-dd",
 			showButtonPanel: true,
-			showAnim: "",
-			onClose: function(selectedDate){
-				$("#tripEndDate").datepicker("option", "minDate", selectedDate);
-			}
+			showAnim: ""
 		});	//당일 선택 가능 0, 당일 선택 불가능 1
 		
-		$("#tripEndDate").datepicker({
-			showOn: "both",
-			buttonImage: "../resources/images/btn_calendar.png",
-			buttonImageOnly: true,
-			buttonText: "Select date",
-			dateFormat: "yy-mm-dd",
-			minDate: 0,
-			showButtonPanel: true,
-			showAnim: "",
-			onClose: function(selectedDate){
-				$("#tripStartDate").datepicker("option", "maxdate", selectedDate)
-			}
-		});
-		/*
-		ClassicEditor
-        .create(document.getElementById("tripContents"), {
-			language: 'ko',
-        }).then( editor => {
-        	editor1 = editor;
-    		console.log( editor1 );
-    	}).catch( error => {
-    		console.error( error );
-    	});
-		
-		ClassicEditor
-        .create(document.getElementById("tripCost"), {
-			language: 'ko',
-        }).then( editor => {
-        	editor2 = editor;
-    		console.log( editor2 );
-    	}).catch( error => {
-    		console.error( error );
-    	});
-		*/
 		fn.autoComplete($("#keyword"));
 	});
-	
-	/*
-	function CreateEditor(editorId) {
-	    ClassicEditor
-	        .create(document.getElementById(editorId), {
-				language: 'ko',
-	        }).then( editor => {
-	        	window.editor = editor;
-	    		console.log( editor );
-	    	}).catch( error => {
-	    		console.error( error );
-	    	});
-	}
-	*/
 	
 	/* 파일첨부 관련 함수 START */
 	var attatchFileArr = [];
@@ -229,231 +175,66 @@
 		$('#attatch_common').val('')
 	}
 	
-	function fn_insertTmp() {
-		if( !chkNull($("#title").val()) ) {
-			alert("제목을 입력해 주세요.");
-			$("#title").focus();
-			return;
-		} else {
-			var formData = new FormData();
-			formData.append("title",$("#title").val());
-			formData.append("tripType",$("#tripType").selectedValues()[0]);
-			formData.append("tripDiv",$("#tripDiv").selectedValues()[0]);
-			
-			var deptArr = new Array();
-			var positionArr = new Array();
-			var nameArr = new Array();
-			$('tr[id^=user_tr]').toArray().forEach(function(contRow){
-				var rowId = $(contRow).attr('id');
-				var itemDept = $('#'+ rowId + ' input[name=dept]').val();
-				var itemPosition = $('#'+ rowId + ' input[name=position]').val();
-				var itemNmae = $('#'+ rowId + ' input[name=name]').val();				
-				deptArr.push(itemDept);
-				positionArr.push(itemPosition);
-				nameArr.push(itemNmae);
-			});
-			formData.append("deptArr",JSON.stringify(deptArr));
-			formData.append("positionArr",JSON.stringify(positionArr));
-			formData.append("nameArr",JSON.stringify(nameArr));
-			
-			var purposeElements = document.querySelectorAll('input[name="purpose"]');
-			var purposeArr = new Array();
-			for (var purposeElement of purposeElements) {
-				if( purposeElement.value != '' ) {
-					purposeArr.push(purposeElement.value);	
-				}
-			}			
-			formData.append("purposeArr",JSON.stringify(purposeArr));
-			
-			formData.append("tripStartDate",$("#tripStartDate").val());
-			formData.append("tripEndDate",$("#tripEndDate").val());
-			
-			//tripDestination
-			var tripDestinationElements = document.querySelectorAll('input[name="tripDestination"]');
-			var tripDestinationArr = new Array();
-			for (var tripDestinationElement of tripDestinationElements) {
-				if( tripDestinationElement.value != '' ) {
-					tripDestinationArr.push(tripDestinationElement.value);
-				}				
-			}			
-			formData.append("tripDestinationArr",JSON.stringify(tripDestinationArr));
-			
-			var scheduleArr = new Array();
-			var contentArr = new Array();
-			var placeArr = new Array();
-			var noteArr = new Array();
-			$('tr[id^=contents_tr]').toArray().forEach(function(contRow){
-				var rowId = $(contRow).attr('id');
-				var itemSchedule = $('#'+ rowId + ' input[name=schedule]').val();
-				var itemContent = $('#'+ rowId + ' input[name=content]').val();
-				var itemPlace = $('#'+ rowId + ' input[name=place]').val();	
-				var itemNote = $('#'+ rowId + ' input[name=note]').val();	
-				if( !(itemSchedule == '' && itemContent == '' && itemPlace == '' && itemNote == '') ) {
-					scheduleArr.push(itemSchedule);
-					contentArr.push(itemContent);
-					placeArr.push(itemPlace);
-					noteArr.push(itemNote);
-				}				
-			});
-			formData.append("scheduleArr",JSON.stringify(scheduleArr));
-			formData.append("contentArr",JSON.stringify(contentArr));
-			formData.append("placeArr",JSON.stringify(placeArr));
-			formData.append("noteArr",JSON.stringify(noteArr));
-			
-			formData.append("tripCost",$("#tripCost").val());
-			formData.append("calMethod",$("#calMethod").val());
-			formData.append("tripEffect",$("#tripEffect").val());
-			formData.append("tripTransit",$("#tripTransit").val());
-			formData.append("docType", $("#docType").val());
-			formData.append("status", "TMP");
-			
-			for (var i = 0; i < attatchFileArr.length; i++) {
-				formData.append('file', attatchFileArr[i])
-			}
-			
-			for (var i = 0; i < attatchFileTypeArr.length; i++) {
-				formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
-			}
-			
-			for (var i = 0; i < attatchFileTypeArr.length; i++) {
-				formData.append('fileType', attatchFileTypeArr[i].fileType)			
-			}
-			
-			URL = "../report2/insertBusinessTripPlanTmpAjax";
-			$.ajax({
-				type:"POST",
-				url:URL,
-				data: formData,
-				processData: false,
-		        contentType: false,
-		        cache: false,
-				dataType:"json",
-				success:function(result) {
-					if(data.RESULT == 'S') {
-						alert("임시저장되었습니다.");
-						fn_goList();
-						return;
-					} else {
-						alert("오류가 발생하였습니다."+data.MESSAGE);
-						fn_goList();
-						return;
-					}
-				},
-				error:function(request, status, errorThrown){
-					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-				}			
-			});
-		}			
-	}
-	
 	//입력확인
 	function fn_insert(){
 		//var tripContents = editor1.getData();
-		//var tripCost = editor2.getData();
+		var tripContents = editor1.getData();
+		var tripCost = editor2.getData();
 		console.log(editor1.getData());
 		console.log(editor2.getData());
 		if( !chkNull($("#title").val()) ) {
 			alert("제목을 입력해 주세요.");
 			$("#title").focus();
 			return;
+		} else if( !chkNull($("#dept").val()) ) {
+			alert("소속을 입력해 주세요.");
+			$("#dept").focus();
+			return;
+		} else if( !chkNull($("#position").val()) ) {
+			alert("직위(직급)을 입력해 주세요.");
+			$("#position").focus();
+			return;
+		} else if( !chkNull($("#name").val()) ) {
+			alert("성명을 입력해 주세요.");
+			$("#name").focus();
+			return;
+		} else if( !chkNull($("#tripPurpose").val()) ) {
+			alert("출장목적을 입력해 주세요.");
+			$("#tripPurpose").focus();
+			return;
 		} else if( !chkNull($("#tripStartDate").val()) ) {
 			alert("출장일을 입력해 주세요.");
 			$("#tripStartDate").focus();
 			return;
-		} else if( !chkNull($("#tripCost").val()) ) {
+		} else if( !chkNull($("#tripDestination").val()) ) {
+			alert("출장지를 입력해 주세요.");
+			$("#tripDestination").focus();
+			return;
+		} else if( !chkNull(tripContents) ) {
+			alert("업무수행내용을 입력해주세요.");		
+			return;
+		} else if( !chkNull(tripCost) ) {
 			alert("경비를 입력해주세요.");		
 			return;
-		} /* else if( attatchFileArr.length == 0  && $("#tempFileList option").length == 0) {
+		} else if( attatchFileArr.length == 0 ) {
 			alert("첨부파일을 등록해주세요.");		
 			return;			
-		} */ else {
+		} else {
 			var formData = new FormData();
-			formData.append("title",$("#title").val());
 			formData.append("tripType",$("#tripType").selectedValues()[0]);
-			formData.append("tripDiv",$("#tripDiv").selectedValues()[0]);
-			
-			var deptArr = new Array();
-			var positionArr = new Array();
-			var nameArr = new Array();
-			$('tr[id^=user_tr]').toArray().forEach(function(contRow){
-				var rowId = $(contRow).attr('id');
-				var itemDept = $('#'+ rowId + ' input[name=dept]').val();
-				var itemPosition = $('#'+ rowId + ' input[name=position]').val();
-				var itemNmae = $('#'+ rowId + ' input[name=name]').val();				
-				deptArr.push(itemDept);
-				positionArr.push(itemPosition);
-				nameArr.push(itemNmae);
-			});
-			if( deptArr.length == 0 || positionArr.length == 0 || nameArr.length == 0 ) {
-				alert("출장자를 입력해주세요.");
-				return;
-			}
-			formData.append("deptArr",JSON.stringify(deptArr));
-			formData.append("positionArr",JSON.stringify(positionArr));
-			formData.append("nameArr",JSON.stringify(nameArr));
-			
-			var purposeElements = document.querySelectorAll('input[name="purpose"]');
-			var purposeArr = new Array();
-			for (var purposeElement of purposeElements) {
-				if( purposeElement.value != '' ) {
-					purposeArr.push(purposeElement.value);	
-				}
-			}	
-			if( purposeArr.length == 0 ) {
-				alert("출장목적을 입력해주세요.");
-				return;
-			}
-			formData.append("purposeArr",JSON.stringify(purposeArr));
-			
+			formData.append("title",$("#title").val());
+			formData.append("dept",$("#dept").val());
+			formData.append("position",$("#position").val());
+			formData.append("name",$("#name").val());
+			formData.append("tripPurpose",$("#tripPurpose").val());
 			formData.append("tripStartDate",$("#tripStartDate").val());
 			formData.append("tripEndDate",$("#tripEndDate").val());
-			
-			//tripDestination
-			var tripDestinationElements = document.querySelectorAll('input[name="tripDestination"]');
-			var tripDestinationArr = new Array();
-			for (var tripDestinationElement of tripDestinationElements) {
-				if( tripDestinationElement.value != '' ) {
-					tripDestinationArr.push(tripDestinationElement.value);
-				}				
-			}	
-			if( tripDestinationArr.length == 0 ) {
-				alert("출장지를 입력해주세요.");
-				return;
-			}
-			formData.append("tripDestinationArr",JSON.stringify(tripDestinationArr));
-			
-			var scheduleArr = new Array();
-			var contentArr = new Array();
-			var placeArr = new Array();
-			var noteArr = new Array();
-			$('tr[id^=contents_tr]').toArray().forEach(function(contRow){
-				var rowId = $(contRow).attr('id');
-				var itemSchedule = $('#'+ rowId + ' input[name=schedule]').val();
-				var itemContent = $('#'+ rowId + ' input[name=content]').val();
-				var itemPlace = $('#'+ rowId + ' input[name=place]').val();	
-				var itemNote = $('#'+ rowId + ' input[name=note]').val();	
-				if( !(itemSchedule == '' && itemContent == '' && itemPlace == '' && itemNote == '') ) {
-					scheduleArr.push(itemSchedule);
-					contentArr.push(itemContent);
-					placeArr.push(itemPlace);
-					noteArr.push(itemNote);
-				}
-			});
-			if( scheduleArr.length == 0 || contentArr.length == 0 || placeArr.length == 0 || noteArr.length == 0 ) {
-				alert("업무수행 내용을 입력해주세요.");
-				return;
-			}
-			formData.append("scheduleArr",JSON.stringify(scheduleArr));
-			formData.append("contentArr",JSON.stringify(contentArr));
-			formData.append("placeArr",JSON.stringify(placeArr));
-			formData.append("noteArr",JSON.stringify(noteArr));
-			
-			formData.append("tripCost",$("#tripCost").val());
-			formData.append("calMethod",$("#calMethod").val());
-			formData.append("tripEffect",$("#tripEffect").val());
+			formData.append("tripDestination",$("#tripDestination").val());
 			formData.append("tripTransit",$("#tripTransit").val());
-			formData.append("docType", $("#docType").val());
-			formData.append("status", "REG");
+			formData.append("tripContents",tripContents);
+			formData.append("tripCost",tripCost);
+			formData.append("overReason",$("#overReason").val());
+			formData.append("tripEffect",$("#tripEffect").val());
 			
 			for (var i = 0; i < attatchFileArr.length; i++) {
 				formData.append('file', attatchFileArr[i])
@@ -467,7 +248,7 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/insertBusinessTripPlanAjax";
+			URL = "../report2/insertBusinessTripAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -480,9 +261,6 @@
 					console.log(result);
 					if( result.RESULT == 'S' ) {
 						if( result.IDX > 0 ) {
-							//alert($("#productName").val()+"("+$("#productCode").val()+")"+"가 정상적으로 생성되었습니다.");
-							//fn_goList();
-							
 							if( $("#apprLine option").length > 0 ) {
 								var apprFormData = new FormData();
 								apprFormData.append("docIdx", result.IDX );
@@ -517,7 +295,7 @@
 									}			
 								});
 							} else {
-								alert($("#title").val()+" 문서가 정상적으로 생성되었습니다.");
+								alert($("#productName").val()+"("+$("#productCode").val()+")"+"가 정상적으로 생성되었습니다.");
 								fn_goList();
 							}
 
@@ -537,7 +315,7 @@
 	}
 
 	function fn_goList() {
-		location.href = '/report2/businessTripPlanList';
+		location.href = '/report2/businessTripList';
 	}
 	
 	function fn_apprSubmit(){
@@ -564,6 +342,100 @@
 			$("#refTxtFull").html("&nbsp;"+refTxtFull);
 		}
 		closeDialog('approval_dialog');
+	}
+	
+	function fn_copySearch() {
+		openDialog('dialog_search');
+	}
+	
+	function fn_closeSearch() {
+		closeDialog('dialog_search');
+		$("#searchValue").val("");
+		$("#searchCategory1").removeOption(/./);
+		$("#searchCategory2").removeOption(/./);
+		$("#searchCategory2_div").hide();
+		$("#searchCategory3").removeOption(/./);
+		$("#searchCategory3_div").hide();
+		$("#productLayerBody").html("<tr><td colspan=\"4\">검색해주세요</td></tr>");
+	}
+	
+	function fn_search() {
+		var URL = "../report2/searchBusinessTripPlanListAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				searchValue : $("#searchValue").val()
+			},
+			dataType:"json",
+			success:function(result) {
+				console.log(result);
+				//productLayerBody
+				var jsonData = {};
+				jsonData = result;
+				$('#productLayerBody').empty();
+				if( jsonData.length == 0 ) {
+					var html = "";
+					$("#productLayerBody").html(html);
+					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
+					$("#productLayerBody").html(html);
+				} else {
+					jsonData.forEach(function(item){
+						var row = '<tr onClick="fn_copy(\''+item.PLAN_IDX+'\')">';
+						row += '<td></td>';
+						row += '<td class="tgnl">'+item.TITLE+'</td>';
+						row += '<td>'+item.TRIP_DESTINATION+'</td>';
+						row += '<td>';
+						row += ''+item.TRIP_START_DATE;
+						if( item.TRIP_END_DATE != '' ) {
+							row += ' ~ '+item.TRIP_END_DATE;	
+						}
+						row += '</td>';
+						row += '</tr>';
+						$('#productLayerBody').append(row);
+					})
+				}
+			},
+			error:function(request, status, errorThrown){
+				var html = "";
+				$("#productLayerBody").html(html);
+				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
+				$("#productLayerBody").html(html);
+			}			
+		});
+	}
+	
+	function fn_copy(idx) {
+		var URL = "../report2/selectBusinessTripPlanDataAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"idx" : idx
+			},
+			dataType:"json",
+			success:function(result) {
+				console.log(result);
+				$("#tripType").selectOptions(result.TRIP_TYPE);
+				$("#tripType_label").html($("#tripType").selectedTexts());
+				$("#tripStartDate").val(result.TRIP_START_DATE);
+				$("#tripEndDate").val(result.TRIP_END_DATE);
+				$("#title").val(result.TITLE);
+				$("#dept").val(result.DEPT);
+				$("#position").val(result.POSITION);
+				$("#name").val(result.NAME);
+				$("#tripPurpose").val(result.TRIP_PURPOSE);
+				$("#tripDestination").val(result.TRIP_DESTINATION);
+				$("#tripTransit").val(result.TRIP_TRANSIT);
+				editor1.setData(result.CONTENTS);
+				editor2.setData(result.TRIP_COST);
+				$("#tripEffect").val(result.TRIP_EFFECT);
+				fn_closeSearch();
+			},
+			error:function(request, status, errorThrown){
+				
+			}			
+		});
 	}
 	
 	function fn_addCol(type) {
@@ -596,20 +468,20 @@
 			if($('#'+checkBoxId).is(':checked')) $(v).remove();
 		})
 	}
-	
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
-		출장계획 보고서&nbsp;&nbsp;
+		시장조사결과 보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;<a href="#none">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 		<h2 style="position:relative">
-			<span class="title_s">Design Change Report</span><span class="title">출장계획보고서</span>
+			<span class="title_s">Market Research Report</span><span class="title">시장조사결과보고서</span>
 			<div class="top_btn_box">
 				<ul>
 					<li>
+						<button class="btn_circle_modifiy" onclick="fn_copySearch()">&nbsp;</button>
 						<button class="btn_circle_save" onclick="fn_insert()">&nbsp;</button>
 					</li>
 				</ul>
@@ -634,58 +506,20 @@
 							<td colspan="3"><input type="text" name="title" id="title" style="width: 90%;" class="req" /></td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장구분</th>
+							<th style="border-left: none;">대상업소<span onClick="fn_addCol('market')" id="span_market">(+)</span></th>
 							<td colspan="3">
-								<div class="selectbox" style="width:150px;">  
-									<label for="tripType" id="tripType_label">선택</label> 
-									<select name="tripType" id="tripType">
-										<option value="">선택</option>
-										<option value="I">국내</option>
-										<option value="O">해외</option>
-									</select>
-								</div>
-								<div class="selectbox" style="width:150px;margin-left:10px;">  
-									<label for="tripDiv" id="tripDiv_label">선택</label> 
-									<select name="tripDiv" id="tripDiv">
-										<option value="">선택</option>
-										<option value="T">출장</option>
-										<option value="R">시장조사</option>
-									</select>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">출장자<span onClick="fn_addCol('user')">(+)</span></th>
-							<td colspan="3">
-								<table width="100%">
-									<tr>
-										<td>소속</td>
-										<td>직위(직급)</td>
-										<td>성명</td>
-									</tr>
-									<tbody id="user_tbody" name="user_tbody">
-										<tr id="user_tr_1">
+								<table width="100%" border="0">
+									<tbody id="market_tbody" name="market_tbody">
+										<tr id="market_tr_1">
 											<td>
-												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="position" id="position" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="name" id="name" style="width: 100%;" class="req" />
+												<input type="text"  style="width:300px; float: left" class="req" name="marketName" id="marketName" placeholder="" value="가."/>
 											</td>
 										</tr>
 									</tbody>
-									<tbody id="user_tbody_temp" name="user_tbody_temp" style="display:none">
-										<tr id="user_tmp_tr_1" style="display:none">
+									<tbody id="market_tbody_temp" name="market_tbody_temp" style="display:none">
+										<tr id="market_tmp_tr_1" style="display:none">
 											<td>
-												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="position" id="position" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="name" id="name" style="width: 100%;" class="req" />
+												<input type="text"  style="width:300px; float: left" class="req" name="marketName" id="marketName" placeholder=""/>
 											</td>
 										</tr>
 									</tbody>
@@ -693,123 +527,44 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장목적<span onClick="fn_addCol('purpose')">(+)</span></th>
-							<td colspan="3">
+							<th style="border-left: none;">목적<span onClick="fn_addCol('purpose')" id="span_purpose">(+)</span></th>
+							<td colspan="3">								
 								<table width="100%" border="0">
-									<tbody id="purpose_tbody" name="purpose_tbody">
+									<tbody id="purpose_tbody" name="market_tbody">
 										<tr id="purpose_tr_1">
 											<td>
-												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req" />
+												<input type="text" name="purpose" id="purpose" style="width: 90%;" class="req" />
 											</td>
 										</tr>
 									</tbody>
 									<tbody id="purpose_tbody_temp" name="purpose_tbody_temp" style="display:none">
 										<tr id="purpose_tmp_tr_1" style="display:none">
 											<td>
-												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req" />
+												<input type="text" name="purpose" id="purpose" style="width: 90%;" class="req" />
 											</td>
 										</tr>
 									</tbody>
-								</table>
+								</table>	
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장기간</th>
+							<th style="border-left: none;">일시</th>
+							<td colspan="3"><input type="text" name="researchDate" id="researchDate" style="width: 150px;" class="req" /></td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">주소</th>
+							<td colspan="3"><input type="text" name="marketAddress" id="marketAddress" style="width: 90%;" class="req" /></td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">비용</th>
 							<td colspan="3">
-								<input type="text" name="tripStartDate" id="tripStartDate" style="width: 120px;" class="req" />
-								&nbsp;~&nbsp;
-								<input type="text" name="tripEndDate" id="tripEndDate" style="width: 120px;" class="req" />
+								<textarea name="cost" id="cost" style="width: 95%; height: 40px; "></textarea>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장지<span onClick="fn_addCol('destination')">(+)</span></th>
-							<td>
-								
-								<table width="100%" border="0">
-									<tbody id="destination_tbody" name="destination_tbody">
-										<tr id="destination_tr_1">
-											<td>
-												<input type="text"  style="width:95%; float: left" class="req" name="tripDestination" id="tripDestination" placeholder=""/>
-											</td>
-										</tr>
-									</tbody>
-									<tbody id="destination_tbody_temp" name="destination_tbody_temp" style="display:none">
-										<tr id="destination_tmp_tr_1" style="display:none">
-											<td>
-												<input type="text"  style="width:95%; float: left" class="req" name="tripDestination" id="tripDestination" placeholder=""/>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</td>
-							<th style="border-left: none;">경유지</th>
-							<td>
-								<input type="text"  style="width:95%; float: left" class="req" name="tripTransit" id="tripTransit" placeholder=""/>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">업무수행내용<span onClick="fn_addCol('contents')">(+)</span></th>
-							<td colspan="3">
-								<table width="100%">
-									<tr>
-										<td>일정</td>
-										<td>세부내용</td>
-										<td>장소</td>
-										<td>비고</td>
-									</tr>
-									<tbody id="contents_tbody" name="contents_tbody">
-										<tr id="contents_tr_1">
-											<td>
-												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="content" id="content" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="place" id="place" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="note" id="note" style="width: 100%;" class="req" />
-											</td>
-										</tr>
-									</tbody>
-									<tbody id="contents_tbody_temp" name="contents_tbody_temp" style="display:none">
-										<tr id="contents_tmp_tr_1" style="display:none">
-											<td>
-												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="content" id="content" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="place" id="place" style="width: 100%;" class="req" />
-											</td>
-											<td>
-												<input type="text" name="note" id="note" style="width: 100%;" class="req" />
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">예상경비</th>
-							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripCost" id="tripCost"></textarea>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">산출식</th>
-							<td colspan="3">
-								<textarea rows='2' cols="130" name="calMethod" id="calMethod"></textarea>
-							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">기대효과</th>
-							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripEffect" id="tripEffect"></textarea>
-							</td>
-						</tr>						
+							<th style="border-left: none;">조사자</th>
+							<td colspan="3"><input type="text" name="cost" id="cost" style="width: 90%;" class="req" /></td>
+						</tr>												
 						<tr>
 							<th style="border-left: none;">결재라인</th>
 							<td colspan="3">
@@ -851,9 +606,8 @@
 				<div class="btn_box_con4">
 					<!-- 
 					<button class="btn_admin_red">임시/템플릿저장</button>
-					<button class="btn_admin_navi">임시저장</button>
 					 -->
-					<button class="btn_admin_navi" onclick="fn_insertTmp()">임시저장</button> 
+					<button class="btn_admin_navi" onclick="fn_insertTmp()">임시저장</button>
 					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
 					<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
 				</div>
@@ -862,28 +616,6 @@
 		</div>
 	</section>
 </div>
-
-<table id="tmpTable" class="tbl05" style="display:none">
-	<tbody id="tmpChangeTbody" name="tmpChangeTbody">
-		<tr id="tmpChangeRow_1" class="temp_color">
-			<td>
-				<input type="checkbox" id="change_1"><label for="change_1"><span></span></label>
-			</td>
-			<td>
-				<input type="text" name="itemDiv" style="width: 99%" class="req code_tbl"/>							
-			</td>
-			<td>
-				<textarea style="width:95%; height:50px" placeholder="기존정보를 입력하세요." name="itemCurrent" id="itemCurrent" class="req code_tbl"></textarea>
-			</td>
-			<td>
-				<textarea style="width:95%; height:50px" placeholder="변경정보를 입력하세요." name="itemChange" id="itemChange" class="req code_tbl"></textarea>
-			</td>
-			<td>
-				<input type="text" name="itemNote" style="width: 99%" class="req code_tbl"/>
-			</td>
-		</tr>
-	</tbody>
-</table>
 
 <!-- 첨부파일 추가레이어 start-->
 <!-- 신규로 레이어창을 생성하고싶을때는  아이디값 교체-->
@@ -937,7 +669,7 @@
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="PLAN"/>
+	<input type="hidden" id="docType" value="RESEARCH"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />
@@ -948,7 +680,7 @@
  	</select>
 	<div class="modal" style="	margin-left:-500px;width:1000px;height: 550px;margin-top:-300px">
 		<h5 style="position:relative">
-			<span class="title">출장계획보고서 결재 상신</span>
+			<span class="title">시장조사결과보고서 결재 상신</span>
 			<div  class="top_btn_box">
 				<ul><li><button class="btn_madal_close" onClick="apprClass.apprCancel(); return false;"></button></li></ul>
 			</div>
@@ -1014,3 +746,54 @@
 	</div>
 </div>
 <!-- 결재 상신 레이어  close-->
+
+<!-- 문서 검색 레이어 start-->
+<div class="white_content" id="dialog_search">
+	<div class="modal" style="	width: 700px;margin-left:-360px;height: 550px;margin-top:-300px;">
+		<h5 style="position:relative">
+			<span class="title">출장계획보고서 검색</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="closeDialog('dialog_search')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>
+					<dt>보고서검색</dt>
+					<dd>
+						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 업무내용 등을 입력하세요."/>
+						<button class="btn_small_search ml5" onclick="fn_search()" style="float: left">조회</button>
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="main_tbl" style="height: 300px; overflow-y: auto">
+			<table class="tbl07">
+				<colgroup>
+					<col width="40px">
+					<col/>
+					<col width="23%">
+					<col width="30%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th></th>
+						<th>제목</th>
+						<th>출장지</th>
+						<th>출장일</th>
+					<tr>
+				</thead>
+				<tbody id="productLayerBody">
+					<tr>
+						<td colspan="4">검색해주세요</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!-- 문서 검색 레이어 close-->

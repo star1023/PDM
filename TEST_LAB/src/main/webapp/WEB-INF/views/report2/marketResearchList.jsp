@@ -3,19 +3,19 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
-<title>상품설계변경보고서</title>
+<title>시장조사결과보고서</title>
 <script type="text/javascript">
 $(document).ready(function(){
-	fn_loadList(1);
+	//fn_loadList(1);
 });
 
 function fn_loadList(pageNo) {
-	var URL = "../report2/selectBusinessTripPlanListAjax";
+	var URL = "../report2/selectMarketResearchListAjax";
 	var viewCount = $("#viewCount").selectedValues()[0];
 	if( viewCount == '' ) {
 		viewCount = "10";
 	}
-	$("#list").html("<tr><td align='center' colspan='5'>조회중입니다.</td></tr>");
+	$("#list").html("<tr><td align='center' colspan='6'>조회중입니다.</td></tr>");
 	$('.page_navi').html("");
 	
 	$.ajax({
@@ -34,23 +34,7 @@ function fn_loadList(pageNo) {
 			if( data.totalCount > 0 ) {
 				$("#list").html(html);
 				data.list.forEach(function (item) {
-					html += "<tr>";
-					html += "	<td>"+nvl(item.TRIP_TYPE_TXT,'&nbsp;')+"</td>";
-					html += "	<td><div class=\"ellipsis_txt tgnl\">&nbsp;&nbsp;<a href=\"#\" onClick=\"fn_view('"+item.PLAN_IDX+"')\">"+nvl(item.TITLE,'&nbsp;')+"</a></div></td>";					
-					html += "	<td>"+nvl(item.TRIP_DESTINATION,'&nbsp;')+"</td>";
-					html += "	<td>"+nvl(item.STATUS_TXT,'&nbsp;')+"</td>";
-					html += "	<td>"+nvl(item.DOC_OWNER_NAME,'&nbsp;')+"</td>";
-					html += "	<td>";
-					html += "		<li style=\"float:none; display:inline\">";
-					if( item.IS_LAST == 'Y' ) {						
-						html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.PLAN_IDX+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
-					}
-					if( item.STATUS == 'TMP' || item.STATUS == 'COND_APPR' ) {
-						html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.PLAN_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
-					}
-					html += "		</li>";
-					html += "	</td>";
-					html += "</tr>"		
+
 				});				
 			} else {
 				$("#list").html(html);
@@ -72,15 +56,15 @@ function fn_loadList(pageNo) {
 }
 
 function fn_insertForm() {
-	window.location.href = "../report2/businessTripPlanInsert2";
+	window.location.href = "../report2/marketResearchInsert";
 }
 
 function fn_view(idx) {
-	window.location.href = "../report2/businessTripPlanView?idx="+idx;
+	window.location.href = "../report2/marketResearchView?idx="+idx;
 }
 
 function fn_update(idx) {
-	location.href = '/report2/businessTripPlanUpdate?idx='+idx;
+	location.href = '/report2/marketResearchUpdate?idx='+idx;
 }
 
 function fn_viewHistory(idx) {
@@ -90,7 +74,7 @@ function fn_viewHistory(idx) {
 		url:URL,
 		data:{
 			"idx" : idx
-			, "docType" : "PLAN"
+			, "docType" : "RESEARCH"
 		},
 		dataType:"json",
 		async:false,
@@ -123,14 +107,14 @@ function fn_viewHistory(idx) {
 
 <input type="hidden" name="pageNo" id="pageNo" value="${paramVO.pageNo}">
 <div class="wrap_in" id="fixNextTag">
-	<span class="path">출장계획보고서&nbsp;&nbsp;
+	<span class="path">시장조사결과보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align:middle"/>&nbsp;&nbsp;
 		<a href="#">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 	<!-- 상세 페이지  start-->
-		<h2 style="position:relative"><span class="title_s">Business Trip Plan Report</span>
-			<span class="title">출장계획보고서</span>
+		<h2 style="position:relative"><span class="title_s">Market Research Report</span>
+			<span class="title">시장조사결과보고서</span>
 			<div  class="top_btn_box">
 				<ul>
 					<li>
@@ -224,7 +208,7 @@ function fn_viewHistory(idx) {
 				</div>
 			</div>
 			<div class="btn_box_con"> 
-				<button class="btn_admin_red" onclick="javascript:fn_insertForm();">출장계획보고서 생성</button>
+				<button class="btn_admin_red" onclick="javascript:fn_insertForm();">시장조서결과보고서 생성</button>
 			</div>
 	 		<hr class="con_mode"/><!-- 신규 추가 꼭 데려갈것 !-->
 		</div>

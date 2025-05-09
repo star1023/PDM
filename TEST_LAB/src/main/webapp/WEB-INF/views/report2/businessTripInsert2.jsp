@@ -227,7 +227,7 @@
 		$('#attatch_common').val('')
 	}
 	
-	function fn_updateTmp() {
+	function fn_insertTmp() {
 		var tripContents = editor1.getData();
 		var tripCost = editor2.getData();
 		console.log(editor1.getData());
@@ -238,9 +238,7 @@
 			return;
 		} else {
 			var formData = new FormData();
-			formData.append("idx",$("#idx").val());			
 			formData.append("planIdx",$("#planIdx").val());
-			formData.append("currentStatus",$("#currentStatus").val());
 			formData.append("title",$("#title").val());
 			formData.append("tripType",$("#tripType").selectedValues()[0]);
 			
@@ -323,7 +321,7 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/updateBusinessTripTmpAjax";
+			URL = "../report2/insertBusinessTripTmpAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -352,7 +350,8 @@
 	}
 	
 	//입력확인
-	function fn_update(){
+	function fn_insert(){
+		//var tripContents = editor1.getData();
 		var tripContents = editor1.getData();
 		var tripCost = editor2.getData();
 		console.log(editor1.getData());
@@ -368,14 +367,12 @@
 		} else if( !chkNull(tripCost) ) {
 			alert("경비를 입력해주세요.");		
 			return;
-		} /* else if( attatchFileArr.length == 0 ) {
+		} /*else if( attatchFileArr.length == 0  && $("#tempFileList option").length == 0) {
 			alert("첨부파일을 등록해주세요.");		
 			return;			
-		}  */else {
+		}*/ else {
 			var formData = new FormData();
-			formData.append("idx",$("#idx").val());			
 			formData.append("planIdx",$("#planIdx").val());
-			formData.append("currentStatus",$("#currentStatus").val());
 			formData.append("title",$("#title").val());
 			formData.append("tripType",$("#tripType").selectedValues()[0]);
 			
@@ -405,11 +402,12 @@
 				if( purposeElement.value != '' ) {
 					purposeArr.push(purposeElement.value);	
 				}
-			}	
+			}
 			if( purposeArr.length == 0 ) {
 				alert("출장목적을 입력해주세요.");
 				return;
 			}
+			
 			formData.append("purposeArr",JSON.stringify(purposeArr));
 			
 			formData.append("tripStartDate",$("#tripStartDate").val());
@@ -421,7 +419,7 @@
 				if( tripDestinationElement.value != '' ) {
 					tripDestinationArr.push(tripDestinationElement.value);
 				}				
-			}		
+			}
 			if( tripDestinationArr.length == 0 ) {
 				alert("출장지를 입력해주세요.");
 				return;
@@ -446,10 +444,12 @@
 					noteArr.push(itemNote);
 				}				
 			});
+			
 			if( scheduleArr.length == 0 || contentArr.length == 0 || placeArr.length == 0 || noteArr.length == 0 ) {
 				alert("업무수행 내용을 입력해주세요.");
 				return;
 			}
+			
 			formData.append("scheduleArr",JSON.stringify(scheduleArr));
 			formData.append("contentArr",JSON.stringify(contentArr));
 			formData.append("placeArr",JSON.stringify(placeArr));
@@ -460,7 +460,7 @@
 			formData.append("overReason",$("#overReason").val());
 			formData.append("tripEffect",$("#tripEffect").val());
 			formData.append("docType", $("#docType").val());
-			formData.append("status", "REG");
+			formData.append("status", "TMP");
 			
 			for (var i = 0; i < attatchFileArr.length; i++) {
 				formData.append('file', attatchFileArr[i])
@@ -474,7 +474,7 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/updateBusinessTripAjax";
+			URL = "../report2/insertBusinessTripAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -486,41 +486,47 @@
 				success:function(result) {
 					console.log(result);
 					if( result.RESULT == 'S' ) {
-						if( $("#apprLine option").length > 0 ) {
-							var apprFormData = new FormData();
-							apprFormData.append("docIdx", result.IDX );
-							apprFormData.append("apprComment", $("#apprComment").val());
-							apprFormData.append("apprLine", $("#apprLine").selectedValues());
-							apprFormData.append("refLine", $("#refLine").selectedValues());
-							apprFormData.append("title", $("#title").val());
-							apprFormData.append("docType", $("#docType").val());
-							apprFormData.append("status", "N");
-							var URL = "../approval2/insertApprAjax";
-							$.ajax({
-								type:"POST",
-								url:URL,
-								dataType:"json",
-								data: apprFormData,
-								processData: false,
-						        contentType: false,
-						        cache: false,
-								success:function(data) {
-									if(data.RESULT == 'S') {
-										alert("결재상신이 완료되었습니다.");
+						if( result.IDX > 0 ) {
+							if( $("#apprLine option").length > 0 ) {
+								var apprFormData = new FormData();
+								apprFormData.append("docIdx", result.IDX );
+								apprFormData.append("apprComment", $("#apprComment").val());
+								apprFormData.append("apprLine", $("#apprLine").selectedValues());
+								apprFormData.append("refLine", $("#refLine").selectedValues());
+								apprFormData.append("title", $("#title").val());
+								apprFormData.append("docType", $("#docType").val());
+								apprFormData.append("status", "N");
+								var URL = "../approval2/insertApprAjax";
+								$.ajax({
+									type:"POST",
+									url:URL,
+									dataType:"json",
+									data: apprFormData,
+									processData: false,
+							        contentType: false,
+							        cache: false,
+									success:function(data) {
+										if(data.RESULT == 'S') {
+											alert("결재상신이 완료되었습니다.");
+											fn_goList();
+										} else {
+											alert("결재선 상신 오류가 발생하였습니다."+data.MESSAGE);
+											fn_goList();
+											return;
+										}
+									},
+									error:function(request, status, errorThrown){
+										alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 										fn_goList();
-									} else {
-										alert("결재선 상신 오류가 발생하였습니다."+data.MESSAGE);
-										fn_goList();
-										return;
-									}
-								},
-								error:function(request, status, errorThrown){
-									alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-									fn_goList();
-								}			
-							});
+									}			
+								});
+							} else {
+								alert($("#title").val()+" 문서가 정상적으로 생성되었습니다.");
+								fn_goList();
+							}
+
 						} else {
-							alert("문서가 수정되었습니다.");
+							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 							fn_goList();
 						}
 					} else {
@@ -536,30 +542,185 @@
 
 	function fn_goList() {
 		location.href = '/report2/businessTripList';
-	}	
+	}
 	
-	function fn_removeTempFile(element, tempId){
-		//서버의 파일을 삭제한다.
-		var URL = '/file/deleteFile2Ajax';
+	function fn_apprSubmit(){
+		if( $("#apprLine option").length == 0 ) {
+			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
+			return;
+		} else {
+			var apprTxtFull = "";
+			$("#apprLine").selectedTexts().forEach(function( item, index ){
+				console.log(item);
+				if( apprTxtFull != "" ) {
+					apprTxtFull += " > ";
+				}
+				apprTxtFull += item;
+			});
+			$("#apprTxtFull").val(apprTxtFull);
+			var refTxtFull = "";
+			$("#refLine").selectedTexts().forEach(function( item, index ){
+				if( refTxtFull != "" ) {
+					refTxtFull += ", ";
+				}
+				refTxtFull += item;
+			});
+			$("#refTxtFull").html("&nbsp;"+refTxtFull);
+		}
+		closeDialog('approval_dialog');
+	}
+	
+	function fn_copySearch() {
+		openDialog('dialog_search');
+	}
+	
+	function fn_closeSearch() {
+		closeDialog('dialog_search');
+		$("#searchValue").val("");
+		$("#searchCategory1").removeOption(/./);
+		$("#searchCategory2").removeOption(/./);
+		$("#searchCategory2_div").hide();
+		$("#searchCategory3").removeOption(/./);
+		$("#searchCategory3_div").hide();
+		$("#productLayerBody").html("<tr><td colspan=\"4\">검색해주세요</td></tr>");
+	}
+	
+	function fn_search() {
+		var URL = "../report2/searchBusinessTripPlanListAjax";
 		$.ajax({
 			type:"POST",
 			url:URL,
-			data: {
-				"fileIdx": tempId
+			data:{
+				searchValue : $("#searchValue").val()
 			},
 			dataType:"json",
 			success:function(result) {
-				if( result.RESULT == 'S' ) {
-					$(element).parent().remove();
+				console.log(result);
+				//productLayerBody
+				var jsonData = {};
+				jsonData = result;
+				$('#productLayerBody').empty();
+				if( jsonData.length == 0 ) {
+					var html = "";
+					$("#productLayerBody").html(html);
+					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
+					$("#productLayerBody").html(html);
 				} else {
-					alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+					jsonData.forEach(function(item){
+						var row = '<tr onClick="fn_copy(\''+item.PLAN_IDX+'\')">';
+						row += '<td></td>';
+						row += '<td class="tgnl">'+item.TITLE+'</td>';
+						row += '<td>'+item.TRIP_DESTINATION+'</td>';
+						row += '<td>';
+						row += ''+item.TRIP_START_DATE;
+						if( item.TRIP_END_DATE != '' ) {
+							row += ' ~ '+item.TRIP_END_DATE;	
+						}
+						row += '</td>';
+						row += '</tr>';
+						$('#productLayerBody').append(row);
+					})
 				}
 			},
 			error:function(request, status, errorThrown){
-				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				var html = "";
+				$("#productLayerBody").html(html);
+				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
+				$("#productLayerBody").html(html);
 			}			
 		});
 	}
+	
+	function fn_copy(idx) {
+		var URL = "../report2/selectBusinessTripPlanDataAjax";
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data:{
+				"idx" : idx
+			},
+			dataType:"json",
+			success:function(result) {
+				console.log(result);
+				$("#planIdx").val(result.planData.data.PLAN_IDX);
+				$("#title").val(result.planData.data.TITLE);
+				$("#tripType").selectOptions(result.planData.data.TRIP_TYPE);
+				$("#tripType_label").html($("#tripType").selectedTexts());
+				$("#tripStartDate").val(result.planData.data.TRIP_START_DATE);
+				$("#tripEndDate").val(result.planData.data.TRIP_END_DATE);
+				$("#tripTransit").val(result.planData.data.TRIP_TRANSIT);
+				editor2.setData(result.planData.data.TRIP_COST);
+				$("#tripEffect").val(result.planData.data.TRIP_EFFECT);
+				
+				result.userList.forEach(function(item,index){
+					if( index > 0 ) {
+						$("#span_user").trigger("click");	
+					}					
+					var trObj = $("#user_tbody tr:last");
+					trObj.find("input[name='dept']").val(item.DEPT);
+					trObj.find("input[name='position']").val(item.POSITION);
+					trObj.find("input[name='name']").val(item.NAME);
+				});
+				
+				var count = 0;
+				result.infoList.forEach(function(item,index){
+					if( item.INFO_TYPE == 'PUR' ) {
+						if( count > 0 ) {
+							$("#span_purpose").trigger("click");	
+						}
+						var trObj = $("#purpose_tbody tr:last");
+						trObj.find("input[name='purpose']").val(item.INFO_TEXT);
+						count++;
+					}
+				});
+				
+				count = 0;
+				result.infoList.forEach(function(item,index){
+					if( item.INFO_TYPE == 'DEST' ) {
+						if( count > 0 ) {
+							$("#span_destination").trigger("click");	
+						}
+						var trObj = $("#destination_tbody tr:last");
+						trObj.find("input[name='tripDestination']").val(item.INFO_TEXT);
+						count++;
+					}
+				});
+				
+				result.contentsList.forEach(function(item,index){
+					if( index > 0 ) {
+						$("#span_contents").trigger("click");	
+					}					
+					var trObj = $("#contents_tbody tr:last");
+					trObj.find("input[name='schedule']").val(item.SCHEDULE);
+					trObj.find("input[name='content']").val(item.CONTENT);
+					trObj.find("input[name='place']").val(item.PLACE);
+					trObj.find("input[name='note']").val(item.NOTE);
+				});
+				
+				/*
+				$("#tripType").selectOptions(result.TRIP_TYPE);
+				$("#tripType_label").html($("#tripType").selectedTexts());
+				$("#tripStartDate").val(result.TRIP_START_DATE);
+				$("#tripEndDate").val(result.TRIP_END_DATE);
+				$("#title").val(result.TITLE);
+				$("#dept").val(result.DEPT);
+				$("#position").val(result.POSITION);
+				$("#name").val(result.NAME);
+				$("#tripPurpose").val(result.TRIP_PURPOSE);
+				$("#tripDestination").val(result.TRIP_DESTINATION);
+				$("#tripTransit").val(result.TRIP_TRANSIT);
+				editor1.setData(result.CONTENTS);
+				editor2.setData(result.TRIP_COST);
+				$("#tripEffect").val(result.TRIP_EFFECT);
+				*/
+				fn_closeSearch();
+			},
+			error:function(request, status, errorThrown){
+				
+			}			
+		});
+	}
+	
 	
 	function fn_addCol(type) {
 		var randomId = randomId = Math.random().toString(36).substr(2, 9);
@@ -591,32 +752,6 @@
 			if($('#'+checkBoxId).is(':checked')) $(v).remove();
 		})
 	}
-	
-	function fn_apprSubmit(){
-		if( $("#apprLine option").length == 0 ) {
-			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
-			return;
-		} else {
-			var apprTxtFull = "";
-			$("#apprLine").selectedTexts().forEach(function( item, index ){
-				console.log(item);
-				if( apprTxtFull != "" ) {
-					apprTxtFull += " > ";
-				}
-				apprTxtFull += item;
-			});
-			$("#apprTxtFull").val(apprTxtFull);
-			var refTxtFull = "";
-			$("#refLine").selectedTexts().forEach(function( item, index ){
-				if( refTxtFull != "" ) {
-					refTxtFull += ", ";
-				}
-				refTxtFull += item;
-			});
-			$("#refTxtFull").html("&nbsp;"+refTxtFull);
-		}
-		closeDialog('approval_dialog');
-	}
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -630,7 +765,8 @@
 			<div class="top_btn_box">
 				<ul>
 					<li>
-						<button class="btn_circle_save" onclick="fn_update()">&nbsp;</button>
+						<button class="btn_circle_modifiy" onclick="fn_copySearch()">&nbsp;</button>
+						<button class="btn_circle_save" onclick="fn_insert()">&nbsp;</button>
 					</li>
 				</ul>
 			</div>
@@ -652,21 +788,19 @@
 						<tr>
 							<th style="border-left: none;">제목</th>
 							<td colspan="3">
-								<input type="hidden" name="idx" id="idx" value="${businessTripData.data.TRIP_IDX}"/>
-								<input type="hidden" name="planIdx" id="planIdx" value="${businessTripData.data.PLAN_IDX}"/>
-								<input type="hidden" name="currentStatus" id="currentStatus" value="${businessTripData.data.STATUS}"/>
-								<input type="text" name="title" id="title" style="width: 90%;" class="req" value="${businessTripData.data.TITLE}"/>
+								<input type="hidden" name="planIdx" id="planIdx"/>
+								<input type="text" name="title" id="title" style="width: 90%;" class="req" />
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">출장구분</th>
 							<td colspan="3">
 								<div class="selectbox" style="width:100px;">  
-									<label for="tripType" id="tripType_label">${businessTripData.data.TRIP_TYPE_TXT}</label> 
+									<label for="tripType" id="tripType_label">선택</label> 
 									<select name="tripType" id="tripType">
 										<option value="">선택</option>
-										<option value="I" ${businessTripData.data.TRIP_TYPE == 'I' ? 'selected' : ''}>국내</option>
-										<option value="O" ${businessTripData.data.TRIP_TYPE == 'O' ? 'selected' : ''}>해외</option>
+										<option value="I">국내</option>
+										<option value="O">해외</option>
 									</select>
 								</div>
 							</td>
@@ -681,22 +815,6 @@
 										<td>성명</td>
 									</tr>
 									<tbody id="user_tbody" name="user_tbody">
-										<c:set var="count" value="0" />
-										<c:forEach items="${userList}" var="userList" varStatus="status">
-										<c:set var="count" value="${count + 1}" />
-										<tr id="user_tr_${status.count}">
-											<td>
-												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" value="${userList.DEPT}"/>
-											</td>
-											<td>
-												<input type="text" name="position" id="position" style="width: 100%;" class="req" value="${userList.POSITION}"/>
-											</td>
-											<td>
-												<input type="text" name="name" id="name" style="width: 100%;" class="req" value="${userList.NAME}"/>
-											</td>
-										</tr>
-										</c:forEach>
-										<c:if test="${count == 0 }">
 										<tr id="user_tr_1">
 											<td>
 												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
@@ -708,7 +826,6 @@
 												<input type="text" name="name" id="name" style="width: 100%;" class="req" />
 											</td>
 										</tr>
-									</c:if>
 									</tbody>
 									<tbody id="user_tbody_temp" name="user_tbody_temp" style="display:none">
 										<tr id="user_tmp_tr_1" style="display:none">
@@ -731,24 +848,11 @@
 							<td colspan="3">
 								<table width="100%" border="0">
 									<tbody id="purpose_tbody" name="purpose_tbody">
-										<c:set var="count" value="0" />
-										<c:forEach items="${infoList}" var="infoList" varStatus="status">
-										<c:if test="${infoList.INFO_TYPE == 'PUR' }">
-										<c:set var="count" value="${count + 1}" />
-										<tr id="purpose_tr_${status.count}">
+										<tr id="purpose_tr_1">
 											<td>
-												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req" value="${infoList.INFO_TEXT}"/>
+												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req" />
 											</td>
 										</tr>
-										</c:if>
-										</c:forEach>										
-										<c:if test="${count == 0 }">
-											<tr id="purpose_tr_1">
-											<td>
-												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req"/>
-											</td>
-										</tr>
-										</c:if>
 									</tbody>
 									<tbody id="purpose_tbody_temp" name="purpose_tbody_temp" style="display:none">
 										<tr id="purpose_tmp_tr_1" style="display:none">
@@ -763,9 +867,9 @@
 						<tr>
 							<th style="border-left: none;">출장기간</th>
 							<td colspan="3">
-								<input type="text" name="tripStartDate" id="tripStartDate" style="width: 120px;" class="req" value="${businessTripData.data.TRIP_START_DATE}"/>
+								<input type="text" name="tripStartDate" id="tripStartDate" style="width: 120px;" class="req" />
 								&nbsp;~&nbsp;
-								<input type="text" name="tripEndDate" id="tripEndDate" style="width: 120px;" class="req" value="${businessTripData.data.TRIP_END_DATE}"/>
+								<input type="text" name="tripEndDate" id="tripEndDate" style="width: 120px;" class="req" />
 							</td>
 						</tr>
 						<tr>
@@ -774,24 +878,11 @@
 								
 								<table width="100%" border="0">
 									<tbody id="destination_tbody" name="destination_tbody">
-										<c:set var="count" value="0" />
-										<c:forEach items="${infoList}" var="infoList" varStatus="status">
-										<c:if test="${infoList.INFO_TYPE == 'DEST' }">
-										<c:set var="count" value="${count + 1}" />
-										<tr id="destination_tr_1">
-											<td>
-												<input type="text"  style="width:95%; float: left" class="req" name="tripDestination" id="tripDestination" placeholder="" value="${infoList.INFO_TEXT}"/>
-											</td>
-										</tr>
-										</c:if>
-										</c:forEach>
-										<c:if test="${count == 0 }">
 										<tr id="destination_tr_1">
 											<td>
 												<input type="text"  style="width:95%; float: left" class="req" name="tripDestination" id="tripDestination" placeholder=""/>
 											</td>
 										</tr>
-										</c:if>
 									</tbody>
 									<tbody id="destination_tbody_temp" name="destination_tbody_temp" style="display:none">
 										<tr id="destination_tmp_tr_1" style="display:none">
@@ -804,7 +895,7 @@
 							</td>
 							<th style="border-left: none;">경유지</th>
 							<td>
-								<input type="text"  style="width:95%; float: left" class="req" name="tripTransit" id="tripTransit" placeholder="" value="${businessTripData.data.TRIP_TRANSIT}"/>
+								<input type="text"  style="width:95%; float: left" class="req" name="tripTransit" id="tripTransit" placeholder=""/>
 							</td>
 						</tr>
 						<tr>
@@ -818,25 +909,6 @@
 										<td>비고</td>
 									</tr>
 									<tbody id="contents_tbody" name="contents_tbody">
-										<c:set var="count" value="0" />
-										<c:forEach items="${contentsList}" var="contentsList" varStatus="status">
-										<c:set var="count" value="${count + 1}" />
-										<tr id="contents_tr_${status.count}">
-											<td>
-												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" value="${contentsList.SCHEDULE}"/>
-											</td>
-											<td>
-												<input type="text" name="content" id="content" style="width: 100%;" class="req" value="${contentsList.CONTENT}"/>
-											</td>
-											<td>
-												<input type="text" name="place" id="place" style="width: 100%;" class="req" value="${contentsList.PLACE}"/>
-											</td>
-											<td>
-												<input type="text" name="note" id="note" style="width: 100%;" class="req" value="${contentsList.NOTE}"/>
-											</td>
-										</tr>
-										</c:forEach>
-										<c:if test="${count == 0 }">
 										<tr id="contents_tr_1">
 											<td>
 												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" />
@@ -851,7 +923,6 @@
 												<input type="text" name="note" id="note" style="width: 100%;" class="req" />
 											</td>
 										</tr>
-									</c:if>
 									</tbody>
 									<tbody id="contents_tbody_temp" name="contents_tbody_temp" style="display:none">
 										<tr id="contents_tmp_tr_1" style="display:none">
@@ -875,28 +946,27 @@
 						<tr>
 							<th style="border-left: none;">업무수행내용</th>
 							<td colspan="3">
-								<textarea rows='5' cols="130" name="tripContents" id="tripContents" style="width: 466px; height: 40px; display: none;">${businessTripData.data.TRIP_CONTENTS}</textarea>
+								<textarea rows='5' cols="130" name="tripContents" id="tripContents" style="width: 466px; height: 40px; display: none;"></textarea>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">경비</th>
 							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripCost" id="tripCost" style="width: 466px; height: 40px; display: none;">${businessTripData.data.TRIP_COST}</textarea>
+								<textarea rows='2' cols="130" name="tripCost" id="tripCost" style="width: 466px; height: 40px; display: none;"></textarea>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">초과사유</th>
 							<td colspan="3">
-								<textarea rows='2' cols="130" name="overReason" id="overReason">${businessTripData.data.OVER_REASON}</textarea>
+								<textarea rows='2' cols="130" name="overReason" id="overReason"></textarea>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">출장효과</th>
 							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripEffect" id="tripEffect">${businessTripData.data.TRIP_EFFECT}</textarea>
+								<textarea rows='2' cols="130" name="tripEffect" id="tripEffect"></textarea>
 							</td>
-						</tr>
-						<c:if test="${businessTripData.data.STATUS == 'TMP' || businessTripData.data.STATUS == 'REG'}">
+						</tr>						
 						<tr>
 							<th style="border-left: none;">결재라인</th>
 							<td colspan="3">
@@ -910,7 +980,6 @@
 								<div id="refTxtFull" name="refTxtFull"></div>								
 							</td>
 						</tr>
-						</c:if>			
 					</tbody>
 				</table>
 			</div>
@@ -925,12 +994,7 @@
 				<ul>
 					<li class="point_img">
 						<dt>첨부파일</dt><dd>
-							<ul id="temp_attatch_file">
-								<c:forEach items="${businessTripData.fileList}" var="fileList" varStatus="status">
-									<li><a href="#none" onclick="fn_removeTempFile(this, '${fileList.FILE_IDX}')"><img src="/resources/images/icon_del_file.png"></a>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-								</c:forEach>
-							</ul>
-							<ul id="attatch_file">								
+							<ul id="attatch_file">
 							</ul>
 						</dd>
 					</li>
@@ -945,8 +1009,8 @@
 					<!-- 
 					<button class="btn_admin_red">임시/템플릿저장</button>
 					 -->
-					<button class="btn_admin_navi" onclick="fn_updateTmp()">임시저장</button> 
-					<button class="btn_admin_sky" onclick="fn_update()">저장</button>
+					<button class="btn_admin_navi" onclick="fn_insertTmp()">임시저장</button>
+					<button class="btn_admin_sky" onclick="fn_insert()">저장</button>
 					<button class="btn_admin_gray" onclick="fn_goList()">취소</button>
 				</div>
 				<hr class="con_mode" />
@@ -1106,3 +1170,54 @@
 	</div>
 </div>
 <!-- 결재 상신 레이어  close-->
+
+<!-- 문서 검색 레이어 start-->
+<div class="white_content" id="dialog_search">
+	<div class="modal" style="	width: 700px;margin-left:-360px;height: 550px;margin-top:-300px;">
+		<h5 style="position:relative">
+			<span class="title">출장계획보고서 검색</span>
+			<div  class="top_btn_box">
+				<ul>
+					<li>
+						<button class="btn_madal_close" onClick="closeDialog('dialog_search')"></button>
+					</li>
+				</ul>
+			</div>
+		</h5>
+		<div class="list_detail">
+			<ul>
+				<li>
+					<dt>보고서검색</dt>
+					<dd>
+						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 업무내용 등을 입력하세요."/>
+						<button class="btn_small_search ml5" onclick="fn_search()" style="float: left">조회</button>
+					</dd>
+				</li>
+			</ul>
+		</div>
+		<div class="main_tbl" style="height: 300px; overflow-y: auto">
+			<table class="tbl07">
+				<colgroup>
+					<col width="40px">
+					<col/>
+					<col width="23%">
+					<col width="30%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th></th>
+						<th>제목</th>
+						<th>출장지</th>
+						<th>출장일</th>
+					<tr>
+				</thead>
+				<tbody id="productLayerBody">
+					<tr>
+						<td colspan="4">검색해주세요</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<!-- 문서 검색 레이어 close-->

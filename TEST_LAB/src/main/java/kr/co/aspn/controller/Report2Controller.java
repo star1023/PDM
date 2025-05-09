@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -225,27 +226,84 @@ public class Report2Controller {
 	
 	@RequestMapping(value = "/businessTripInsert")
 	public String businessTripInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) {
-		return "/report2/businessTripInsert";
+		return "/report2/businessTripInsert2";
+	}
+	
+	@RequestMapping("/insertBusinessTripTmpAjax")
+	@ResponseBody
+	public Map<String, Object> insertBusinessTripTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			
+			//int tripIdx = 0;
+			int tripIdx = reportService.insertBusinessTripTmp(param, file);
+			returnMap.put("IDX", tripIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
 	}
 	
 	@RequestMapping("/insertBusinessTripAjax")
 	@ResponseBody
 	public Map<String, Object> insertBusinessTripAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
-			, @RequestParam(value = "fileType", required = false) List<String> fileType
-			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
-			System.err.println(fileType);
-			System.err.println(fileTypeText);
 			System.err.println(file);
-			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("fileType", fileType);
-			listMap.put("fileTypeText", fileTypeText);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+
 			//int tripIdx = 0;
 			int tripIdx = reportService.insertBusinessTrip(param, file);
 			returnMap.put("IDX", tripIdx);
@@ -261,16 +319,78 @@ public class Report2Controller {
 	public String businessTripView(HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model) throws Exception{
 		//lab_design 테이블 조회, lab_file 테이블 조회
 		Map<String, Object> businessTripData = reportService.selectBusinessTripData(param);
+		//2.lab_business_trip_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripUserList(param);
+		//3.lab_business_trip_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripAddInfoList(param);
+		//4.lab_business_trip_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripContentsList(param);
+		
 		model.addAttribute("businessTripData", businessTripData);
+		model.put("userList", userList);
+		model.put("infoList", infoList);
+		model.put("contentsList", contentsList);
+				
 		return "/report2/businessTripView";
 	}
 	
-	@RequestMapping(value = "/businessTripUpdateForm")
+	@RequestMapping(value = "/businessTripUpdate")
 	public String businessTripUpdateForm( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) throws Exception{
-		Map<String, Object> businessTripData = reportService.selectBusinessTripData(param);
 		//lab_design 테이블 조회, lab_file 테이블 조회
+		Map<String, Object> businessTripData = reportService.selectBusinessTripData(param);
+		//2.lab_business_trip_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripUserList(param);
+		//3.lab_business_trip_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripAddInfoList(param);
+		//4.lab_business_trip_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripContentsList(param);
+		
 		model.addAttribute("businessTripData", businessTripData);
+		model.put("userList", userList);
+		model.put("infoList", infoList);
+		model.put("contentsList", contentsList);
 		return "/report2/businessTripUpdate";		
+	}
+	
+	@RequestMapping("/updateBusinessTripTmpAjax")
+	@ResponseBody
+	public Map<String, Object> updateBusinessTripTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			
+			reportService.updateBusinessTripTmp(param, file);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
 	}
 	
 	@RequestMapping("/updateBusinessTripAjax")
@@ -282,16 +402,31 @@ public class Report2Controller {
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
-			System.err.println(fileType);
-			System.err.println(fileTypeText);
 			System.err.println(file);
-			HashMap<String, Object> listMap = new HashMap<String, Object>();
-			listMap.put("fileType", fileType);
-			listMap.put("fileTypeText", fileTypeText);
-			//int tripIdx = 0;
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			
 			reportService.updateBusinessTrip(param, file);
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
@@ -313,7 +448,22 @@ public class Report2Controller {
 	@RequestMapping("/selectBusinessTripPlanDataAjax")
 	@ResponseBody
 	public Map<String, Object> selectBusinessTripPlanDataAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
-		return reportService.selectBusinessTripPlanData(param);
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		//1.lab_business_trip_plan 조회
+		Map<String, Object> planData = reportService.selectBusinessTripPlanData(param);
+		//2.lab_business_trip_plan_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripPlanUserList(param);
+		//3.lab_business_trip_plan_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripPlanAddInfoList(param);
+		//4.lab_business_trip_plan_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripPlanContentsList(param);
+		
+		returnMap.put("planData", planData);
+		returnMap.put("userList", userList);
+		returnMap.put("infoList", infoList);
+		returnMap.put("contentsList", contentsList);
+		
+		return returnMap;
 	}
 	
 	@RequestMapping(value = "/businessTripPlanList")
@@ -340,6 +490,50 @@ public class Report2Controller {
 		return "/report2/businessTripPlanInsert2";
 	}
 	
+	@RequestMapping("/insertBusinessTripPlanTmpAjax")
+	@ResponseBody
+	public Map<String, Object> insertBusinessTripPlanTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			HashMap<String, Object> listMap = new HashMap<String, Object>();
+			//int tripIdx = 0;
+			int planIdx = reportService.insertBusinessTripPlanTmp(param, file);
+			returnMap.put("IDX", planIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
 	@RequestMapping("/insertBusinessTripPlanAjax")
 	@ResponseBody
 	public Map<String, Object> insertBusinessTripPlanAjax(HttpServletRequest request, HttpServletResponse response
@@ -361,6 +555,122 @@ public class Report2Controller {
 			//int tripIdx = 0;
 			int planIdx = reportService.insertBusinessTripPlan(param, file);
 			returnMap.put("IDX", planIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping(value = "/businessTripPlanView")
+	public String businessTripPlanView( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) {
+		//1.lab_business_trip_plan 조회
+		Map<String, Object> planData = reportService.selectBusinessTripPlanData(param);
+		//2.lab_business_trip_plan_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripPlanUserList(param);
+		//3.lab_business_trip_plan_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripPlanAddInfoList(param);
+		//4.lab_business_trip_plan_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripPlanContentsList(param);
+		
+		model.addAttribute("planData", planData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		model.addAttribute("contentsList", contentsList);
+		return "/report2/businessTripPlanView";
+	}
+	
+	@RequestMapping(value = "/businessTripPlanUpdate")
+	public String businessTripPlanUpdate( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) {
+		//1.lab_business_trip_plan 조회
+		Map<String, Object> planData = reportService.selectBusinessTripPlanData(param);
+		//2.lab_business_trip_plan_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripPlanUserList(param);
+		//3.lab_business_trip_plan_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripPlanAddInfoList(param);
+		//4.lab_business_trip_plan_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripPlanContentsList(param);
+		
+		model.addAttribute("planData", planData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		model.addAttribute("contentsList", contentsList);
+		return "/report2/businessTripPlanUpdate";
+	}
+	
+	@RequestMapping("/updateBusinessTripPlanTmpAjax")
+	@ResponseBody
+	public Map<String, Object> updateBusinessTripPlanTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			reportService.updateBusinessTripPlanTmp(param, file);			
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/updateBusinessTripPlanAjax")
+	@ResponseBody
+	public Map<String, Object> updateBusinessTripPlanAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray tripDestinationArr = (JSONArray) parser.parse((String)param.get("tripDestinationArr"));
+			JSONArray scheduleArr = (JSONArray) parser.parse((String)param.get("scheduleArr"));
+			JSONArray contentArr = (JSONArray) parser.parse((String)param.get("contentArr"));
+			JSONArray placeArr = (JSONArray) parser.parse((String)param.get("placeArr"));
+			JSONArray noteArr = (JSONArray) parser.parse((String)param.get("noteArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+			System.err.println(purposeArr);
+			System.err.println(tripDestinationArr);
+			System.err.println(scheduleArr);
+			System.err.println(contentArr);
+			System.err.println(placeArr);
+			System.err.println(noteArr);
+			reportService.updateBusinessTripPlan(param, file);			
 			returnMap.put("RESULT", "S");			
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
@@ -502,6 +812,10 @@ public class Report2Controller {
 	@ResponseBody
 	public Map<String, Object> updateSenseQualityTmpAjax(HttpServletRequest request, HttpServletResponse response
 			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "displayOrderArr", required = false) List<String> displayOrderArr
+			, @RequestParam(value = "orderArr", required = false) List<String> orderArr
+			, @RequestParam(value = "dataStatusArr", required = false) List<String> dataStatusArr
+			, @RequestParam(value = "contentsIdxArr", required = false) List<String> contentsIdxArr
 			, @RequestParam(required=false) MultipartFile... file) throws Exception {
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 		try {
@@ -515,34 +829,217 @@ public class Report2Controller {
 			Auth auth = AuthUtil.getAuth(request);
 			param.put("userId", auth.getUserId());
 			System.err.println(param);
+			System.err.println(displayOrderArr);
+			System.err.println(orderArr);
+			System.err.println(dataStatusArr);
+			System.err.println(contentsIdxArr);
 			System.err.println(contentsDivArr);
 			System.err.println(contentsResultArr);
 			System.err.println(contentsNoteArr);
 			System.err.println(resultArr);
 			System.err.println(file);
-			for( int i = 0 ; i < contentsDivArr.size() ; i++ ) {
-				MultipartFile multipartFile = file[i];
-				if( file != null && file.length > 0 ) {
-					if( !multipartFile.isEmpty() ) {
-						System.err.println(multipartFile.getOriginalFilename());
-					}
+			
+			HashMap<String, Object> dataListMap = new HashMap<String, Object>();
+			
+			for( int i = 0 ; i < displayOrderArr.size() ; i++ ) {
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(displayOrderArr.get(i));
+				if( dataMap == null ) {
+					dataMap = new HashMap<String, Object>();
+					dataMap.put("displayOrder", displayOrderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(i));
+					dataMap.put("contentsResult", contentsResultArr.get(i));
+					dataMap.put("contentsIdx", contentsIdxArr.get(i));
+					dataMap.put("dataStatus", dataStatusArr.get(i));
+					
+				} else {
+					dataMap.put("displayOrder", displayOrderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(i));
+					dataMap.put("contentsResult", contentsResultArr.get(i));
+					dataMap.put("contentsIdx", contentsIdxArr.get(i));
+					dataMap.put("dataStatus", dataStatusArr.get(i));
 				}
+				dataListMap.put(displayOrderArr.get(i), dataMap);
 			}
 			
+			HashMap<String, Object> fileMap = new HashMap<String, Object>();
+			for( int i = 0 ; i < orderArr.size() ; i++ ) {
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(orderArr.get(i));
+				if( dataMap == null ) {
+					dataMap = new HashMap<String, Object>();
+					dataMap.put("displayOrder", orderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsResult", contentsResultArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsIdx", "");
+					dataMap.put("dataStatus", "I");
+				} else {
+					dataMap.put("displayOrder", orderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsResult", contentsResultArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsIdx", "");
+					dataMap.put("dataStatus", "I");
+				}				
+				dataListMap.put(orderArr.get(i), dataMap);
+				fileMap.put(orderArr.get(i), file[i]);
+			}
+			
+			System.err.println(dataListMap);
+			System.err.println(fileMap);
+			
+			Iterator<String> keys = dataListMap.keySet().iterator();
+			
+			while( keys.hasNext() ) {
+				String key = keys.next();
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(key);
+				System.err.println(dataMap);
+			}
 			
 			HashMap<String, Object> listMap = new HashMap<String, Object>();			
-			
-			listMap.put("contentsDivArr", contentsDivArr);
-			listMap.put("contentsResultArr", contentsResultArr);
+			//listMap.put("displayOrderArr", displayOrderArr);
+			//listMap.put("orderArr", orderArr);
+			//listMap.put("dataStatusArr", dataStatusArr);
+			//listMap.put("contentsIdxArr", contentsIdxArr);
+			//listMap.put("contentsDivArr", contentsDivArr);
+			//listMap.put("contentsResultArr", contentsResultArr);
 			listMap.put("contentsNoteArr", contentsNoteArr);
 			listMap.put("resultArr", resultArr);
-			//int reportIdx = reportService.insertSenseQualityTmp(param, listMap, file);
-			//returnMap.put("IDX", reportIdx);
+			reportService.updateSenseQualityTmp(param, dataListMap, fileMap, listMap, file);			
 			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			e.printStackTrace();
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/updateSenseQualityAjax")
+	@ResponseBody
+	public Map<String, Object> updateSenseQualityAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(value = "displayOrderArr", required = false) List<String> displayOrderArr
+			, @RequestParam(value = "orderArr", required = false) List<String> orderArr
+			, @RequestParam(value = "dataStatusArr", required = false) List<String> dataStatusArr
+			, @RequestParam(value = "contentsIdxArr", required = false) List<String> contentsIdxArr
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray contentsDivArr = (JSONArray) parser.parse((String)param.get("contentsDivArr"));
+			JSONArray contentsResultArr = (JSONArray) parser.parse((String)param.get("contentsResultArr"));
+			JSONArray contentsNoteArr = (JSONArray) parser.parse((String)param.get("contentsNoteArr"));
+			JSONArray resultArr = (JSONArray) parser.parse((String)param.get("resultArr"));
+			
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(displayOrderArr);
+			System.err.println(orderArr);
+			System.err.println(dataStatusArr);
+			System.err.println(contentsIdxArr);
+			System.err.println(contentsDivArr);
+			System.err.println(contentsResultArr);
+			System.err.println(contentsNoteArr);
+			System.err.println(resultArr);
+			System.err.println(file);
+			
+			HashMap<String, Object> dataListMap = new HashMap<String, Object>();
+			
+			for( int i = 0 ; i < displayOrderArr.size() ; i++ ) {
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(displayOrderArr.get(i));
+				if( dataMap == null ) {
+					dataMap = new HashMap<String, Object>();
+					dataMap.put("displayOrder", displayOrderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(i));
+					dataMap.put("contentsResult", contentsResultArr.get(i));
+					dataMap.put("contentsIdx", contentsIdxArr.get(i));
+					dataMap.put("dataStatus", dataStatusArr.get(i));
+					
+				} else {
+					dataMap.put("displayOrder", displayOrderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(i));
+					dataMap.put("contentsResult", contentsResultArr.get(i));
+					dataMap.put("contentsIdx", contentsIdxArr.get(i));
+					dataMap.put("dataStatus", dataStatusArr.get(i));
+				}
+				dataListMap.put(displayOrderArr.get(i), dataMap);
+			}
+			
+			HashMap<String, Object> fileMap = new HashMap<String, Object>();
+			for( int i = 0 ; i < orderArr.size() ; i++ ) {
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(orderArr.get(i));
+				if( dataMap == null ) {
+					dataMap = new HashMap<String, Object>();
+					dataMap.put("displayOrder", orderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsResult", contentsResultArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsIdx", "");
+					dataMap.put("dataStatus", "I");
+				} else {
+					dataMap.put("displayOrder", orderArr.get(i));
+					dataMap.put("contentsDiv", contentsDivArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsResult", contentsResultArr.get(Integer.parseInt(orderArr.get(i))-1));
+					dataMap.put("contentsIdx", "");
+					dataMap.put("dataStatus", "I");
+				}				
+				dataListMap.put(orderArr.get(i), dataMap);
+				fileMap.put(orderArr.get(i), file[i]);
+			}
+			
+			System.err.println(dataListMap);
+			System.err.println(fileMap);
+			
+			Iterator<String> keys = dataListMap.keySet().iterator();
+			
+			while( keys.hasNext() ) {
+				String key = keys.next();
+				HashMap<String, Object> dataMap = (HashMap<String, Object>)dataListMap.get(key);
+				System.err.println(dataMap);
+			}
+			
+			HashMap<String, Object> listMap = new HashMap<String, Object>();			
+			//listMap.put("displayOrderArr", displayOrderArr);
+			//listMap.put("orderArr", orderArr);
+			//listMap.put("dataStatusArr", dataStatusArr);
+			//listMap.put("contentsIdxArr", contentsIdxArr);
+			//listMap.put("contentsDivArr", contentsDivArr);
+			//listMap.put("contentsResultArr", contentsResultArr);
+			listMap.put("contentsNoteArr", contentsNoteArr);
+			listMap.put("resultArr", resultArr);
+			reportService.updateSenseQuality(param, dataListMap, fileMap, listMap, file);			
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			e.printStackTrace();
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/deleteSenseQualityContenstsDataAjax")
+	@ResponseBody
+	public Map<String, Object> deleteSenseQualityContenstsDataAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			reportService.deleteSenseQualityContenstsData(param);
+			returnMap.put("RESULT", "S");
 		} catch( Exception e ) {
 			returnMap.put("RESULT", "E");
 			returnMap.put("MESSAGE",e.getMessage());
 		}
 		return returnMap;
+	}
+	
+	//여기부터 추가시작
+	@RequestMapping(value = "/marketResearchList")
+	public String marketResearchList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) {
+		return "/report2/marketResearchList";
+	}
+	
+	@RequestMapping(value = "/marketResearchInsert")
+	public String marketResearchInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) {
+		return "/report2/marketResearchInsert";
 	}
 }

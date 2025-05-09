@@ -272,6 +272,35 @@ public class Approval2Controller {
 		return "/approval2/designPopup";
 	}
 	
+	@RequestMapping("/businessTripPlanPopup")
+	public String businessTripPlanPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		//1.lab_business_trip_plan 조회
+		Map<String, Object> planData = reportService.selectBusinessTripPlanData(param);
+		//2.lab_business_trip_plan_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripPlanUserList(param);
+		//3.lab_business_trip_plan_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripPlanAddInfoList(param);
+		//4.lab_business_trip_plan_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripPlanContentsList(param);
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("planData", planData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		model.addAttribute("contentsList", contentsList);
+		model.addAttribute("paramVO", param);
+
+		return "/approval2/businessTripPlanPopup";
+	}
+	
 	@RequestMapping("/businessTripPopup")
 	public String businessTripPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
 		System.err.println(param);
@@ -280,15 +309,45 @@ public class Approval2Controller {
 		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
 		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
 		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		//1.lab_business_trip 조회
 		Map<String, Object> businessTripData = reportService.selectBusinessTripData(param);
+		//2.lab_business_trip_user 조회
+		List<Map<String, Object>> userList = reportService.selectBusinessTripUserList(param);
+		//3.lab_business_trip_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectBusinessTripAddInfoList(param);
+		//4.lab_business_trip_contents 조회
+		List<Map<String, Object>> contentsList = reportService.selectBusinessTripContentsList(param);
 		
 		model.addAttribute("apprHeader", apprHeader);
 		model.addAttribute("apprItem", apprItem);
 		model.addAttribute("refList", refList);
 		model.addAttribute("businessTripData", businessTripData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		model.addAttribute("contentsList", contentsList);
 		model.addAttribute("paramVO", param);
 
 		return "/approval2/businessTripPopup";
+	}
+	
+	@RequestMapping("/senseQualityReportPopup")
+	public String senseQualityReportPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> senseQualityData = reportService.selectSenseQualityData(param);
+		
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("senseQualityData", senseQualityData);
+		model.addAttribute("paramVO", param);
+
+		return "/approval2/senseQualityReportPopup";
 	}
 
 	@RequestMapping("/approvalSubmitAjax")

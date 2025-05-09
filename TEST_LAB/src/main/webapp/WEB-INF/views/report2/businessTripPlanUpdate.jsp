@@ -4,7 +4,7 @@
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="dateUtil" uri="/WEB-INF/tld/dateUtil.tld"%>
-<title>상품설계변경 보고서 생성</title>
+<title>출장계획보고서 생성</title>
 <style>
 .positionCenter{
 	position: absolute;
@@ -46,7 +46,7 @@
 				$("#tripStartDate").datepicker("option", "maxdate", selectedDate)
 			}
 		});
-		
+		/*
 		ClassicEditor
         .create(document.getElementById("tripContents"), {
 			language: 'ko',
@@ -66,10 +66,11 @@
     	}).catch( error => {
     		console.error( error );
     	});
-		
+		*/
 		fn.autoComplete($("#keyword"));
 	});
 	
+	/*
 	function CreateEditor(editorId) {
 	    ClassicEditor
 	        .create(document.getElementById(editorId), {
@@ -81,6 +82,7 @@
 	    		console.error( error );
 	    	});
 	}
+	*/
 	
 	/* 파일첨부 관련 함수 START */
 	var attatchFileArr = [];
@@ -228,21 +230,17 @@
 	}
 	
 	function fn_updateTmp() {
-		var tripContents = editor1.getData();
-		var tripCost = editor2.getData();
-		console.log(editor1.getData());
-		console.log(editor2.getData());
 		if( !chkNull($("#title").val()) ) {
 			alert("제목을 입력해 주세요.");
 			$("#title").focus();
 			return;
 		} else {
 			var formData = new FormData();
-			formData.append("idx",$("#idx").val());			
-			formData.append("planIdx",$("#planIdx").val());
+			formData.append("idx",$("#idx").val());
 			formData.append("currentStatus",$("#currentStatus").val());
 			formData.append("title",$("#title").val());
 			formData.append("tripType",$("#tripType").selectedValues()[0]);
+			formData.append("tripDiv",$("#tripDiv").selectedValues()[0]);
 			
 			var deptArr = new Array();
 			var positionArr = new Array();
@@ -272,6 +270,7 @@
 			formData.append("tripStartDate",$("#tripStartDate").val());
 			formData.append("tripEndDate",$("#tripEndDate").val());
 			
+			//tripDestination
 			var tripDestinationElements = document.querySelectorAll('input[name="tripDestination"]');
 			var tripDestinationArr = new Array();
 			for (var tripDestinationElement of tripDestinationElements) {
@@ -280,7 +279,6 @@
 				}				
 			}			
 			formData.append("tripDestinationArr",JSON.stringify(tripDestinationArr));
-			formData.append("tripTransit",$("#tripTransit").val());
 			
 			var scheduleArr = new Array();
 			var contentArr = new Array();
@@ -297,17 +295,17 @@
 					contentArr.push(itemContent);
 					placeArr.push(itemPlace);
 					noteArr.push(itemNote);
-				}				
+				}
 			});
 			formData.append("scheduleArr",JSON.stringify(scheduleArr));
 			formData.append("contentArr",JSON.stringify(contentArr));
 			formData.append("placeArr",JSON.stringify(placeArr));
 			formData.append("noteArr",JSON.stringify(noteArr));
 			
-			formData.append("tripContents",tripContents);
-			formData.append("tripCost",tripCost);
-			formData.append("overReason",$("#overReason").val());
+			formData.append("tripCost",$("#tripCost").val());
+			formData.append("calMethod",$("#calMethod").val());
 			formData.append("tripEffect",$("#tripEffect").val());
+			formData.append("tripTransit",$("#tripTransit").val());
 			formData.append("docType", $("#docType").val());
 			formData.append("status", "TMP");
 			
@@ -323,7 +321,7 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/updateBusinessTripTmpAjax";
+			URL = "../report2/updateBusinessTripPlanTmpAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -333,30 +331,27 @@
 		        cache: false,
 				dataType:"json",
 				success:function(result) {
-					if(result.RESULT == 'S') {
+					console.log(result);
+					if(data.RESULT == 'S') {
 						alert("임시저장되었습니다.");
 						fn_goList();
 						return;
 					} else {
-						alert("오류가 발생하였습니다."+result.MESSAGE);
+						alert("오류가 발생하였습니다."+data.MESSAGE);
 						fn_goList();
 						return;
 					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+					fn_goList();
 				}			
 			});
-			
-		}
+		}			
 	}
 	
 	//입력확인
 	function fn_update(){
-		var tripContents = editor1.getData();
-		var tripCost = editor2.getData();
-		console.log(editor1.getData());
-		console.log(editor2.getData());
 		if( !chkNull($("#title").val()) ) {
 			alert("제목을 입력해 주세요.");
 			$("#title").focus();
@@ -365,7 +360,7 @@
 			alert("출장일을 입력해 주세요.");
 			$("#tripStartDate").focus();
 			return;
-		} else if( !chkNull(tripCost) ) {
+		} else if( !chkNull($("#tripCost").val()) ) {
 			alert("경비를 입력해주세요.");		
 			return;
 		} /* else if( attatchFileArr.length == 0 ) {
@@ -373,11 +368,11 @@
 			return;			
 		}  */else {
 			var formData = new FormData();
-			formData.append("idx",$("#idx").val());			
-			formData.append("planIdx",$("#planIdx").val());
+			formData.append("idx",$("#idx").val());
 			formData.append("currentStatus",$("#currentStatus").val());
 			formData.append("title",$("#title").val());
 			formData.append("tripType",$("#tripType").selectedValues()[0]);
+			formData.append("tripDiv",$("#tripDiv").selectedValues()[0]);
 			
 			var deptArr = new Array();
 			var positionArr = new Array();
@@ -391,13 +386,14 @@
 				positionArr.push(itemPosition);
 				nameArr.push(itemNmae);
 			});
+			formData.append("deptArr",JSON.stringify(deptArr));
+			formData.append("positionArr",JSON.stringify(positionArr));
+			formData.append("nameArr",JSON.stringify(nameArr));
+			
 			if( deptArr.length == 0 || positionArr.length == 0 || nameArr.length == 0 ) {
 				alert("출장자를 입력해주세요.");
 				return;
 			}
-			formData.append("deptArr",JSON.stringify(deptArr));
-			formData.append("positionArr",JSON.stringify(positionArr));
-			formData.append("nameArr",JSON.stringify(nameArr));
 			
 			var purposeElements = document.querySelectorAll('input[name="purpose"]');
 			var purposeArr = new Array();
@@ -405,7 +401,8 @@
 				if( purposeElement.value != '' ) {
 					purposeArr.push(purposeElement.value);	
 				}
-			}	
+			}
+			
 			if( purposeArr.length == 0 ) {
 				alert("출장목적을 입력해주세요.");
 				return;
@@ -415,19 +412,20 @@
 			formData.append("tripStartDate",$("#tripStartDate").val());
 			formData.append("tripEndDate",$("#tripEndDate").val());
 			
+			//tripDestination
 			var tripDestinationElements = document.querySelectorAll('input[name="tripDestination"]');
 			var tripDestinationArr = new Array();
 			for (var tripDestinationElement of tripDestinationElements) {
 				if( tripDestinationElement.value != '' ) {
 					tripDestinationArr.push(tripDestinationElement.value);
 				}				
-			}		
+			}	
 			if( tripDestinationArr.length == 0 ) {
 				alert("출장지를 입력해주세요.");
 				return;
 			}
+			
 			formData.append("tripDestinationArr",JSON.stringify(tripDestinationArr));
-			formData.append("tripTransit",$("#tripTransit").val());
 			
 			var scheduleArr = new Array();
 			var contentArr = new Array();
@@ -444,21 +442,23 @@
 					contentArr.push(itemContent);
 					placeArr.push(itemPlace);
 					noteArr.push(itemNote);
-				}				
+				}
 			});
+			
 			if( scheduleArr.length == 0 || contentArr.length == 0 || placeArr.length == 0 || noteArr.length == 0 ) {
 				alert("업무수행 내용을 입력해주세요.");
 				return;
 			}
+			
 			formData.append("scheduleArr",JSON.stringify(scheduleArr));
 			formData.append("contentArr",JSON.stringify(contentArr));
 			formData.append("placeArr",JSON.stringify(placeArr));
 			formData.append("noteArr",JSON.stringify(noteArr));
 			
-			formData.append("tripContents",tripContents);
-			formData.append("tripCost",tripCost);
-			formData.append("overReason",$("#overReason").val());
+			formData.append("tripCost",$("#tripCost").val());
+			formData.append("calMethod",$("#calMethod").val());
 			formData.append("tripEffect",$("#tripEffect").val());
+			formData.append("tripTransit",$("#tripTransit").val());
 			formData.append("docType", $("#docType").val());
 			formData.append("status", "REG");
 			
@@ -474,7 +474,7 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/updateBusinessTripAjax";
+			URL = "../report2/updateBusinessTripPlanAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -535,30 +535,33 @@
 	}
 
 	function fn_goList() {
-		location.href = '/report2/businessTripList';
-	}	
+		location.href = '/report2/businessTripPlanList';
+	}
 	
-	function fn_removeTempFile(element, tempId){
-		//서버의 파일을 삭제한다.
-		var URL = '/file/deleteFile2Ajax';
-		$.ajax({
-			type:"POST",
-			url:URL,
-			data: {
-				"fileIdx": tempId
-			},
-			dataType:"json",
-			success:function(result) {
-				if( result.RESULT == 'S' ) {
-					$(element).parent().remove();
-				} else {
-					alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+	function fn_apprSubmit(){
+		if( $("#apprLine option").length == 0 ) {
+			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
+			return;
+		} else {
+			var apprTxtFull = "";
+			$("#apprLine").selectedTexts().forEach(function( item, index ){
+				console.log(item);
+				if( apprTxtFull != "" ) {
+					apprTxtFull += " > ";
 				}
-			},
-			error:function(request, status, errorThrown){
-				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
-			}			
-		});
+				apprTxtFull += item;
+			});
+			$("#apprTxtFull").val(apprTxtFull);
+			var refTxtFull = "";
+			$("#refLine").selectedTexts().forEach(function( item, index ){
+				if( refTxtFull != "" ) {
+					refTxtFull += ", ";
+				}
+				refTxtFull += item;
+			});
+			$("#refTxtFull").html("&nbsp;"+refTxtFull);
+		}
+		closeDialog('approval_dialog');
 	}
 	
 	function fn_addCol(type) {
@@ -592,41 +595,40 @@
 		})
 	}
 	
-	function fn_apprSubmit(){
-		if( $("#apprLine option").length == 0 ) {
-			alert("등록된 결재라인이 없습니다. 결재 라인 추가 후 결재상신 해 주세요.");
-			return;
-		} else {
-			var apprTxtFull = "";
-			$("#apprLine").selectedTexts().forEach(function( item, index ){
-				console.log(item);
-				if( apprTxtFull != "" ) {
-					apprTxtFull += " > ";
+	
+	function fn_removeTempFile(element, tempId){
+		//서버의 파일을 삭제한다.
+		var URL = '/file/deleteFile2Ajax';
+		$.ajax({
+			type:"POST",
+			url:URL,
+			data: {
+				"fileIdx": tempId
+			},
+			dataType:"json",
+			success:function(result) {
+				if( result.RESULT == 'S' ) {
+					$(element).parent().remove();
+				} else {
+					alert("오류가 발생하였습니다.\n"+result.MESSAGE);
 				}
-				apprTxtFull += item;
-			});
-			$("#apprTxtFull").val(apprTxtFull);
-			var refTxtFull = "";
-			$("#refLine").selectedTexts().forEach(function( item, index ){
-				if( refTxtFull != "" ) {
-					refTxtFull += ", ";
-				}
-				refTxtFull += item;
-			});
-			$("#refTxtFull").html("&nbsp;"+refTxtFull);
-		}
-		closeDialog('approval_dialog');
+			},
+			error:function(request, status, errorThrown){
+				alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+			}			
+		});
 	}
+	
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
-		출장결과 보고서&nbsp;&nbsp;
+		출장계획 보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;<a href="#none">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 		<h2 style="position:relative">
-			<span class="title_s">Design Change Report</span><span class="title">출장결과보고서</span>
+			<span class="title_s">Design Change Report</span><span class="title">출장계획보고서</span>
 			<div class="top_btn_box">
 				<ul>
 					<li>
@@ -652,27 +654,34 @@
 						<tr>
 							<th style="border-left: none;">제목</th>
 							<td colspan="3">
-								<input type="hidden" name="idx" id="idx" value="${businessTripData.data.TRIP_IDX}"/>
-								<input type="hidden" name="planIdx" id="planIdx" value="${businessTripData.data.PLAN_IDX}"/>
-								<input type="hidden" name="currentStatus" id="currentStatus" value="${businessTripData.data.STATUS}"/>
-								<input type="text" name="title" id="title" style="width: 90%;" class="req" value="${businessTripData.data.TITLE}"/>
+								<input type="hidden" name="idx" id="idx" value="${planData.data.PLAN_IDX}">
+								<input type="hidden" name="currentStatus" id="currentStatus" value="${planData.data.STATUS}"/>
+								<input type="text" name="title" id="title" style="width: 90%;" class="req" value="${planData.data.TITLE}"/>
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">출장구분</th>
 							<td colspan="3">
-								<div class="selectbox" style="width:100px;">  
-									<label for="tripType" id="tripType_label">${businessTripData.data.TRIP_TYPE_TXT}</label> 
+								<div class="selectbox" style="width:150px;">  
+									<label for="tripType" id="tripType_label">${planData.data.TRIP_TYPE_TXT}</label> 
 									<select name="tripType" id="tripType">
 										<option value="">선택</option>
-										<option value="I" ${businessTripData.data.TRIP_TYPE == 'I' ? 'selected' : ''}>국내</option>
-										<option value="O" ${businessTripData.data.TRIP_TYPE == 'O' ? 'selected' : ''}>해외</option>
+										<option value="I" ${planData.data.TRIP_TYPE == 'I' ? 'selected' : ''}>국내</option>
+										<option value="O" ${planData.data.TRIP_TYPE == 'O' ? 'selected' : ''}>해외</option>
+									</select>
+								</div>
+								<div class="selectbox" style="width:150px;margin-left:10px;">  
+									<label for="tripDiv" id="tripDiv_label">${planData.data.TRIP_DIV_TXT}</label> 
+									<select name="tripDiv" id="tripDiv">
+										<option value="">선택</option>
+										<option value="T" ${planData.data.TRIP_DIV == 'T' ? 'selected' : ''}>출장</option>
+										<option value="R" ${planData.data.TRIP_DIV == 'R' ? 'selected' : ''}>시장조사</option>
 									</select>
 								</div>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장자<span onClick="fn_addCol('user')" id="span_user">(+)</span></th>
+							<th style="border-left: none;">출장자<span onClick="fn_addCol('user')">(+)</span></th>
 							<td colspan="3">
 								<table width="100%">
 									<tr>
@@ -683,7 +692,7 @@
 									<tbody id="user_tbody" name="user_tbody">
 										<c:set var="count" value="0" />
 										<c:forEach items="${userList}" var="userList" varStatus="status">
-										<c:set var="count" value="${count + 1}" />
+										<c:set var="count" value="${count + 1}" />										 
 										<tr id="user_tr_${status.count}">
 											<td>
 												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" value="${userList.DEPT}"/>
@@ -696,7 +705,8 @@
 											</td>
 										</tr>
 										</c:forEach>
-										<c:if test="${count == 0 }">
+									</tbody>
+									<c:if test="${count == 0 }">
 										<tr id="user_tr_1">
 											<td>
 												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
@@ -709,7 +719,6 @@
 											</td>
 										</tr>
 									</c:if>
-									</tbody>
 									<tbody id="user_tbody_temp" name="user_tbody_temp" style="display:none">
 										<tr id="user_tmp_tr_1" style="display:none">
 											<td>
@@ -727,7 +736,7 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장목적<span onClick="fn_addCol('purpose')" id="span_purpose">(+)</span></th>
+							<th style="border-left: none;">출장목적<span onClick="fn_addCol('purpose')">(+)</span></th>
 							<td colspan="3">
 								<table width="100%" border="0">
 									<tbody id="purpose_tbody" name="purpose_tbody">
@@ -741,11 +750,11 @@
 											</td>
 										</tr>
 										</c:if>
-										</c:forEach>										
+										</c:forEach>
 										<c:if test="${count == 0 }">
-											<tr id="purpose_tr_1">
+										<tr id="purpose_tr_1">
 											<td>
-												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req"/>
+												<input type="text" name="purpose" id="purpose" style="width: 100%;" class="req" />
 											</td>
 										</tr>
 										</c:if>
@@ -763,13 +772,13 @@
 						<tr>
 							<th style="border-left: none;">출장기간</th>
 							<td colspan="3">
-								<input type="text" name="tripStartDate" id="tripStartDate" style="width: 120px;" class="req" value="${businessTripData.data.TRIP_START_DATE}"/>
+								<input type="text" name="tripStartDate" id="tripStartDate" style="width: 120px;" class="req" value="${planData.data.TRIP_START_DATE}"/>
 								&nbsp;~&nbsp;
-								<input type="text" name="tripEndDate" id="tripEndDate" style="width: 120px;" class="req" value="${businessTripData.data.TRIP_END_DATE}"/>
+								<input type="text" name="tripEndDate" id="tripEndDate" style="width: 120px;" class="req" value="${planData.data.TRIP_END_DATE}"/>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장지<span onClick="fn_addCol('destination')" id="span_destination">(+)</span></th>
+							<th style="border-left: none;">출장지<span onClick="fn_addCol('destination')">(+)</span></th>
 							<td>
 								
 								<table width="100%" border="0">
@@ -778,7 +787,7 @@
 										<c:forEach items="${infoList}" var="infoList" varStatus="status">
 										<c:if test="${infoList.INFO_TYPE == 'DEST' }">
 										<c:set var="count" value="${count + 1}" />
-										<tr id="destination_tr_1">
+										<tr id="destination_tr_${status.count}">
 											<td>
 												<input type="text"  style="width:95%; float: left" class="req" name="tripDestination" id="tripDestination" placeholder="" value="${infoList.INFO_TEXT}"/>
 											</td>
@@ -804,11 +813,11 @@
 							</td>
 							<th style="border-left: none;">경유지</th>
 							<td>
-								<input type="text"  style="width:95%; float: left" class="req" name="tripTransit" id="tripTransit" placeholder="" value="${businessTripData.data.TRIP_TRANSIT}"/>
+								<input type="text"  style="width:95%; float: left" class="req" name="tripTransit" id="tripTransit" placeholder=""/>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장내용<span onClick="fn_addCol('contents')" id="span_contents">(+)</span></th>
+							<th style="border-left: none;">업무수행내용<span onClick="fn_addCol('contents')">(+)</span></th>
 							<td colspan="3">
 								<table width="100%">
 									<tr>
@@ -818,9 +827,9 @@
 										<td>비고</td>
 									</tr>
 									<tbody id="contents_tbody" name="contents_tbody">
-										<c:set var="count" value="0" />
-										<c:forEach items="${contentsList}" var="contentsList" varStatus="status">
-										<c:set var="count" value="${count + 1}" />
+									<c:set var="count" value="0" />
+									<c:forEach items="${contentsList}" var="contentsList" varStatus="status">
+									<c:set var="count" value="${count + 1}" />
 										<tr id="contents_tr_${status.count}">
 											<td>
 												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" value="${contentsList.SCHEDULE}"/>
@@ -835,8 +844,8 @@
 												<input type="text" name="note" id="note" style="width: 100%;" class="req" value="${contentsList.NOTE}"/>
 											</td>
 										</tr>
-										</c:forEach>
-										<c:if test="${count == 0 }">
+									</c:forEach>
+									<c:if test="${count == 0 }">
 										<tr id="contents_tr_1">
 											<td>
 												<input type="text" name="schedule" id="schedule" style="width: 100%;" class="req" />
@@ -873,30 +882,23 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">업무수행내용</th>
+							<th style="border-left: none;">예상경비</th>
 							<td colspan="3">
-								<textarea rows='5' cols="130" name="tripContents" id="tripContents" style="width: 466px; height: 40px; display: none;">${businessTripData.data.TRIP_CONTENTS}</textarea>
+								<textarea rows='2' cols="130" name="tripCost" id="tripCost">${planData.data.TRIP_COST}</textarea>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">경비</th>
+							<th style="border-left: none;">산출식</th>
 							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripCost" id="tripCost" style="width: 466px; height: 40px; display: none;">${businessTripData.data.TRIP_COST}</textarea>
+								<textarea rows='2' cols="130" name="calMethod" id="calMethod">${planData.data.CAL_METHOD}</textarea>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">초과사유</th>
+							<th style="border-left: none;">기대효과</th>
 							<td colspan="3">
-								<textarea rows='2' cols="130" name="overReason" id="overReason">${businessTripData.data.OVER_REASON}</textarea>
+								<textarea rows='2' cols="130" name="tripEffect" id="tripEffect">${planData.data.TRIP_EFFECT}</textarea>
 							</td>
-						</tr>
-						<tr>
-							<th style="border-left: none;">출장효과</th>
-							<td colspan="3">
-								<textarea rows='2' cols="130" name="tripEffect" id="tripEffect">${businessTripData.data.TRIP_EFFECT}</textarea>
-							</td>
-						</tr>
-						<c:if test="${businessTripData.data.STATUS == 'TMP' || businessTripData.data.STATUS == 'REG'}">
+						</tr>						
 						<tr>
 							<th style="border-left: none;">결재라인</th>
 							<td colspan="3">
@@ -910,7 +912,6 @@
 								<div id="refTxtFull" name="refTxtFull"></div>								
 							</td>
 						</tr>
-						</c:if>			
 					</tbody>
 				</table>
 			</div>
@@ -926,7 +927,7 @@
 					<li class="point_img">
 						<dt>첨부파일</dt><dd>
 							<ul id="temp_attatch_file">
-								<c:forEach items="${businessTripData.fileList}" var="fileList" varStatus="status">
+								<c:forEach items="${planData.fileList}" var="fileList" varStatus="status">
 									<li><a href="#none" onclick="fn_removeTempFile(this, '${fileList.FILE_IDX}')"><img src="/resources/images/icon_del_file.png"></a>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
 								</c:forEach>
 							</ul>
@@ -936,7 +937,8 @@
 					</li>
 				</ul>
 			</div>
-							
+				
+				
 			<div class="main_tbl">
 				<div class="btn_box_con5">
 					<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
@@ -944,6 +946,7 @@
 				<div class="btn_box_con4">
 					<!-- 
 					<button class="btn_admin_red">임시/템플릿저장</button>
+					<button class="btn_admin_navi">임시저장</button>
 					 -->
 					<button class="btn_admin_navi" onclick="fn_updateTmp()">임시저장</button> 
 					<button class="btn_admin_sky" onclick="fn_update()">저장</button>
@@ -951,6 +954,7 @@
 				</div>
 				<hr class="con_mode" />
 			</div>
+			
 		</div>
 	</section>
 </div>
@@ -1029,7 +1033,7 @@
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="TRIP"/>
+	<input type="hidden" id="docType" value="PLAN"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />
@@ -1040,7 +1044,7 @@
  	</select>
 	<div class="modal" style="	margin-left:-500px;width:1000px;height: 550px;margin-top:-300px">
 		<h5 style="position:relative">
-			<span class="title">출장결과보고서 결재 상신</span>
+			<span class="title">출장계획보고서 결재 상신</span>
 			<div  class="top_btn_box">
 				<ul><li><button class="btn_madal_close" onClick="apprClass.apprCancel(); return false;"></button></li></ul>
 			</div>

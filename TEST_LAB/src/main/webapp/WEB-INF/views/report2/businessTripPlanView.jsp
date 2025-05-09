@@ -4,7 +4,7 @@
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="dateUtil" uri="/WEB-INF/tld/dateUtil.tld"%>
-<title>상품설계변경 보고서 생성</title>
+<title>출장계획보고서</title>
 <style>
 .positionCenter{
 	position: absolute;
@@ -26,7 +26,7 @@
 	}
 	
 	function fn_update(idx) {
-		location.href = '/report2/businessTripUpdate?idx='+idx;
+		location.href = '/report2/businessTripPlanUpdate?idx='+idx;
 	}
 	
 	function downloadFile(idx){
@@ -39,11 +39,11 @@
 			return;
 		} else {
 			var formData = new FormData();
-			formData.append("docIdx",'${businessTripData.data.TRIP_IDX}');
+			formData.append("docIdx",'${planData.data.PLAN_IDX}');
 			formData.append("apprComment", $("#apprComment").val());
 			formData.append("apprLine", $("#apprLine").selectedValues());
 			formData.append("refLine", $("#refLine").selectedValues());
-			formData.append("title", '${businessTripData.data.TITLE}');
+			formData.append("title", '${planData.data.TITLE}');
 			formData.append("docType", $("#docType").val());
 			formData.append("status", "N");
 			var URL = "../approval2/insertApprAjax";
@@ -75,17 +75,17 @@
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
-		출장결과 보고서&nbsp;&nbsp;
+		출장계획 보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;보고서&nbsp;&nbsp;
 		<img src="/resources/images/icon_path.png" style="vertical-align: middle" />&nbsp;&nbsp;<a href="#none">${strUtil:getSystemName()}</a>
 	</span>
 	<section class="type01">
 		<h2 style="position:relative">
-			<span class="title_s">Design Change Report</span><span class="title">출장결과보고서</span>
+			<span class="title_s">Business Trip Plan Report</span><span class="title">출장계획 보고서</span>
 			<div class="top_btn_box">
 				<ul>
 					<li>
-						<c:if test="${businessTripData.data.STATUS == 'REG' }">
+						<c:if test="${planData.data.STATUS == 'REG' }">
 							<button class="btn_small_search ml5" onclick="apprClass.openApprovalDialog()" style="float: left">결재</button>
 						</c:if>
 					</li>
@@ -109,13 +109,13 @@
 						<tr>
 							<th style="border-left: none;">제목</th>
 							<td colspan="3">
-								${businessTripData.data.TITLE}
+								${planData.data.TITLE}
 							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">출장구분</th>
 							<td colspan="3">
-								${businessTripData.data.TRIP_TYPE_TXT}
+								${planData.data.TRIP_TYPE_TXT} / ${planData.data.TRIP_DIV_TXT}
 							</td>
 						</tr>
 						<tr>
@@ -146,7 +146,7 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장목적</th>
+							<th style="border-left: none;">출장목적<span onClick="fn_addCol('purpose')">(+)</span></th>
 							<td colspan="3">
 								<c:forEach items="${infoList}" var="infoList" varStatus="status">
 								<c:if test="${infoList.INFO_TYPE == 'PUR' }">
@@ -158,9 +158,9 @@
 						<tr>
 							<th style="border-left: none;">출장기간</th>
 							<td colspan="3">
-								${businessTripData.data.TRIP_START_DATE}
+								${planData.data.TRIP_START_DATE}
 								&nbsp;~&nbsp;
-								${businessTripData.data.TRIP_END_DATE}
+								${planData.data.TRIP_END_DATE}
 							</td>
 						</tr>
 						<tr>
@@ -174,11 +174,11 @@
 							</td>
 							<th style="border-left: none;">경유지</th>
 							<td>
-								${businessTripData.data.TRIP_TRANSIT}								
+								${planData.data.TRIP_TRANSIT}								
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">출장내용</th>
+							<th style="border-left: none;">업무수행내용<span onClick="fn_addCol('contents')">(+)</span></th>
 							<td colspan="3">
 								<table width="100%">
 									<tr>
@@ -209,29 +209,23 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">업무수행내용</th>
+							<th style="border-left: none;">예상경비</th>
 							<td colspan="3">
-								${businessTripData.data.TRIP_CONTENTS}
+								<p style="white-space: pre-line; text-align:left;">${planData.data.TRIP_COST}</p>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">경비</th>
+							<th style="border-left: none;">산출식</th>
 							<td colspan="3">
-								<p style="white-space: pre-line; text-align:left;">${businessTripData.data.TRIP_COST}</p>
+								<p style="white-space: pre-line; text-align:left;">${planData.data.CAL_METHOD}</p>
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">초과사유</th>
+							<th style="border-left: none;">기대효과</th>
 							<td colspan="3">
-								<p style="white-space: pre-line; text-align:left;">${businessTripData.data.OVER_REASON}</p>
+								<p style="white-space: pre-line; text-align:left;">${planData.data.TRIP_EFFECT}</p>
 							</td>
 						</tr>
-						<tr>
-							<th style="border-left: none;">출장효과</th>
-							<td colspan="3">
-								<p style="white-space: pre-line; text-align:left;">${businessTripData.data.TRIP_EFFECT}</p>
-							</td>
-						</tr>						
 					</tbody>
 				</table>
 			</div>
@@ -242,7 +236,7 @@
 					<li class="point_img">
 						<dt>첨부파일</dt><dd>
 							<ul>
-								<c:forEach items="${businessTripData.fileList}" var="fileList" varStatus="status">
+								<c:forEach items="${planData.fileList}" var="fileList" varStatus="status">
 									<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
 								</c:forEach>
 							</ul>
@@ -256,8 +250,8 @@
 					
 				</div>
 				<div class="btn_box_con4">
-					<c:if test="${businessTripData.data.STATUS == 'TMP'}">
-						<button class="btn_admin_sky" onclick="fn_update('${businessTripData.data.TRIP_IDX}')">수정</button>
+					<c:if test="${planData.data.STATUS == 'TMP'}">
+						<button class="btn_admin_sky" onclick="fn_update('${planData.data.PLAN_IDX}')">수정</button>
 					</c:if>
 					<button class="btn_admin_gray" onClick="fn_goList();" style="width: 120px;">목록</button>
 				</div>
@@ -341,7 +335,7 @@
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="TRIP"/>
+	<input type="hidden" id="docType" value="PLAN"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />
@@ -352,7 +346,7 @@
  	</select>
 	<div class="modal" style="	margin-left:-500px;width:1000px;height: 550px;margin-top:-300px">
 		<h5 style="position:relative">
-			<span class="title">출장결과보고서 결재 상신</span>
+			<span class="title">개발완료보고서 결재 상신</span>
 			<div  class="top_btn_box">
 				<ul><li><button class="btn_madal_close" onClick="apprClass.apprCancel(); return false;"></button></li></ul>
 			</div>

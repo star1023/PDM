@@ -44,8 +44,12 @@
 				url = "/approval2/menuPopup?apprIdx="+apprIdx+"&idx="+docIdx;
 			} else if( docType == 'DESIGN' ) {
 				url = "/approval2/designPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'PLAN' ) {
+				url = "/approval2/businessTripPlanPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'TRIP' ) {
 				url = "/approval2/businessTripPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'SENSE_QUALITY' ) {
+				url = "/approval2/senseQualityReportPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			}
 		} else if( $("#listType").val() == 'myApprList' ) {
 			mode = "width=1100, height=600, left=100, top=10, scrollbars=yes";
@@ -55,8 +59,12 @@
 				url = "";
 			} else if( docType == 'DESIGN' ) {
 				url = "/approval2/designPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'PLAN' ) {
+				url = "/approval2/businessTripPlanPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'TRIP' ) {
 				url = "/approval2/businessTripPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'SENSE_QUALITY' ) {
+				url = "/approval2/senseQualityReportPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			}
 		} else if( $("#listType").val() == 'myRefList' ) {
 			mode = "width=1100, height=600, left=100, top=10, scrollbars=yes";
@@ -64,6 +72,14 @@
 				url = "";
 			} else if( docType == 'MENU' ) {
 				url = "";
+			} else if( docType == 'DESIGN' ) {
+				url = "";
+			} else if( docType == 'PLAN' ) {
+				url = "";
+			} else if( docType == 'TRIP' ) {
+				url = "";
+			} else if( docType == 'SENSE_QUALITY' ) {
+				url = "";	
 			}
 		} else if( $("#listType").val() == 'myCompList' ) {
 			mode = "width=1100, height=600, left=100, top=10, scrollbars=yes";
@@ -71,6 +87,14 @@
 				url = "";
 			} else if( docType == 'MENU' ) {
 				url = "";
+			} else if( docType == 'DESIGN' ) {
+				url = "";	
+			} else if( docType == 'PLAN' ) {
+				url = "";
+			} else if( docType == 'TRIP' ) {
+				url = "";
+			} else if( docType == 'SENSE_QUALITY' ) {
+				url = "";	
 			}
 		}
 		

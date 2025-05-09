@@ -86,13 +86,15 @@ table{font-size: 12px}
 			}
 			
 			var fileElements = document.querySelectorAll('input[name="file"]');
-			console.log(fileElements);
 			var fileArr = new Array();
+			var orderArr = new Array();
 			count = 1;
 			for (var fileElement of fileElements) {
 				if( contentsDiv*3 >= count) {
+					//var order = fileElement.dataset.order;
 					if( fileElement.value != '' ) {
-						formData.append('file', fileElement.files[0]);						
+						formData.append('file', fileElement.files[0]);
+						orderArr.push(fileElement.dataset.order);
 					} else {
 						formData.append('file', '');
 					}
@@ -101,6 +103,8 @@ table{font-size: 12px}
 				}
 				count++;
 			}
+			
+			formData.append("orderArr",orderArr);
 			
 			var contentsResultElements = document.querySelectorAll('textarea[name="contentsResult"]');
 			var contentsResultArr = new Array();
@@ -173,13 +177,38 @@ table{font-size: 12px}
 			
 			var displayOrders = document.querySelectorAll('input[name="displayOrder"]');
 			var contentsIdxs = document.querySelectorAll('input[name="contentsIdx"]');
+			var dataStatuses = document.querySelectorAll('input[name="dataStatus"]');
 			
-			console.log(displayOrders);
-			console.log(contentsIdxs);
+			var displayOrderArr = new Array();
+			for (var displayOrder of displayOrders) {
+				displayOrderArr.push(displayOrder.value);
+			}
 			
+			var contentsIdxArr = new Array();
+			for (var contentsIdx of contentsIdxs) {
+				contentsIdxArr.push(contentsIdx.value);
+			}
+			
+			var dataStatusArr = new Array();
+			for (var dataStatus of dataStatuses) {
+				dataStatusArr.push(dataStatus.value);
+			}
+			
+			for (var contentsNoteElement of contentsNoteElements) {
+				if( contentsDiv >= count ) {
+					contentsNoteArr.push(contentsNoteElement.value);					
+				} else {
+					break;
+				}				
+				count++;
+			}
+			
+			formData.append("displayOrderArr",displayOrderArr);
+			formData.append("contentsIdxArr",contentsIdxArr);
+			formData.append("dataStatusArr",dataStatusArr);
 			
 			var URL = "../report2/updateSenseQualityTmpAjax";
-			/*
+
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -189,13 +218,18 @@ table{font-size: 12px}
 		        cache: false,
 				dataType:"json",
 				success:function(result) {
-					console.log(result);
+					if( result.RESULT == 'S' ) {
+						alert("임시저장 되었습니다.");
+						fn_goList();
+					} else {
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 				}			
 			});
-			*/
+
 		}
 	}
 	//입력확인
@@ -244,16 +278,24 @@ table{font-size: 12px}
 			
 			var fileElements = document.querySelectorAll('input[name="file"]');
 			var fileArr = new Array();
+			var orderArr = new Array();
 			count = 1;
 			for (var fileElement of fileElements) {
 				if( contentsDiv*3 >= count) {
-					fileArr.push(fileElement.value);
-					formData.append('file', fileElement.files[0]);
+					//var order = fileElement.dataset.order;
+					if( fileElement.value != '' ) {
+						formData.append('file', fileElement.files[0]);
+						orderArr.push(fileElement.dataset.order);
+					} else {
+						formData.append('file', '');
+					}
 				} else {
 					break;
 				}
 				count++;
 			}
+			
+			formData.append("orderArr",orderArr);
 			
 			var contentsResultElements = document.querySelectorAll('textarea[name="contentsResult"]');
 			var contentsResultArr = new Array();
@@ -306,10 +348,10 @@ table{font-size: 12px}
 				}
 			});
 			
-			if( inputCheckCnt > 0 ) {
-				alert("세부내용은 구분, 사진, 결과를 입력하여야 합니다.");
-				return;
-			}
+			//if( inputCheckCnt > 0 ) {
+			//	alert("세부내용은 구분, 사진, 결과를 입력하여야 합니다.");
+			//	return;
+			//}
 			
 			for( var i = nullIdxArr.length-1 ; i >= 0 ; i-- ) {
 				contentsDivArr.splice(nullIdxArr[i],1);
@@ -323,7 +365,40 @@ table{font-size: 12px}
 			formData.append("contentsNoteArr",JSON.stringify(contentsNoteArr));
 			formData.append("resultArr",JSON.stringify(resultArr));
 			
-			var URL = "../report2/insertSenseQualityAjax";
+			
+			var displayOrders = document.querySelectorAll('input[name="displayOrder"]');
+			var contentsIdxs = document.querySelectorAll('input[name="contentsIdx"]');
+			var dataStatuses = document.querySelectorAll('input[name="dataStatus"]');
+			
+			var displayOrderArr = new Array();
+			for (var displayOrder of displayOrders) {
+				displayOrderArr.push(displayOrder.value);
+			}
+			
+			var contentsIdxArr = new Array();
+			for (var contentsIdx of contentsIdxs) {
+				contentsIdxArr.push(contentsIdx.value);
+			}
+			
+			var dataStatusArr = new Array();
+			for (var dataStatus of dataStatuses) {
+				dataStatusArr.push(dataStatus.value);
+			}
+			
+			for (var contentsNoteElement of contentsNoteElements) {
+				if( contentsDiv >= count ) {
+					contentsNoteArr.push(contentsNoteElement.value);					
+				} else {
+					break;
+				}				
+				count++;
+			}
+			
+			formData.append("displayOrderArr",displayOrderArr);
+			formData.append("contentsIdxArr",contentsIdxArr);
+			formData.append("dataStatusArr",dataStatusArr);
+			
+			var URL = "../report2/updateSenseQualityAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -334,6 +409,47 @@ table{font-size: 12px}
 				dataType:"json",
 				success:function(result) {
 					console.log(result);
+					if( result.RESULT == 'S' ) {
+						if( $("#apprLine option").length > 0 ) {
+							var apprFormData = new FormData();
+							apprFormData.append("docIdx", '${senseQualityData.reportMap.REPORT_IDX}');
+							apprFormData.append("apprComment", $("#apprComment").val());
+							apprFormData.append("apprLine", $("#apprLine").selectedValues());
+							apprFormData.append("refLine", $("#refLine").selectedValues());
+							apprFormData.append("title", $("#title").val());
+							apprFormData.append("docType", $("#docType").val());
+							apprFormData.append("status", "N");
+							var URL = "../approval2/insertApprAjax";
+							$.ajax({
+								type:"POST",
+								url:URL,
+								dataType:"json",
+								data: apprFormData,
+								processData: false,
+						        contentType: false,
+						        cache: false,
+								success:function(data) {
+									if(data.RESULT == 'S') {
+										alert("결재상신이 완료되었습니다.");
+										fn_goList();
+									} else {
+										alert("결재상신 오류가 발생하였습니다."+data.MESSAGE);
+										fn_goList();
+										return;
+									}
+								},
+								error:function(request, status, errorThrown){
+									alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+									fn_goList();
+								}			
+							});
+						} else {
+							alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+							fn_goList();
+						}
+					} else {
+						alert("오류가 발생하였습니다.\n"+result.MESSAGE);
+					}
 				},
 				error:function(request, status, errorThrown){
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
@@ -443,11 +559,30 @@ table{font-size: 12px}
 	}
 	
 	function fn_deleteImageFile2(element, e) {
-		console.log($(element).parent().next());
-		console.log($(element).parent().next().next().val());
-		if( confirm("이미지를 삭제하시겠습니까?") ) {
-			$(element).parent().parent().hide();
-			$(element).parent().parent().next().show();
+		if( confirm("이미지를 삭제하시겠습니까?") ) {			
+			var contentsIdx = $(element).parent().next().next().val();			
+			var URL = "../report2/deleteSenseQualityContenstsDataAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data: {
+					"contentsIdx" : contentsIdx
+				},
+				dataType:"json",
+				success:function(result) {
+					console.log(result);
+					if( result.RESULT == 'S' ) {
+						$(element).parent().next().next().next().val('M');
+						$(element).parent().parent().hide();
+						$(element).parent().parent().next().show();	
+					} else {
+						alert("이미지 삭제 오류가 발생했습니다.\n다시 시도하여 주세요.");
+					}
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
 		}
 	}
 </script>
@@ -586,6 +721,7 @@ table{font-size: 12px}
 							</div>
 							<input type="hidden" name="displayOrder" id="displayOrder" value="${contentsList.DISPLAY_ORDER}">
 							<input type="hidden" name="contentsIdx" id="contentsIdx" value="${contentsList.CONTENTS_IDX}">
+							<input type="hidden" name="dataStatus" id="dataStatus" value="U">
 							</div>
 							<div style="display:none">
 								<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
@@ -687,6 +823,7 @@ table{font-size: 12px}
 								</div>
 								<input type="hidden" name="displayOrder" id="displayOrder" value="${contentsList.DISPLAY_ORDER}">
 								<input type="hidden" name="contentsIdx" id="contentsIdx" value="${contentsList.CONTENTS_IDX}">
+								<input type="hidden" name="dataStatus" id="dataStatus" value="U">
 							</div>
 							<div style="display:none">
 								<p><img id="preview" src="/resources/images/img_noimg3.png" style="border:1px solid #e1e1e1; border-radius:5px; width:258px; height:193px;"></p>
@@ -839,14 +976,28 @@ table{font-size: 12px}
 						<col  />							
 					</colgroup>
 					<tbody id="result_tbody" name="result_tbody">
+					<c:set var="count" value="0" />
+					<c:forEach items="${senseQualityData.infoResultList}" var="infoResultList" varStatus="status">
+						<c:set var="count" value="${count + 1}" />
+						<tr id="result_tr_${status.count}">
+							<td>
+								<input type="checkbox" id="result_${status.count}"><label for="result_${status.count}"><span></span></label>
+							</td>
+							<td>
+								<input type="text"  style="width:99%; float: left" class="req" name="result" value="${infoResultList.INFO_TEXT}"/>
+							</td>
+						</tr>
+					</c:forEach>
+					<c:if test="${count == 0 }">
 						<tr id="result_tr_1">
 							<td>
-								<input type="checkbox" id="result_1"><label for="result_1"><span></span></label>
+								<input type="checkbox" id="result_1"><label for="result_1}"><span></span></label>
 							</td>
 							<td>
 								<input type="text"  style="width:99%; float: left" class="req" name="result" value="가."/>
 							</td>
 						</tr>
+					</c:if>	
 					</tbody>
 					<tbody id="result_tbody_temp" name="result_tbody_temp" style="display:none">
 						<tr id="result_tmp_tr_1"> 
@@ -951,7 +1102,7 @@ table{font-size: 12px}
 
 <!-- 결재 상신 레이어  start-->
 <div class="white_content" id="approval_dialog">
-	<input type="hidden" id="docType" value="TRIP"/>
+	<input type="hidden" id="docType" value="SENSE_QUALITY"/>
  	<input type="hidden" id="deptName" />
 	<input type="hidden" id="teamName" />
 	<input type="hidden" id="userId" />
