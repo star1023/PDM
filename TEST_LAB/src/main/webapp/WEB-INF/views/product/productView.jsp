@@ -659,9 +659,53 @@
 				</c:if>
 				
 				
-				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
-				<div class="title2" style="width: 20%; display: inline-block;">
-				</div>
+				<c:if test="${addInfoCount.USB_CNT > 0 || addInfoCount.USC_CNT > 0}">
+					<div class="title2" style="width: 80%;"><span class="txt">용도</span></div>
+					<div class="title2" style="width: 20%; display: inline-block;"></div>
+					<div class="main_tbl">
+						<c:set var="usageText" value="" />
+						<c:forEach items="${addInfoList}" var="item" varStatus="status">
+							<c:if test="${item.INFO_TYPE == 'USB' || item.INFO_TYPE == 'USC'}">
+								<c:choose>
+									<c:when test="${empty usageText}">
+										<c:choose>
+											<c:when test="${item.INFO_TYPE == 'USB'}">
+												<c:set var="usageText" value="${item.INFO_TEXT_NAME}" />
+											</c:when>
+											<c:otherwise>
+												<c:set var="usageText" value="${item.INFO_TEXT}" />
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+									<c:otherwise>
+										<c:choose>
+											<c:when test="${item.INFO_TYPE == 'USB'}">
+												<c:set var="usageText" value="${usageText}, ${item.INFO_TEXT_NAME}" />
+											</c:when>
+											<c:otherwise>
+												<c:set var="usageText" value="${usageText}, ${item.INFO_TEXT}" />
+											</c:otherwise>
+										</c:choose>
+									</c:otherwise>
+								</c:choose>
+							</c:if>
+						</c:forEach>
+				
+						<c:if test="${not empty usageText}">
+							<div class="main_tbl">
+								<table class="tbl05" style="border-top: 2px solid #4b5165;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ellipsis_txt tgnl">${usageText}</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</c:if>
+					</div>
+				</c:if>
 				
 				<div id="">
 					<div class="title2" style="float: left; margin-top: 30px;">
