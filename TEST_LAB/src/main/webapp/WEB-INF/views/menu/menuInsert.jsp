@@ -4,6 +4,7 @@
 <%@ taglib prefix="userUtil" uri="/WEB-INF/tld/userUtil.tld"%>
 <%@ taglib prefix="strUtil" uri="/WEB-INF/tld/strUtil.tld"%>
 <%@ taglib prefix="dateUtil" uri="/WEB-INF/tld/dateUtil.tld"%>
+
 <title>메뉴 개발완료보고서 생성</title>
 <style>
 .positionCenter{
@@ -11,10 +12,11 @@
 	transform: translate(-50%, -45%);
 }
 .ck-editor__editable { max-height: 200px; min-height:200px;}
+
 </style>
 
 <link href="../resources/css/mfg.css" rel="stylesheet" type="text/css">
-
+<link href="../resources/css/common.css" rel="stylesheet" type="text/css" />
 <link href="../resources/css/tree.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="../resources/js/jstree.js"></script>
 <script type="text/javascript" src="/resources/js/appr/apprClass.js?v=<%= System.currentTimeMillis()%>"></script>
@@ -37,7 +39,7 @@
 	});
 	
 	var selectedArr = new Array();
-	
+	let _brandFullList = []; // 전체 브랜드 저장용 전역변수
 	
 	function loadCode(codeId,selectBoxId) {
 		var URL = "../common/codeListAjax";
@@ -771,6 +773,22 @@
 			});
 			formData.append("featureArr", featureArr);	
 			
+			// 용도
+			const usageType = $('select[name=usageSelect]').val();
+
+			if (usageType === 'BRAND') {
+			    const brandCodes = $('#brandCodeValues_1').val(); // 예: "1,2,3"
+			    if (brandCodes) {
+			        formData.append("usageArr", brandCodes); // 그대로 넣음
+			    }
+			} else if (usageType === 'CUSTOM') {
+			    const customText = $('#customUsage_1').val();
+			    if (customText) {
+			        formData.append("usageArr", customText.trim()); // 문자열 그대로 넣음
+			    }
+			}
+			formData.append("usageType", usageType); // 그대로 넣음
+			
 			// 신규도입품/제품규격
 			var newItemNameArr = new Array();
 			var newItemStandardArr = new Array();
@@ -789,7 +807,6 @@
 			});
 			$('tr[id^=new1_tr]').toArray().forEach(function(newRow){
 				var rowId = $(newRow).attr('id');
-				console.log(rowId);
 				newItemNameArr.push($('#'+ rowId + ' input[name=itemName]').val());
 				newItemStandardArr.push($('#'+ rowId + ' input[name=itemStandard]').val());
 				newItemSupplierArr.push($('#'+ rowId + ' input[name=itemSupplier]').val());
@@ -931,6 +948,7 @@
 					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
 				}			
 			});
+			
 		}
 	}
 	//입력확인
@@ -1016,6 +1034,22 @@
 						});
 						formData.append("featureArr", featureArr);	
 						
+						// 용도
+						const usageType = $('select[name=usageSelect]').val();
+
+						if (usageType === 'BRAND') {
+						    const brandCodes = $('#brandCodeValues_1').val(); // 예: "1,2,3"
+						    if (brandCodes) {
+						        formData.append("usageArr", brandCodes); // 그대로 넣음
+						    }
+						} else if (usageType === 'CUSTOM') {
+						    const customText = $('#customUsage_1').val();
+						    if (customText) {
+						        formData.append("usageArr", customText.trim()); // 문자열 그대로 넣음
+						    }
+						}
+						formData.append("usageType", usageType); // 그대로 넣음
+						
 						// 신규도입품/제품규격
 						var newItemNameArr = new Array();
 						var newItemStandardArr = new Array();
@@ -1023,23 +1057,30 @@
 						var newItemKeepExpArr = new Array();
 						var newItemNoteArr = new Array();
 						var newItemTypeCodeArr = new Array();
-						$('tr[id^=new_tr]').toArray().forEach(function(newRow){
+						$('tr[id^=new_tr]').toArray().forEach(function(newRow) {
 							var rowId = $(newRow).attr('id');
-							newItemNameArr.push($('#'+ rowId + ' input[name=itemName]').val());
-							newItemStandardArr.push($('#'+ rowId + ' input[name=itemStandard]').val());
-							newItemSupplierArr.push($('#'+ rowId + ' input[name=itemSupplier]').val());
-							newItemKeepExpArr.push($('#'+ rowId + ' input[name=itemKeepExp]').val());
-							newItemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
-							newItemTypeCodeArr.push('A');
+							var itemName = $('#' + rowId + ' input[name=itemName]').val(); // 임시로 이름값이 없으면 안넣음
+							if ($.trim(itemName) !== '') {
+								newItemNameArr.push(itemName);
+								newItemStandardArr.push($('#' + rowId + ' input[name=itemStandard]').val());
+								newItemSupplierArr.push($('#' + rowId + ' input[name=itemSupplier]').val());
+								newItemKeepExpArr.push($('#' + rowId + ' input[name=itemKeepExp]').val());
+								newItemNoteArr.push($('#' + rowId + ' input[name=itemNote]').val());
+								newItemTypeCodeArr.push('A');
+							}
 						});
-						$('tr[id^=new1_tr]').toArray().forEach(function(newRow){
+
+						$('tr[id^=new1_tr]').toArray().forEach(function(newRow) {
 							var rowId = $(newRow).attr('id');
-							newItemNameArr.push($('#'+ rowId + ' input[name=itemName]').val());
-							newItemStandardArr.push($('#'+ rowId + ' input[name=itemStandard]').val());
-							newItemSupplierArr.push($('#'+ rowId + ' input[name=itemSupplier]').val());
-							newItemKeepExpArr.push($('#'+ rowId + ' input[name=itemKeepExp]').val());
-							newItemNoteArr.push($('#'+ rowId + ' input[name=itemNote]').val());
-							newItemTypeCodeArr.push('B');
+							var itemName = $('#' + rowId + ' input[name=itemName]').val(); // 임시로 이름값이 없으면 안넣음
+							if ($.trim(itemName) !== '') {
+								newItemNameArr.push(itemName);
+								newItemStandardArr.push($('#' + rowId + ' input[name=itemStandard]').val());
+								newItemSupplierArr.push($('#' + rowId + ' input[name=itemSupplier]').val());
+								newItemKeepExpArr.push($('#' + rowId + ' input[name=itemKeepExp]').val());
+								newItemNoteArr.push($('#' + rowId + ' input[name=itemNote]').val());
+								newItemTypeCodeArr.push('B');
+							}
 						});
 						formData.append("newItemNameArr", newItemNameArr);	
 						formData.append("newItemStandardArr", newItemStandardArr);	
@@ -1155,6 +1196,10 @@
 						formData.append("itemDescArr", itemDescArr);
 						
 						URL = "../menu/insertMenuAjax";
+						formData.forEach((value, key) => {
+							  console.log(key + ' =', value);
+						});
+						
 						$.ajax({
 							type:"POST",
 							url:URL,
@@ -1374,6 +1419,7 @@
 				console.log(newDataList);
 				$("#menuName").val(data.NAME);
 				
+				console.log(addInfoCount)
 				if( addInfoCount.PUR_CNT > 0 ) {
 					$("#purpose_tbody").html("");
 					addInfoList.forEach(function(item){
@@ -1396,17 +1442,40 @@
 					});
 				}
 				
-				if( newDataList.length > 0 ) {
-					$("#new_tbody").html("");
-					newDataList.forEach(function(item){
-						$("#new_add_btn").trigger("click");
-						var trObj = $("#new_tbody tr:last");
-						trObj.find("input[name='itemName']").val(item.MENU_NAME);
-						trObj.find("input[name='itemStandard']").val(item.PACKAGE_STANDARD);
-						trObj.find("input[name='itemSupplier']").val(item.SUPPLIER);
-						trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
-						trObj.find("input[name='itemNote']").val(item.NOTE);
-					});
+				if (newDataList.length > 0) {
+					// 신규도입품용
+					const dataA = newDataList.filter(item => item.TYPE_CODE === 'A');
+					const validDataA = dataA.filter(item => item.MENU_NAME || item.PACKAGE_STANDARD || item.SUPPLIER || item.KEEP_EXP || item.NOTE);
+
+					if (validDataA.length > 0) {
+						$("#new_tbody").html(""); // 기존 row 제거
+						validDataA.forEach(item => {
+							$("#new_add_btn").trigger("click");
+							const trObj = $("#new_tbody tr:last");
+							trObj.find("input[name='itemName']").val(item.MENU_NAME);
+							trObj.find("input[name='itemStandard']").val(item.PACKAGE_STANDARD);
+							trObj.find("input[name='itemSupplier']").val(item.SUPPLIER);
+							trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
+							trObj.find("input[name='itemNote']").val(item.NOTE);
+						});
+					}
+
+					// 추정원가용
+					const dataB = newDataList.filter(item => item.TYPE_CODE === 'B');
+					const validDataB = dataB.filter(item => item.MENU_NAME || item.PACKAGE_STANDARD || item.SUPPLIER || item.KEEP_EXP || item.NOTE);
+
+					if (validDataB.length > 0) {
+						$("#new1_tbody").html(""); // 기존 row 제거
+						validDataB.forEach(item => {
+							$("#new1_add_btn").trigger("click");
+							const trObj = $("#new1_tbody tr:last");
+							trObj.find("input[name='itemName']").val(item.MENU_NAME);
+							trObj.find("input[name='itemStandard']").val(item.PACKAGE_STANDARD);
+							trObj.find("input[name='itemSupplier']").val(item.SUPPLIER);
+							trObj.find("input[name='itemKeepExp']").val(item.KEEP_EXP);
+							trObj.find("input[name='itemNote']").val(item.NOTE);
+						});
+					}
 				}
 				
 				$("#scheduleDate").val(data.SCHEDULE_DATE);	
@@ -1512,6 +1581,76 @@
 						$("#temp_attatch_file").append(childTag);
 					});
 				}
+				
+				// 용도 초기화
+				$("#usageContentArea_1").html('');
+				$("select[name='usageSelect']").val(""); // 기본값으로 초기화
+
+				addInfoList.forEach(function(item){
+					if (item.INFO_TYPE === 'USB') {
+						// BRAND 선택 설정 및 브랜드 내용 렌더링
+						const select = document.querySelector("select[name='usageSelect']");
+						select.value = "BRAND";
+						onUsageChange(select, 1); // 동적으로 영역 생성
+
+						// 브랜드 코드, 이름 파싱
+						const codeArr = item.INFO_TEXT.split(",");
+						const nameArr = item.INFO_TEXT_NAME.split(",");
+
+						const tokenBox = document.getElementById("brandTokenBox_1");
+						const hiddenInput = document.getElementById("brandCodeValues_1");
+						tokenBox.innerHTML = '';
+						let brandCodes = [];
+
+						codeArr.forEach((code, i) => {
+							const name = nameArr[i];
+							brandCodes.push(code);
+
+							const token = document.createElement("span");
+							token.className = "brand-token";
+							token.setAttribute("data-code", code);
+							token.style = `
+								display: flex;
+								align-items: center;
+								background: #e0e0e0;
+								border-radius: 12px;
+								padding: 4px 8px;
+								margin-right: 5px;
+								font-size: 13px;
+							`;
+
+							const removeBtn = document.createElement("span");
+							removeBtn.textContent = "✕";
+							removeBtn.style = `
+								font-weight: bold;
+								margin-right: 6px;
+								cursor: pointer;
+								color: #666;
+							`;
+							removeBtn.onclick = function () {
+								token.remove();
+								updateHiddenBrandCodes(1);
+							};
+
+							token.appendChild(removeBtn);
+							token.append(name);
+							tokenBox.appendChild(token);
+						});
+
+						hiddenInput.value = brandCodes.join(',');
+					}
+
+					if (item.INFO_TYPE === 'USC') {
+						// CUSTOM 선택 설정 및 input 생성
+						const select = document.querySelector("select[name='usageSelect']");
+						select.value = "CUSTOM";
+						onUsageChange(select, 1); // 동적으로 영역 생성
+
+						const input = document.getElementById("customUsage_1");
+						input.value = item.INFO_TEXT;
+					}
+				});
+				
 			},
 			error:function(request, status, errorThrown){
 
@@ -1914,7 +2053,214 @@
 			if($('#'+checkBoxId).is(':checked')) $(v).remove();
 		})
 	}
+
+// ---------------------------------------------- BRAND POPUP -------------------------------------------
+	function onUsageChange(select, idx) {
+	    // label 업데이트
+	    const label = select.parentNode.parentNode.querySelector('label');
+	    if (label) {
+  	      label.textContent = select.options[select.selectedIndex].text;
+	    }
+	    // 3단계 위로 올라가서 td 찾기
+	    var td = select.parentNode.parentNode.parentNode;
+	    var contentTd = td.nextElementSibling; // 옆에 있는 내용 td
+
+	    contentTd.innerHTML = ''; // 내용 초기화
+
+	    if (select.value === 'BRAND') {
+	        const wrapper = document.createElement('div');
+	        wrapper.style = 'width: 100%;';
+
+	        // ✅ 전체를 감쌀 컨테이너 (토큰 + 버튼)
+	        const flexContainer = document.createElement('div');
+	        flexContainer.style = 'display: flex; margin-left: 10px; justify-content: space-between; align-items: center; gap: 10px;';
+
+	        // ✅ 토큰이 보여질 영역 (왼쪽)
+	        const tokenDiv = document.createElement('div');
+	        tokenDiv.id = 'brandTokenBox_' + idx;
+	        tokenDiv.className = 'token-box';
+	        tokenDiv.style = 'display: flex; flex-wrap: wrap; gap: 5px; flex: 1;';
+
+	        // ✅ 버튼 그룹 (오른쪽)
+	        const buttonGroup = document.createElement('div');
+	        buttonGroup.style = 'display: flex; gap: 5px;';
+
+	        const btnSearch = document.createElement('button');
+	        btnSearch.className = 'btn_small_search ml5';
+	        btnSearch.textContent = '조회';
+	        btnSearch.onclick = function () {
+	            openBrandDialog(idx);
+	        };
+
+	        const btnReset = document.createElement('button');
+	        btnReset.className = 'btn_small_search ml5';
+	        btnReset.textContent = '초기화';
+	        btnReset.onclick = function () {
+	            tokenDiv.innerHTML = '';
+	            hiddenInput.value = '';
+	        };
+
+	        buttonGroup.appendChild(btnSearch);
+	        buttonGroup.appendChild(btnReset);
+
+	        // ✅ 숨겨진 input (브랜드 코드 값들)
+	        const hiddenInput = document.createElement('input');
+	        hiddenInput.type = 'hidden';
+	        hiddenInput.id = 'brandCodeValues_' + idx;
+	        hiddenInput.name = 'brandCodeValues_' + idx;
+
+	        // ✅ 조합
+	        flexContainer.appendChild(tokenDiv);
+	        flexContainer.appendChild(buttonGroup);
+	        wrapper.appendChild(flexContainer);
+	        wrapper.appendChild(hiddenInput);
+	        contentTd.appendChild(wrapper);
+	    } else if (select.value === 'CUSTOM') {
+	        const input = document.createElement('input');
+	        input.type = 'text';
+	        input.id = 'customUsage_' + idx;
+	        input.placeholder = '용도를 입력하세요';
+	        input.className = 'req';
+	        input.style = 'width:99%;';
+	        contentTd.appendChild(input);
+	    }
+	}
+
+	function openBrandDialog(idx) {
+	    window._brandIdx = idx;
+	    document.getElementById("dialog_brand").style.display = "block";
+
+	    if (_brandFullList.length > 0) {
+	        // 이미 로드된 경우 필터 없이 전체 출력
+	        renderBrandTable(_brandFullList);
+	        return;
+	    }
+
+	    $.ajax({
+	        type: "POST",
+	        url: "../common/codeListAjax",
+	        data: { groupCode: "BRAND" },
+	        dataType: "json",
+	        success: function (data) {
+	            _brandFullList = data.RESULT; // ✅ 전역 변수에 저장
+	            renderBrandTable(_brandFullList); // 전체 출력
+	        },
+	        error: function () {
+	            alert("브랜드 정보를 불러오는데 실패했습니다.");
+	        }
+	    });
+	}
 	
+	function renderBrandTable(brandList) {
+	    const idx = window._brandIdx;
+	    const selectedCodesStr = document.getElementById("brandCodeValues_" + idx)?.value || "";
+	    const selectedCodes = selectedCodesStr.split(',').map(code => code.trim());
+
+	    const tbody = document.getElementById("brandLayerBody");
+	    tbody.innerHTML = "";
+
+	    const countElement = document.getElementById("brandCount") || document.getElementById("matCount");
+
+	    if (!brandList || brandList.length === 0) {
+	        tbody.innerHTML = "<tr><td colspan='3'>검색 결과가 없습니다.</td></tr>";
+	        if (countElement) countElement.textContent = "0";
+	        return;
+	    }
+
+	    brandList.forEach(function (brand) {
+	        const isChecked = selectedCodes.includes(brand.itemCode);
+
+	        const row = document.createElement("tr");
+	        row.innerHTML =
+	            "<td><input type='checkbox' style='width:20px; height:20px;' name='brandChk' value='" +
+	            brand.itemCode +
+	            "' data-name='" +
+	            brand.itemName +
+	            "'" + (isChecked ? " checked" : "") + "></td>" +
+	            "<td>" + brand.itemCode + "</td>" +
+	            "<td>" + brand.itemName + "</td>";
+	        tbody.appendChild(row);
+	    });
+
+	    if (countElement) countElement.textContent = brandList.length;
+	}
+
+	
+	function chooseBrandMulti() {
+	    const idx = window._brandIdx;
+	    const checked = document.querySelectorAll("input[name='brandChk']:checked");
+
+	    const tokenBox = document.getElementById("brandTokenBox_" + idx);
+	    const hiddenInput = document.getElementById("brandCodeValues_" + idx);
+
+	    tokenBox.innerHTML = ''; // 기존 토큰 초기화
+	    let selectedCodes = [];
+
+	    checked.forEach(item => {
+	        const code = item.value;
+	        const name = item.getAttribute("data-name");
+	        selectedCodes.push(code);
+
+	        const token = document.createElement("span");
+	        token.className = "brand-token";
+	        token.setAttribute("data-code", code);
+	        token.style = `
+	            display: flex;
+	            align-items: center;
+	            background: #e0e0e0;
+	            border-radius: 12px;
+	            padding: 4px 8px;
+	            margin-right: 5px;
+	            font-size: 13px;
+	        `;
+
+	        // ❌ 삭제 버튼
+	        const removeBtn = document.createElement("span");
+	        removeBtn.textContent = "✕";
+	        removeBtn.style = `
+	            font-weight: bold;
+	            margin-right: 6px;
+	            cursor: pointer;
+	            color: #666;
+	        `;
+	        removeBtn.onclick = function () {
+	            token.remove();
+	            updateHiddenBrandCodes(idx);
+	        };
+
+	        token.appendChild(removeBtn);
+	        token.append(name); // 브랜드명만 보여줌
+	        tokenBox.appendChild(token);
+	    });
+
+	    hiddenInput.value = selectedCodes.join(',');
+	    closeDialog('dialog_brand');
+	}
+	
+	function searchBrand() {
+	    const keyword = document.getElementById("searchBandValue").value.trim().toLowerCase();
+
+	    const filtered = _brandFullList.filter(function (brand) {
+	        return brand.itemCode.toLowerCase().includes(keyword) || brand.itemName.toLowerCase().includes(keyword);
+	    });
+
+	    renderBrandTable(filtered);
+	}
+
+	// 엔터키 검색용
+	function bindBrandDialogEnter(e) {
+	    if (e.key === 'Enter') {
+	        searchBrand();
+	    }
+	}
+	
+	function updateHiddenBrandCodes(idx) {
+	    const tokens = document.querySelectorAll("#brandTokenBox_" + idx + " .brand-token");
+	    const codes = [...tokens].map(t => t.getAttribute("data-code"));
+	    document.getElementById("brandCodeValues_" + idx).value = codes.join(',');
+	}
+
+// ---------------------------------------------- BRAND POPUP -------------------------------------------
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -2056,8 +2402,41 @@
 				</div>
 				
 				
-				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
-				<div class="title2" style="width: 20%; display: inline-block;">
+				<div id="">
+					<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
+					<table id="usage_Table" class="tbl05">
+						<colgroup>
+							<col width="100">
+							<col width="600">
+							<col />
+						</colgroup>
+						<thead>
+							<tr>
+								<th>용도선택</th>
+								<th>내용</th>
+							</tr>
+						</thead>
+						<tbody id="brand_tbody" name="brand_tbody">
+							<tr id="brand_tr_1" class="temp_color">
+								<td>
+									<div class="search_box" style="width:100%;" >
+										<div class="selectbox" style="width:100%; text-align:center;" >
+											<label>-- 선택 --</label>
+										    <select name="usageSelect" onchange="onUsageChange(this, 1);">
+										      <option value="">-- 선택 --</option>
+										      <option value="BRAND">브랜드선택</option>
+										      <option value="CUSTOM">제품 용도 기입</option>
+										    </select>
+										</div>
+									</div>
+								</td>
+								<td id="usageContentArea_1">
+								</td>
+							</tr>
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
 				</div>
 				
 				<div id="">
@@ -2081,7 +2460,7 @@
 						</colgroup>
 						<thead>
 							<tr>
-								<th></th>
+								<th><input type="checkbox" id="newTable_1" onclick="checkAll(event)"><label for="newTable_1"><span></span></label></th>
 								<th>제품명</th>
 								<th>포장규격</th>
 								<th>공급처 및 담당자</th>
@@ -2151,8 +2530,8 @@
 						</colgroup>
 						<thead>
 							<tr>
-								<th></th>
-								<th>제품명</th>
+								<th><input type="checkbox" id="newTable_2" onclick="checkAll(event)"><label for="newTable_2"><span></span></label></th>
+								<th>메뉴명</th>
 								<th>예상판매가</th>
 								<th>예상원가</th>
 								<th>원가율(%)</th>
@@ -2947,3 +3326,56 @@
 	</div>
 </div>
 <!-- 결재 상신 레이어  close-->
+
+<!-- 브랜드 선택 레이어 open -->
+<div class="white_content" id="dialog_brand" style="display: none;">
+	<input id="targetID" type="hidden">
+	<input id="itemType" type="hidden">
+	<input id="searchType" type="hidden">
+	<div class="modal" style="width: 700px; margin-left: -400px; height: 650px; margin-top: -300px;">
+		<h5 style="position:relative">
+			<span class="title">브랜드 선택</span>
+			<div class="top_btn_box">
+				<ul>
+					<li><button class="btn_madal_close" onclick="closeDialog('dialog_brand')"></button></li>
+				</ul>
+			</div>
+		</h5>
+		<div style="width:100%; text-align:center;">
+			<input id="searchBandValue" type="text" class="code_input" onkeyup="bindBrandDialogEnter(event)" style="width: 300px;" placeholder="일부단어로 검색가능">
+			<img src="/resources/images/icon_code_search.png" onclick="searchBrand()"/>
+		</div>
+		<div class="code_box2">
+			(<strong> <span id="brandCount">0</span> </strong>)건
+		</div>
+		<div class="main_tbl" style="height: 400px; overflow-y: auto;">
+			<table class="tbl02">
+				<colgroup>
+					<col width="20%">
+					<col width="40%">
+					<col width="40%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th></th>	
+						<th>브랜드 코드</th>
+						<th>브랜드 명</th>
+					</tr>
+				</thead>
+				<tbody id="brandLayerBody">
+					<input type="hidden" id="brandLayerPage" value="0"/>
+					<Tr>
+						<td colspan="10">브랜드코드 혹은 브랜드명을 검색해주세요</td>
+					</Tr>
+				</tbody>
+			</table>
+		</div>
+		<div style="margin-top: 40px;">
+		    <!-- ✅ 선택 완료 버튼 추가 -->
+		    <div style="text-align: center;">
+		      <button class="btn_large_search" onclick="chooseBrandMulti()">선택 완료</button>
+		    </div>
+		</div>
+	</div>
+</div>
+<!-- 브랜드 선택 레이어 close -->

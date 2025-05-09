@@ -48,6 +48,8 @@ public interface Report2Dao {
 	void updateBusinessTrip(Map<String, Object> param) throws Exception;
 	
 	List<Map<String, Object>> searchBusinessTripPlanList(Map<String, Object> param);
+	
+	List<Map<String, Object>> searchNewProductResultListAjax(Map<String, Object> param);
 
 	int selectBusinessTripPlanCount(Map<String, Object> param);
 
@@ -125,5 +127,14 @@ public interface Report2Dao {
 	void deleteBusinessTripAddInfo(Map<String, Object> param) throws Exception;
 
 	void deleteBusinessTripContents(Map<String, Object> param) throws Exception;
+
+	int selectNewProductResultCount(Map<String, Object> param);
+	
+	int selectChemicalTestCount(Map<String, Object> param);
+	
+	List<Map<String, Object>> selectNewProductResultList(Map<String, Object> param);
+	
+	List<Map<String, Object>> selectChemicalTestList(Map<String, Object> param);
+
 	
 }

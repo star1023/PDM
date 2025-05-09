@@ -1042,4 +1042,64 @@ public class Report2Controller {
 	public String marketResearchInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) {
 		return "/report2/marketResearchInsert";
 	}
+
+	@RequestMapping(value = "/newProductResultList")
+	public String newProductResultList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		try {
+			logger.debug("param : {} ",param.toString());
+			return "/report2/newProductResultList";
+		} catch( Exception e ) {
+			logger.error(StringUtil.getStackTrace(e, this.getClass()));
+			throw e;
+		}
+	}
+	
+	@RequestMapping("/selectNewProductResultListAjax")
+	@ResponseBody
+	public Map<String, Object> newProductResultListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		Map<String, Object> returnMap = reportService.selectNewProductResultList(param);
+		return returnMap;
+	}
+	
+	@RequestMapping("/selectChemicalTestListAjax")
+	@ResponseBody
+	public Map<String, Object> selectChemicalTestListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		Map<String, Object> returnMap = reportService.selectChemicalTestList(param);
+		return returnMap;
+	}
+	
+	@RequestMapping(value = "/newProductResultInsert")
+	public String newProductResultInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		return "/report2/newProductResultInsert";
+	}
+	
+	@RequestMapping("/searchNewProductResultListAjax")
+	@ResponseBody
+	public List<Map<String, Object>> searchNewProductResultListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		List<Map<String, Object>> returnList = reportService.searchNewProductResultListAjax(param);
+		return returnList;
+	}
+	
+	@RequestMapping(value = "/chemicalTestList")
+	public String chemicalTestList( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		try {
+			logger.debug("param : {} ",param.toString());
+			return "/report2/chemicalTestList";
+		} catch( Exception e ) {
+			logger.error(StringUtil.getStackTrace(e, this.getClass()));
+			throw e;
+		}
+	}
+	
+	@RequestMapping(value = "/chemicalTestInsert")
+	public String chemicalTestInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) throws Exception{
+		return "/report2/chemicalTestInsert";
+	}
+	
 }

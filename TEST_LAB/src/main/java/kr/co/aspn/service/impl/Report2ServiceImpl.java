@@ -930,7 +930,12 @@ public class Report2ServiceImpl implements Report2Service {
 		// TODO Auto-generated method stub
 		return reportDao.searchBusinessTripPlanList(param);
 	}
-
+	
+	@Override
+	public List<Map<String, Object>> searchNewProductResultListAjax(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return reportDao.searchNewProductResultListAjax(param);
+	}
 
 	@Override
 	public Map<String, Object> selectBusinessTripPlanList(Map<String, Object> param) throws Exception {
@@ -2000,6 +2005,7 @@ public class Report2ServiceImpl implements Report2Service {
 	}
 
 
+
 	@Override
 	public void deleteSenseQualityContenstsData(Map<String, Object> param) throws Exception {
 		// TODO Auto-generated method
@@ -2388,5 +2394,73 @@ public class Report2ServiceImpl implements Report2Service {
 		} catch( Exception e ) {
 			throw e;
 		}
+	}
+	
+	@Override
+	public Map<String, Object> selectNewProductResultList(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		int totalCount = reportDao.selectNewProductResultCount(param);
+		
+		int viewCount = 10;
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt((String)param.get("pageNo"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			pageNo = 1;
+		}
+		
+		try {
+			viewCount = Integer.parseInt((String)param.get("viewCount"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			viewCount = 10;
+		}
+		
+		// 페이징: 페이징 정보 SET
+		PageNavigator navi = new PageNavigator(param, viewCount, totalCount);
+		
+		List<Map<String, Object>> newProductResultList = reportDao.selectNewProductResultList(param);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("pageNo", pageNo);
+		map.put("totalCount", totalCount);
+		map.put("list", newProductResultList);	
+		map.put("navi", navi);
+		return map;
+	}
+	
+	@Override
+	public Map<String, Object> selectChemicalTestList(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		int totalCount = reportDao.selectChemicalTestCount(param);
+		
+		int viewCount = 10;
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt((String)param.get("pageNo"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			pageNo = 1;
+		}
+		
+		try {
+			viewCount = Integer.parseInt((String)param.get("viewCount"));
+		} catch( Exception e ) {
+			System.err.println(e.getMessage());
+			viewCount = 10;
+		}
+		
+		// 페이징: 페이징 정보 SET
+		PageNavigator navi = new PageNavigator(param, viewCount, totalCount);
+		
+		List<Map<String, Object>> chemicalTestList = reportDao.selectChemicalTestList(param);
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("pageNo", pageNo);
+		map.put("totalCount", totalCount);
+		map.put("list", chemicalTestList);	
+		map.put("navi", navi);
+		return map;
 	}
 }

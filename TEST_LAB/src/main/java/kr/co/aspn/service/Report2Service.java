@@ -38,6 +38,8 @@ public interface Report2Service {
 	void updateBusinessTrip(Map<String, Object> param, MultipartFile[] file) throws Exception;
 	
 	List<Map<String, Object>> searchBusinessTripPlanList(Map<String, Object> param);
+	
+	List<Map<String, Object>> searchNewProductResultListAjax(Map<String, Object> param);
 
 	Map<String, Object> selectBusinessTripPlanList(Map<String, Object> param) throws Exception;
 	
@@ -84,5 +86,9 @@ public interface Report2Service {
 	void updateBusinessTripTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
 
 	
+	
+	Map<String, Object> selectNewProductResultList(Map<String, Object> param) throws Exception;
+	
+	Map<String, Object> selectChemicalTestList(Map<String, Object> param) throws Exception;
 	
 }

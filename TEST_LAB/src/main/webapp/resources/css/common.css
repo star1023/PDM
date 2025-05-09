@@ -1133,7 +1133,21 @@ h5 ul{ padding-right:0 !important;}
   .history_option li:first-child{margin-top:10px !important}
  
  
- 
+ .brand-token {
+    display: flex;
+    align-items: center;
+    background: #e0e0e0;
+    border-radius: 12px;
+    padding: 4px 8px;
+    margin-right: 5px;
+    font-size: 13px;
+}
+.brand-token span {
+    font-weight: bold;
+    margin-right: 6px;
+    cursor: pointer;
+    color: #666;
+}
  
  
  

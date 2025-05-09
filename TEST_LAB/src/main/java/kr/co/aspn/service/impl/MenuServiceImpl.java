@@ -91,6 +91,8 @@ public class MenuServiceImpl implements MenuService {
 		try {
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -118,6 +120,7 @@ public class MenuServiceImpl implements MenuService {
 			System.err.println(param);
 			System.err.println(purposeArr);
 			System.err.println(featureArr);
+			System.err.println(usageArr);
 			System.err.println(newItemNameArr);
 			System.err.println(newItemStandardArr);
 			System.err.println(newItemSupplierArr);
@@ -173,6 +176,16 @@ public class MenuServiceImpl implements MenuService {
 					featureData.put("infoType", "FEA");
 					featureData.put("infoText", featureArr.get(i));
 					addInfoList.add(featureData);
+				}
+			}
+			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
 				}
 			}
 			
@@ -358,6 +371,8 @@ public class MenuServiceImpl implements MenuService {
 		try{
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -413,6 +428,16 @@ public class MenuServiceImpl implements MenuService {
 					featureData.put("infoType", "FEA");
 					featureData.put("infoText", featureArr.get(i));
 					addInfoList.add(featureData);
+				}
+			}
+			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
 				}
 			}
 			
@@ -472,7 +497,7 @@ public class MenuServiceImpl implements MenuService {
 			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+			for( int i = 0 ; i < itemMatIdxArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
@@ -510,8 +535,11 @@ public class MenuServiceImpl implements MenuService {
 				}
 				matList.add(matMap);
 			}
-			param.put("matList", matList);
-			menuDao.insertMenuMaterial(param);
+			
+			if( matList != null && matList.size() > 0 ) {
+				param.put("matList", matList);
+				menuDao.insertMenuMaterial(param);				
+			}
 			
 			//첨부파일 유형 저장
 			List<HashMap<String, Object>> docTypeList = new ArrayList<HashMap<String, Object>>();
@@ -674,6 +702,8 @@ public class MenuServiceImpl implements MenuService {
 			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
 			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
 			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
 			ArrayList<String> newItemSupplierArr = (ArrayList<String>)listMap.get("newItemSupplierArr");
@@ -760,6 +790,16 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
+				}
+			}
+			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
 				//등록한다.
 				menuDao.insertAddInfo(addInfoList);
@@ -816,7 +856,7 @@ public class MenuServiceImpl implements MenuService {
 			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+			for( int i = 0 ; i < itemMatIdxArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
@@ -934,7 +974,8 @@ public class MenuServiceImpl implements MenuService {
 			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
 			ArrayList<String> itemNoteArr = (ArrayList<String>)listMap.get("itemNoteArr");
 			ArrayList<String> improveArr = (ArrayList<String>)listMap.get("improveArr");
-			
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			
 			ArrayList<String> newItemNameArr = (ArrayList<String>)listMap.get("newItemNameArr");
 			ArrayList<String> newItemStandardArr = (ArrayList<String>)listMap.get("newItemStandardArr");
@@ -1023,6 +1064,16 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
+				}
+			}
+			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
 				//등록한다.
 				menuDao.insertAddInfo(addInfoList);
@@ -1079,7 +1130,7 @@ public class MenuServiceImpl implements MenuService {
 			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+			for( int i = 0 ; i < itemMatIdxArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
@@ -1232,6 +1283,8 @@ public class MenuServiceImpl implements MenuService {
 		try{
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			
 			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
 			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
@@ -1348,6 +1401,16 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
+				}
+			}
+			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
 				//추가 정보를 등록한다.
 				menuDao.insertAddInfo(addInfoList);
@@ -1409,7 +1472,7 @@ public class MenuServiceImpl implements MenuService {
 			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+			for( int i = 0 ; i < itemMatIdxArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
@@ -1442,8 +1505,11 @@ public class MenuServiceImpl implements MenuService {
 				}
 				matList.add(matMap);
 			}
-			param.put("matList", matList);
-			menuDao.insertMenuMaterial(param);
+			
+			if( matList != null && matList.size() > 0 ) {
+				param.put("matList", matList);
+				menuDao.insertMenuMaterial(param);				
+			}
 			
 			//첨부파일 유형 삭제
 			map = new HashMap<String,Object>(); 
@@ -1531,6 +1597,8 @@ public class MenuServiceImpl implements MenuService {
 		try{
 			ArrayList<String> purposeArr = (ArrayList<String>)listMap.get("purposeArr");
 			ArrayList<String> featureArr = (ArrayList<String>)listMap.get("featureArr");
+			ArrayList<String> usageArr = (ArrayList<String>)listMap.get("usageArr");
+			String usageType = (String)listMap.get("usageType");
 			
 			ArrayList<String> itemImproveArr = (ArrayList<String>)listMap.get("itemImproveArr");
 			ArrayList<String> itemExistArr = (ArrayList<String>)listMap.get("itemExistArr");
@@ -1642,6 +1710,16 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
+			if( usageArr.size() > 0 ) {
+				for( int i = 0 ; i < usageArr.size() ; i++ ) {
+					HashMap<String,Object> usageData = new HashMap<String,Object>();
+					usageData.put("idx", menuIdx);
+					usageData.put("infoType", "BRAND".equals(usageType) ? "USB" : "USC");
+					usageData.put("infoText", usageArr.get(i));
+					addInfoList.add(usageData);
+				}
+			}
+			
 			if( addInfoList != null && addInfoList.size() > 0 ) {
 				//추가 정보를 등록한다.
 				menuDao.insertAddInfo(addInfoList);
@@ -1703,12 +1781,18 @@ public class MenuServiceImpl implements MenuService {
 			
 			//원료 리스트 등록
 			ArrayList<HashMap<String,String>> matList = new ArrayList<HashMap<String,String>>();
-			for( int i = 0 ; i < itemSapCodeArr.size() ; i++ ) {
+			// itemSapCodeArr => itemMatIdxArr 로 for문 돌림 (신규원료의 경우 SAP_CODE 가 없기떄문) 
+			System.out.println("원료 IDX : " + itemMatIdxArr.toString());
+			for( int i = 0 ; i < itemMatIdxArr.size() ; i++ ) {
 				HashMap<String,String> matMap = new HashMap<String,String>();
 				matMap.put("itemType", itemTypeArr.get(i));
 				matMap.put("matIdx", itemMatIdxArr.get(i));
-				matMap.put("sapCode", itemSapCodeArr.get(i));
 				matMap.put("name", itemNameArr.get(i));
+				try {
+					matMap.put("sapCode", itemSapCodeArr.get(i));										
+				} catch(Exception e){
+					matMap.put("sapCode", "");					
+				}
 				try{
 					matMap.put("matCode", itemMatCodeArr.get(i));
 				} catch(Exception e) {
@@ -1736,8 +1820,11 @@ public class MenuServiceImpl implements MenuService {
 				}
 				matList.add(matMap);
 			}
-			param.put("matList", matList);
-			menuDao.insertMenuMaterial(param);
+			// 빈 리스트가 아닐 때만 등록 처리 20250429 이정혁 
+			if (!matList.isEmpty()) {
+				param.put("matList", matList);
+				menuDao.insertMenuMaterial(param);
+			}
 			
 			//첨부파일 유형 삭제
 			map = new HashMap<String,Object>(); 

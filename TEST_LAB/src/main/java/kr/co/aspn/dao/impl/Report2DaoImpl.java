@@ -123,6 +123,12 @@ public class Report2DaoImpl implements Report2Dao {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("report2.searchBusinessTripPlanList", param);
 	}
+	
+	@Override
+	public List<Map<String, Object>> searchNewProductResultListAjax(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.searchNewProductResultListAjax", param);
+	}
 
 	@Override
 	public int selectBusinessTripPlanCount(Map<String, Object> param) {
@@ -266,6 +272,7 @@ public class Report2DaoImpl implements Report2Dao {
 	public List<Map<String, Object>> selectSenseQualityInfo(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("report2.selectSenseQualityInfo",param);
+
 	}
 
 	@Override
@@ -360,4 +367,28 @@ public class Report2DaoImpl implements Report2Dao {
 		sqlSessionTemplate.delete("report2.deleteBusinessTripContents", param);
 	}
 
+	
+	@Override
+	public int selectNewProductResultCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectNewProductResultCount",param);
+	}
+	
+	@Override
+	public int selectChemicalTestCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectChemicalTestCount",param);
+	}
+	
+	@Override
+	public List<Map<String, Object>> selectNewProductResultList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectNewProductResultList", param);
+	}
+	
+	@Override
+	public List<Map<String, Object>> selectChemicalTestList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectChemicalTestList", param);
+	}
 }

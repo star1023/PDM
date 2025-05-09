@@ -633,7 +633,7 @@
 				</c:if>
 				
 				<c:if test="${addInfoCount.IMP_CNT > 0 }">
-				<div class="title2"  style="width: 80%;"><span class="txt">개선 사항</span></div>
+				<div class="title2"  style="width: 80%; margin-top:30px"><span class="txt">개선 사항</span></div>
 				<div class="title2" style="width: 20%; display: inline-block;">
 				</div>
 				<div class="main_tbl">
@@ -657,11 +657,54 @@
 					</table>
 				</div>
 				</c:if>
+						
+				<c:if test="${addInfoCount.USB_CNT > 0 || addInfoCount.USC_CNT > 0}">
+					<div class="title2" style="width: 80%;"><span class="txt">용도</span></div>
+					<div class="title2" style="width: 20%; display: inline-block;"></div>
+					<div class="main_tbl">
+						<c:set var="usageText" value="" />
+						<c:forEach items="${addInfoList}" var="item" varStatus="status">
+							<c:if test="${item.INFO_TYPE == 'USB' || item.INFO_TYPE == 'USC'}">
+								<c:choose>
+									<c:when test="${empty usageText}">
+										<c:choose>
+											<c:when test="${item.INFO_TYPE == 'USB'}">
+												<c:set var="usageText" value="${item.INFO_TEXT_NAME}" />
+											</c:when>
+											<c:otherwise>
+												<c:set var="usageText" value="${item.INFO_TEXT}" />
+											</c:otherwise>
+										</c:choose>
+									</c:when>
+									<c:otherwise>
+										<c:choose>
+											<c:when test="${item.INFO_TYPE == 'USB'}">
+												<c:set var="usageText" value="${usageText}, ${item.INFO_TEXT_NAME}" />
+											</c:when>
+											<c:otherwise>
+												<c:set var="usageText" value="${usageText}, ${item.INFO_TEXT}" />
+											</c:otherwise>
+										</c:choose>
+									</c:otherwise>
+								</c:choose>
+							</c:if>
+						</c:forEach>
 				
-				
-				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
-				<div class="title2" style="width: 20%; display: inline-block;">
-				</div>
+						<c:if test="${not empty usageText}">
+							<div class="main_tbl">
+								<table class="tbl05" style="border-top: 2px solid #4b5165;">
+									<tbody>
+										<tr>
+											<td>
+												<div class="ellipsis_txt tgnl">${usageText}</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</c:if>
+					</div>
+				</c:if>
 				
 				<div id="">
 					<div class="title2" style="float: left; margin-top: 30px;">
@@ -685,23 +728,25 @@
 							</tr>
 						</thead>
 						<tbody id="new_tbody" name="new_tbody">
-							<c:forEach items="${newDataList}" var="newDataList" varStatus="status">
-								<c:if  test="${newDataList.TYPE_CODE == 'A'}">
-									<tr id="new_tr_${status.count}" class="temp_color">
-										<td>
-											${newDataList.PRODUCT_NAME}
-										</td>
-										<td>
-											${newDataList.PACKAGE_STANDARD}
-										</td>
-										<td>
-											${newDataList.SUPPLIER}
-										</td>
-										<td>${newDataList.KEEP_EXP}</td>
-										<td>${newDataList.NOTE}</td>
-									</tr>
-								</c:if>
-							</c:forEach>							
+							<c:if test="${fn:length(newDataList) > 0}">
+								<c:forEach items="${newDataList}" var="newDataList" varStatus="status">
+									<c:if  test="${newDataList.TYPE_CODE == 'A'}">
+										<tr id="new_tr_${status.count}" class="temp_color">
+											<td>
+												${newDataList.PRODUCT_NAME}
+											</td>
+											<td>
+												${newDataList.PACKAGE_STANDARD}
+											</td>
+											<td>
+												${newDataList.SUPPLIER}
+											</td>
+											<td>${newDataList.KEEP_EXP}</td>
+											<td>${newDataList.NOTE}</td>
+										</tr>
+									</c:if>
+								</c:forEach>							
+							</c:if>
 						</tbody>
 					</table>
 				</div>
@@ -720,7 +765,7 @@
 						</colgroup>
 						<thead>
 							<tr>
-								<th>제품명</th>
+								<th>메뉴명</th>
 								<th>포장규격</th>
 								<th>공급처 및 담당자</th>
 								<th>보관조건 및 소비기한</th>

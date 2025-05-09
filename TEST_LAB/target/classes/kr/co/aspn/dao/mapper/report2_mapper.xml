@@ -74,6 +74,22 @@
 		</if>
 	</sql>
 	
+	<sql id="whereNewProductResultList">
+		<if test="searchType != null and searchType != '' ">
+			<choose>
+				<when test="searchType.equals('searchTitle')">
+					AND TITLE LIKE CONCAT('%', #{searchValue}, '%')
+				</when>
+				<when test="searchType.equals('searchDate')">
+					AND DATE_FORMAT(EXCUTE_DATE, '%Y-%m') = #{searchValue}
+				</when>
+			</choose>
+		</if>
+		<if test="searchFileTxt != null and searchFileTxt != '' ">
+			AND RESULT_IDX IN (SELECT distinct DOC_IDX FROM lab_file WHERE 1 = 1 AND DOC_TYPE = 'RESULT' AND FILE_CONTENT LIKE CONCAT('%',#{searchFileTxt},'%'))
+		</if>
+	</sql>
+	
 	<select id="selectDesignCount" parameterType="map" resultType="int">
 	/*	report2.selectDesignCount */
 		SELECT
@@ -441,6 +457,24 @@
 			AND IS_DELETE = 'N'
 			AND IS_LAST = 'Y'
 			AND ( TITLE LIKE CONCAT('%',#{searchValue},'%') OR TRIP_EFFECT LIKE CONCAT('%',#{searchValue},'%') )
+	</select>
+	
+	<select id="searchNewProductResultListAjax" parameterType="map" resultType="hashmap">
+		/*	report2.searchNewProductResultListAjax */
+		SELECT
+			RESULT_IDX
+			, TITLE
+			, EXCUTE_DATE
+			, REG_USER
+			, DOC_OWNER
+			, STATUS
+			, IS_DELETE
+		FROM 	
+			lab_new_product_result
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			AND IS_DELETE = 'N'
+			AND TITLE LIKE CONCAT('%',#{searchValue},'%')
 	</select>
 	
 	<sql id="whereBusinessTripPlan">
@@ -909,7 +943,7 @@
 			AND INFO_TYPE = #{infoType}
 		</if>	
 	</select>
-	
+
 	<select id="selectSenseQualityContenstsData" parameterType="map" resultType="hashmap">
 		/*	report2.selectSenseQualityContenstsData */
 		SELECT
@@ -1103,4 +1137,135 @@
 		WHERE 1 = 1
 			AND TRIP_IDX = #{idx}
 	</delete>
+	
+	<select id="selectNewProductResultCount" parameterType="map" resultType="int">
+	/*	report2.selectNewProductResultCount */
+		SELECT
+			COUNT(RESULT_IDX) as cnt
+		FROM 	
+			lab_new_product_result
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			AND IS_DELETE = 'N'
+			<include refid="report2.whereNewProductResultList" />
+	</select>
+	
+	<select id="selectNewProductResultList" parameterType="map" resultType="hashmap">
+	/*	report2.selectNewProductResultList */
+		SELECT
+			tmp.*
+			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, CASE 
+				WHEN tmp.STATUS = 'REG' THEN '등록'
+				WHEN tmp.STATUS = 'APPR' THEN '결재중'
+				WHEN tmp.STATUS = 'COMP' THEN '완료'
+				WHEN tmp.STATUS = 'COND_APPR' THEN '부분승인'
+				END	AS STATUS_TXT
+		FROM
+		(	
+			SELECT
+				row_number() over (order by  RESULT_IDX DESC) as rnum
+				, RESULT_IDX
+				, TITLE
+				, IS_DELETE
+				, STATUS
+				, REG_USER
+				, DOC_OWNER
+			FROM 	
+				lab_new_product_result
+			WHERE 1 = 1
+				AND DOC_OWNER = #{userId}
+				AND IS_DELETE = 'N'
+				<include refid="report2.whereNewProductResultList" />
+		)tmp
+		WHERE rnum between #{startRow} and #{endRow}		
+	</select>
+	
+	<sql id="whereChemicalTestList">
+	    <if test="searchType != null and searchType != '' ">
+	        <choose>
+	            <when test="searchType == 'searchProduct'">
+	                AND PRODUCT_NAME LIKE CONCAT('%', #{searchValue}, '%')
+	            </when>
+	            <when test="searchType == 'searchRequestUser'">
+	                AND REQUEST_USER LIKE CONCAT('%', #{searchValue}, '%')
+	            </when>
+	            <when test="searchType == 'searchStandardContent'">
+	                AND STANDARD_CONTENT LIKE CONCAT('%', #{searchValue}, '%')
+	            </when>
+	            <when test="searchType == 'searchRequsetContent'">
+	                AND REQUEST_CONTENT LIKE CONCAT('%', #{searchValue}, '%')
+	            </when>
+	        </choose>
+	    </if>
+	
+	    <if test="requestDate != null and requestDate != '' ">
+	        AND DATE(REQUEST_DATE) = #{requestDate}
+	    </if>
+	
+	    <if test="completeDate != null and completeDate != '' ">
+	        AND DATE(COMPLETION_DATE) = #{completeDate}
+	    </if>
+	
+	    <if test="searchFileTxt != null and searchFileTxt != '' ">
+	        AND CHEMICAL_IDX IN (
+	            SELECT DISTINCT DOC_IDX
+	            FROM lab_file
+	            WHERE DOC_TYPE = 'CHEMICAL' 
+	              AND FILE_CONTENT LIKE CONCAT('%', #{searchFileTxt}, '%')
+	        )
+	    </if>
+	</sql>
+	
+	<select id="selectChemicalTestCount" parameterType="map" resultType="int">
+	/*	report2.selectChemicalTestCount */
+		SELECT
+			COUNT(CHEMICAL_IDX) as cnt
+		FROM 	
+			lab_chemical_test
+		WHERE 1 = 1
+			AND DOC_OWNER = #{userId}
+			AND IS_DELETE = 'N'
+			<include refid="report2.whereChemicalTestList" />
+	</select>
+	
+	<select id="selectChemicalTestList" parameterType="map" resultType="hashmap">
+	/*	report2.selectChemicalTestList */
+		SELECT
+			tmp.*
+			, FN_GET_USER_NAME(tmp.DOC_OWNER) as DOC_OWNER_NAME
+			, CASE 
+				WHEN tmp.STATUS = 'TMP' THEN '임시저장'
+				WHEN tmp.STATUS = 'REG' THEN '등록'
+				WHEN tmp.STATUS = 'APPR' THEN '결재중'
+				WHEN tmp.STATUS = 'COMP' THEN '완료'
+				WHEN tmp.STATUS = 'COND_APPR' THEN '부분승인'
+				END	AS STATUS_TXT
+		FROM
+		(	
+			SELECT
+				row_number() over (order by  CHEMICAL_IDX DESC) as rnum
+				, CHEMICAL_IDX
+				, REQUEST_DATE
+				, COMPLETION_DATE
+				, REQUEST_USER
+				, PRODUCT_CODE
+				, PRODUCT_NAME
+				, SAP_CODE
+				, PRESERVATION
+				, STANDARD_CONTENT
+				, REQUEST_CONTENT
+				, IS_DELETE
+				, STATUS
+				, DOC_OWNER
+			FROM 	
+				lab_chemical_test
+			WHERE 1 = 1
+				AND DOC_OWNER = #{userId}
+				AND IS_DELETE = 'N'
+				<include refid="report2.whereChemicalTestList" />
+		)tmp
+		WHERE rnum between #{startRow} and #{endRow}		
+	</select>
+	
 </mapper>

@@ -732,14 +732,19 @@
 	
 	<select id="selectAddInfo" parameterType="map" resultType="hashmap">
 		SELECT
-			INFO_IDX
-			, MENU_IDX
-			, INFO_TYPE
-			, INFO_TEXT
+			INFO_IDX,
+			MENU_IDX,
+			INFO_TYPE,
+			INFO_TEXT,
+			<!-- ✅ USA일 때만 함수로 치환, 아니면 원래 값 -->
+			CASE 
+				WHEN INFO_TYPE = 'USB' THEN FN_GET_CODE_NAME('BRAND', INFO_TEXT)
+				ELSE ''
+			END AS INFO_TEXT_NAME
 		FROM 
 			lab_menu_add_info
-		WHERE 1 = 1
-			AND MENU_IDX = #{idx}
+		WHERE 
+			MENU_IDX = #{idx}
 		ORDER BY INFO_IDX ASC
 	</select>
 	
@@ -811,6 +816,8 @@
 			SUM(CASE WHEN tmp.INFO_TYPE = 'PUR' THEN tmp.cnt ELSE 0 END) AS PUR_CNT
 			, SUM(CASE WHEN tmp.INFO_TYPE = 'FEA' THEN tmp.cnt ELSE 0 END) AS FEA_CNT 
 			, SUM(CASE WHEN tmp.INFO_TYPE = 'IMP' THEN tmp.cnt ELSE 0 END) AS IMP_CNT 
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'USB' THEN tmp.cnt ELSE 0 END) AS USB_CNT 
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'USC' THEN tmp.cnt ELSE 0 END) AS USC_CNT 
 		FROM (
 			SELECT INFO_TYPE, COUNT(INFO_TYPE) AS cnt FROM lab_menu_add_info lpai 
 			WHERE 1 = 1

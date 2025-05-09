@@ -134,6 +134,8 @@ public class MenuController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -165,6 +167,8 @@ public class MenuController {
 			
 			System.err.println(purposeArr);
 			System.err.println(featureArr);
+			System.err.println(usageArr);
+			System.err.println(usageType);
 			System.err.println(newItemNameArr);
 			System.err.println(newItemStandardArr);
 			System.err.println(newItemSupplierArr);
@@ -192,6 +196,8 @@ public class MenuController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
@@ -232,6 +238,8 @@ public class MenuController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
@@ -280,6 +288,8 @@ public class MenuController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
@@ -359,11 +369,14 @@ public class MenuController {
 			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
 			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
 			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
 			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
 			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
 			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
@@ -390,7 +403,10 @@ public class MenuController {
 			System.err.println(itemImproveArr);
 			System.err.println(itemExistArr);
 			System.err.println(itemNoteArr);
+			System.err.println(itemNoteArr);
 			System.err.println(improveArr);
+			System.err.println(usageArr);
+			System.err.println(usageType);
 			
 			System.err.println(fileType);
 			System.err.println(fileTypeText);
@@ -414,11 +430,14 @@ public class MenuController {
 			listMap.put("itemExistArr", itemExistArr);
 			listMap.put("itemNoteArr", itemNoteArr);
 			listMap.put("improveArr", improveArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
 			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
 			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
 			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
@@ -452,11 +471,14 @@ public class MenuController {
 			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
 			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
 			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
 			, @RequestParam(value = "newItemSupplierArr", required = false) List<String> newItemSupplierArr
 			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
 			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
+			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
 			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
@@ -499,11 +521,14 @@ public class MenuController {
 			listMap.put("itemExistArr", itemExistArr);
 			listMap.put("itemNoteArr", itemNoteArr);
 			listMap.put("improveArr", improveArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			listMap.put("newItemNameArr", newItemNameArr);
 			listMap.put("newItemStandardArr", newItemStandardArr);
 			listMap.put("newItemSupplierArr", newItemSupplierArr);
 			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
 			listMap.put("newItemNoteArr", newItemNoteArr);
+			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
 			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
@@ -650,6 +675,8 @@ public class MenuController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			
 			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
 			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
@@ -702,6 +729,8 @@ public class MenuController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			
 			listMap.put("itemImproveArr", itemImproveArr);
 			listMap.put("itemExistArr", itemExistArr);
@@ -745,12 +774,13 @@ public class MenuController {
 			, @RequestParam(required=false) Map<String, Object> param
 			, @RequestParam(value = "purposeArr", required = false) List<String> purposeArr
 			, @RequestParam(value = "featureArr", required = false) List<String> featureArr
+			, @RequestParam(value = "usageArr", required = false) List<String> usageArr
+			, @RequestParam(value = "usageType", required = false) String usageType
 			
 			, @RequestParam(value = "itemImproveArr", required = false) List<String> itemImproveArr
 			, @RequestParam(value = "itemExistArr", required = false) List<String> itemExistArr
 			, @RequestParam(value = "itemNoteArr", required = false) List<String> itemNoteArr
 			, @RequestParam(value = "improveArr", required = false) List<String> improveArr
-			
 			
 			, @RequestParam(value = "newItemNameArr", required = false) List<String> newItemNameArr
 			, @RequestParam(value = "newItemStandardArr", required = false) List<String> newItemStandardArr
@@ -758,6 +788,7 @@ public class MenuController {
 			, @RequestParam(value = "newItemKeepExpArr", required = false) List<String> newItemKeepExpArr
 			, @RequestParam(value = "newItemNoteArr", required = false) List<String> newItemNoteArr
 			, @RequestParam(value = "newItemTypeCodeArr", required = false) List<String> newItemTypeCodeArr
+			
 			, @RequestParam(value = "menuType", required = false) List<String> menuType
 			, @RequestParam(value = "fileType", required = false) List<String> fileType
 			, @RequestParam(value = "fileTypeText", required = false) List<String> fileTypeText
@@ -798,6 +829,8 @@ public class MenuController {
 			HashMap<String, Object> listMap = new HashMap<String, Object>();
 			listMap.put("purposeArr", purposeArr);
 			listMap.put("featureArr", featureArr);
+			listMap.put("usageArr", usageArr);
+			listMap.put("usageType", usageType);
 			
 			listMap.put("itemImproveArr", itemImproveArr);
 			listMap.put("itemExistArr", itemExistArr);
@@ -810,6 +843,7 @@ public class MenuController {
 			listMap.put("newItemKeepExpArr", newItemKeepExpArr);
 			listMap.put("newItemNoteArr", newItemNoteArr);
 			listMap.put("newItemTypeCodeArr", newItemTypeCodeArr);
+			
 			listMap.put("menuType", menuType);
 			listMap.put("fileType", fileType);
 			listMap.put("fileTypeText", fileTypeText);
