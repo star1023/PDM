@@ -943,7 +943,7 @@
 			AND INFO_TYPE = #{infoType}
 		</if>	
 	</select>
-
+	
 	<select id="selectSenseQualityContenstsData" parameterType="map" resultType="hashmap">
 		/*	report2.selectSenseQualityContenstsData */
 		SELECT
