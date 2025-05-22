@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.ui.velocity.VelocityEngineUtils;
 import org.apache.velocity.app.VelocityEngine;
 
 import java.nio.charset.StandardCharsets;
@@ -99,7 +98,7 @@ public class TrialReportServiceImpl implements TrialReportService {
 
 	@Override
 	public String getReportTemplateContents(String reportTemplateNo,Map<String,Object> model)throws Exception{
-		String strHTML = VelocityEngineUtils.mergeTemplateIntoString(velocityEngine, "config/templates/trialReport_" + reportTemplateNo + ".html", "UTF-8", model);
+		//String strHTML = VelocityEngineUtils.mergeTemplateIntoString(velocityEngine, "config/templates/trialReport_" + reportTemplateNo + ".html", "UTF-8", model);
 //		logger.info("TrialReportServiceImpl.getReportTemplateContents:  velocityEngine - start");
 //		logger.info(strHTML);
 //		logger.info("TrialReportServiceImpl.getReportTemplateContents:  velocityEngine - end");
@@ -114,7 +113,8 @@ public class TrialReportServiceImpl implements TrialReportService {
 //		logger.info("TrialReportServiceImpl.getReportTemplateContents:  FileUtil.read - start");
 //		logger.info(textHTML);
 //		logger.info("TrialReportServiceImpl.getReportTemplateContents:  FileUtil.read - end");
-		return strHTML;
+		//return strHTML;
+		return null;
 	}
 
 	public String base64Encode(String html){

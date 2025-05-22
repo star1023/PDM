@@ -136,5 +136,29 @@ public interface Report2Dao {
 	
 	List<Map<String, Object>> selectChemicalTestList(Map<String, Object> param);
 
+	int selectMarketResearchSeq();
+
+	void insertMarketResearch(Map<String, Object> param) throws Exception;
+
+	void insertMarketResearchAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception;
+
+	void insertMarketResearchUser(ArrayList<HashMap<String, Object>> userList) throws Exception;
+
+	int selectMarketResearchCount(Map<String, Object> param);
+
+	List<Map<String, Object>> selectMarketResearchList(Map<String, Object> param);
+
+	Map<String, String> selectMarketResearchData(Map<String, Object> param);
+
+	List<Map<String, Object>> selectMarketResearchUserList(Map<String, Object> param);
+
+	List<Map<String, Object>> selectMarketResearchAddInfoList(Map<String, Object> param);
+
+	void updateMarketResearch(Map<String, Object> param) throws Exception;
+
+	void deleteMarketResearchAddInfo(Map<String, Object> param) throws Exception;
+
+	void deleteMarketResearchUser(Map<String, Object> param) throws Exception;
+
 	
 }

@@ -1038,9 +1038,192 @@ public class Report2Controller {
 		return "/report2/marketResearchList";
 	}
 	
+	@RequestMapping("/selectMarketResearchListAjax")
+	@ResponseBody
+	public Map<String, Object> selectMarketResearchListAjax(HttpServletRequest request, HttpServletResponse response, @RequestParam(required=false) Map<String, Object> param) throws Exception {
+		Auth auth = AuthUtil.getAuth(request);
+		param.put("userId", auth.getUserId());
+		Map<String, Object> returnMap = reportService.selectMarketResearchList(param);
+		return returnMap;
+	}
+	
 	@RequestMapping(value = "/marketResearchInsert")
 	public String marketResearchInsert( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param ) {
 		return "/report2/marketResearchInsert";
+	}
+	
+	@RequestMapping("/insertMarketResearchTmpAjax")
+	@ResponseBody
+	public Map<String, Object> insertMarketResearchTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray marketNameArr = (JSONArray) parser.parse((String)param.get("marketNameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray marketAddressArr = (JSONArray) parser.parse((String)param.get("marketAddressArr"));
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(marketNameArr);
+			System.err.println(purposeArr);
+			System.err.println(marketAddressArr);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+
+			//int researchIdx = 0;
+			int researchIdx = reportService.insertMarketResearchTmp(param, file);
+			returnMap.put("IDX", researchIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/insertMarketResearchAjax")
+	@ResponseBody
+	public Map<String, Object> insertMarketResearchAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray marketNameArr = (JSONArray) parser.parse((String)param.get("marketNameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray marketAddressArr = (JSONArray) parser.parse((String)param.get("marketAddressArr"));
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(marketNameArr);
+			System.err.println(purposeArr);
+			System.err.println(marketAddressArr);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+
+			//int researchIdx = 0;
+			int researchIdx = reportService.insertMarketResearch(param, file);
+			returnMap.put("IDX", researchIdx);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping(value = "/marketResearchView")
+	public String marketResearchView( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) {
+		//1.lab_market_research 조회
+		Map<String, Object> researchData = reportService.selectMarketResearchData(param);
+		//2.lab_market_research_user 조회
+		List<Map<String, Object>> userList = reportService.selectMarketResearchUserList(param);
+		//3.lab_market_research_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectMarketResearchAddInfoList(param);
+		
+		model.addAttribute("researchData", researchData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		return "/report2/marketResearchView";
+	}
+	
+	@RequestMapping(value = "/marketResearchUpdate")
+	public String marketResearchUpdate( HttpSession session,HttpServletRequest request, HttpServletResponse response, @RequestParam Map<String, Object> param, ModelMap model ) {
+		//1.lab_market_research 조회
+		Map<String, Object> researchData = reportService.selectMarketResearchData(param);
+		//2.lab_market_research_user 조회
+		List<Map<String, Object>> userList = reportService.selectMarketResearchUserList(param);
+		//3.lab_market_research_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectMarketResearchAddInfoList(param);
+		
+		model.addAttribute("researchData", researchData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		return "/report2/marketResearchUpdate";
+	}
+	
+	@RequestMapping("/updateMarketResearchTmpAjax")
+	@ResponseBody
+	public Map<String, Object> updateMarketResearchTmpAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray marketNameArr = (JSONArray) parser.parse((String)param.get("marketNameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray marketAddressArr = (JSONArray) parser.parse((String)param.get("marketAddressArr"));
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(marketNameArr);
+			System.err.println(purposeArr);
+			System.err.println(marketAddressArr);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+
+			reportService.updateMarketResearchTmp(param, file);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
+	}
+	
+	@RequestMapping("/updateMarketResearchAjax")
+	@ResponseBody
+	public Map<String, Object> updateMarketResearchAjax(HttpServletRequest request, HttpServletResponse response
+			, @RequestParam(required=false) Map<String, Object> param
+			, @RequestParam(required=false) MultipartFile... file) throws Exception {
+		Map<String, Object> returnMap = new HashMap<String, Object>();
+		try {
+			JSONParser parser = new JSONParser();
+			JSONArray marketNameArr = (JSONArray) parser.parse((String)param.get("marketNameArr"));
+			JSONArray purposeArr = (JSONArray) parser.parse((String)param.get("purposeArr"));
+			JSONArray marketAddressArr = (JSONArray) parser.parse((String)param.get("marketAddressArr"));
+			JSONArray deptArr = (JSONArray) parser.parse((String)param.get("deptArr"));
+			JSONArray positionArr = (JSONArray) parser.parse((String)param.get("positionArr"));
+			JSONArray nameArr = (JSONArray) parser.parse((String)param.get("nameArr"));
+			
+			Auth auth = AuthUtil.getAuth(request);
+			param.put("userId", auth.getUserId());
+			System.err.println(param);
+			System.err.println(file);
+			System.err.println(marketNameArr);
+			System.err.println(purposeArr);
+			System.err.println(marketAddressArr);
+			System.err.println(deptArr);
+			System.err.println(positionArr);
+			System.err.println(nameArr);
+
+			reportService.updateMarketResearch(param, file);
+			returnMap.put("RESULT", "S");			
+		} catch( Exception e ) {
+			returnMap.put("RESULT", "E");
+			returnMap.put("MESSAGE",e.getMessage());
+		}
+		return returnMap;
 	}
 
 	@RequestMapping(value = "/newProductResultList")

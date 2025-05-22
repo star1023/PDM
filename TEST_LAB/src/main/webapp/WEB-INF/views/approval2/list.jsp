@@ -48,6 +48,8 @@
 				url = "/approval2/businessTripPlanPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'TRIP' ) {
 				url = "/approval2/businessTripPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'RESEARCH' ) {
+				url = "/approval2/marketResearchPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'SENSE_QUALITY' ) {
 				url = "/approval2/senseQualityReportPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			}
@@ -63,6 +65,8 @@
 				url = "/approval2/businessTripPlanPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'TRIP' ) {
 				url = "/approval2/businessTripPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
+			} else if( docType == 'RESEARCH' ) {
+				url = "/approval2/marketResearchPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'SENSE_QUALITY' ) {
 				url = "/approval2/senseQualityReportPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			}
@@ -77,6 +81,8 @@
 			} else if( docType == 'PLAN' ) {
 				url = "";
 			} else if( docType == 'TRIP' ) {
+				url = "";
+			} else if( docType == 'RESEARCH' ) {
 				url = "";
 			} else if( docType == 'SENSE_QUALITY' ) {
 				url = "";	
@@ -93,6 +99,8 @@
 				url = "";
 			} else if( docType == 'TRIP' ) {
 				url = "";
+			} else if( docType == 'RESEARCH' ) {
+				url = "";	
 			} else if( docType == 'SENSE_QUALITY' ) {
 				url = "";	
 			}

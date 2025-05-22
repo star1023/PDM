@@ -571,6 +571,8 @@
 	}
 	
 	function fn_copySearch() {
+		$("#searchValue").val("");
+		$("#searchLayerBody").html("<tr><td colspan=\"5\">검색해주세요</td></tr>");
 		openDialog('dialog_search');
 	}
 	
@@ -582,7 +584,7 @@
 		$("#searchCategory2_div").hide();
 		$("#searchCategory3").removeOption(/./);
 		$("#searchCategory3_div").hide();
-		$("#productLayerBody").html("<tr><td colspan=\"4\">검색해주세요</td></tr>");
+		$("#searchLayerBody").html("<tr><td colspan=\"5\">검색해주세요</td></tr>");
 	}
 	
 	function fn_search() {
@@ -592,25 +594,25 @@
 			url:URL,
 			data:{
 				searchValue : $("#searchValue").val()
+				, tripDiv : "T"
 			},
 			dataType:"json",
 			success:function(result) {
 				console.log(result);
-				//productLayerBody
 				var jsonData = {};
 				jsonData = result;
-				$('#productLayerBody').empty();
+				$('#searchLayerBody').empty();
 				if( jsonData.length == 0 ) {
 					var html = "";
-					$("#productLayerBody").html(html);
+					$("#searchLayerBody").html(html);
 					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
-					$("#productLayerBody").html(html);
+					$("#searchLayerBody").html(html);
 				} else {
 					jsonData.forEach(function(item){
 						var row = '<tr onClick="fn_copy(\''+item.PLAN_IDX+'\')">';
 						row += '<td></td>';
-						row += '<td class="tgnl">'+item.TITLE+'</td>';
-						row += '<td>'+item.TRIP_DESTINATION+'</td>';
+						row += '<td>'+item.TRIP_TYPE_TXT+'</td>';
+						row += '<td class="tgnl">'+item.TITLE+'</td>';						
 						row += '<td>';
 						row += ''+item.TRIP_START_DATE;
 						if( item.TRIP_END_DATE != '' ) {
@@ -618,15 +620,15 @@
 						}
 						row += '</td>';
 						row += '</tr>';
-						$('#productLayerBody').append(row);
+						$('#searchLayerBody').append(row);
 					})
 				}
 			},
 			error:function(request, status, errorThrown){
 				var html = "";
-				$("#productLayerBody").html(html);
+				$("#searchLayerBody").html(html);
 				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
-				$("#productLayerBody").html(html);
+				$("#searchLayerBody").html(html);
 			}			
 		});
 	}
@@ -1189,7 +1191,7 @@
 				<li>
 					<dt>보고서검색</dt>
 					<dd>
-						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 업무내용 등을 입력하세요."/>
+						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 출장효과 등을 입력하세요."/>
 						<button class="btn_small_search ml5" onclick="fn_search()" style="float: left">조회</button>
 					</dd>
 				</li>
@@ -1199,19 +1201,19 @@
 			<table class="tbl07">
 				<colgroup>
 					<col width="40px">
-					<col/>
-					<col width="23%">
+					<col width="15%">
+					<col/>					
 					<col width="30%">
 				</colgroup>
 				<thead>
 					<tr>
 						<th></th>
-						<th>제목</th>
-						<th>출장지</th>
+						<th>출장구분</th>
+						<th>제목</th>						
 						<th>출장일</th>
 					<tr>
 				</thead>
-				<tbody id="productLayerBody">
+				<tbody id="searchLayerBody">
 					<tr>
 						<td colspan="4">검색해주세요</td>
 					</tr>

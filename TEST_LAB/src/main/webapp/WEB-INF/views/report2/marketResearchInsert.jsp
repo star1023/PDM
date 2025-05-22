@@ -175,66 +175,73 @@
 		$('#attatch_common').val('')
 	}
 	
-	//입력확인
-	function fn_insert(){
-		//var tripContents = editor1.getData();
-		var tripContents = editor1.getData();
-		var tripCost = editor2.getData();
-		console.log(editor1.getData());
-		console.log(editor2.getData());
+	function fn_insertTmp() {
 		if( !chkNull($("#title").val()) ) {
 			alert("제목을 입력해 주세요.");
 			$("#title").focus();
 			return;
-		} else if( !chkNull($("#dept").val()) ) {
-			alert("소속을 입력해 주세요.");
-			$("#dept").focus();
-			return;
-		} else if( !chkNull($("#position").val()) ) {
-			alert("직위(직급)을 입력해 주세요.");
-			$("#position").focus();
-			return;
-		} else if( !chkNull($("#name").val()) ) {
-			alert("성명을 입력해 주세요.");
-			$("#name").focus();
-			return;
-		} else if( !chkNull($("#tripPurpose").val()) ) {
-			alert("출장목적을 입력해 주세요.");
-			$("#tripPurpose").focus();
-			return;
-		} else if( !chkNull($("#tripStartDate").val()) ) {
-			alert("출장일을 입력해 주세요.");
-			$("#tripStartDate").focus();
-			return;
-		} else if( !chkNull($("#tripDestination").val()) ) {
-			alert("출장지를 입력해 주세요.");
-			$("#tripDestination").focus();
-			return;
-		} else if( !chkNull(tripContents) ) {
-			alert("업무수행내용을 입력해주세요.");		
-			return;
-		} else if( !chkNull(tripCost) ) {
-			alert("경비를 입력해주세요.");		
-			return;
-		} else if( attatchFileArr.length == 0 ) {
-			alert("첨부파일을 등록해주세요.");		
-			return;			
 		} else {
 			var formData = new FormData();
-			formData.append("tripType",$("#tripType").selectedValues()[0]);
+			formData.append("planIdx",$("#planIdx").val());
 			formData.append("title",$("#title").val());
-			formData.append("dept",$("#dept").val());
-			formData.append("position",$("#position").val());
-			formData.append("name",$("#name").val());
-			formData.append("tripPurpose",$("#tripPurpose").val());
-			formData.append("tripStartDate",$("#tripStartDate").val());
-			formData.append("tripEndDate",$("#tripEndDate").val());
-			formData.append("tripDestination",$("#tripDestination").val());
-			formData.append("tripTransit",$("#tripTransit").val());
-			formData.append("tripContents",tripContents);
-			formData.append("tripCost",tripCost);
-			formData.append("overReason",$("#overReason").val());
-			formData.append("tripEffect",$("#tripEffect").val());
+			formData.append("tripType",$("#tripType").selectedValues()[0]);
+			
+			var marketNameArr = new Array();
+			$('tr[id^=market_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemMarketName = $('#'+ rowId + ' input[name=marketName]').val();
+				if( itemMarketName != '' ) {
+					marketNameArr.push(itemMarketName);	
+				}
+			});
+			formData.append("marketNameArr",JSON.stringify(marketNameArr));
+			
+			var purposeArr = new Array();
+			$('tr[id^=purpose_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemPurpose = $('#'+ rowId + ' input[name=purpose]').val();
+				if( itemPurpose != '' ) {
+					purposeArr.push(itemPurpose);
+				}
+			});
+			formData.append("purposeArr",JSON.stringify(purposeArr));
+			
+			formData.append("researchDate",$("#researchDate").val());
+			
+			var marketAddressArr = new Array();
+			$('tr[id^=address_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemMarketAddress = $('#'+ rowId + ' input[name=marketAddress]').val();
+				if( itemMarketAddress != '' ) {
+					marketAddressArr.push(itemMarketAddress);	
+				}
+			});
+			
+			formData.append("marketAddressArr",JSON.stringify(marketAddressArr));
+			
+			formData.append("cost",$("#cost").val());
+			
+			var deptArr = new Array();
+			var positionArr = new Array();
+			var nameArr = new Array();
+			var validUser = true;
+			$('tr[id^=user_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemDept = $('#'+ rowId + ' input[name=dept]').val();
+				var itemPosition = $('#'+ rowId + ' input[name=position]').val();
+				var itemNmae = $('#'+ rowId + ' input[name=name]').val();
+				if( itemDept == '' && itemPosition == '' && itemNmae == '' ) {
+					validUser = false;
+				}
+				deptArr.push(itemDept);
+				positionArr.push(itemPosition);
+				nameArr.push(itemNmae);
+			});
+			formData.append("deptArr",JSON.stringify(deptArr));
+			formData.append("positionArr",JSON.stringify(positionArr));
+			formData.append("nameArr",JSON.stringify(nameArr));
+			formData.append("docType", $("#docType").val());
+			formData.append("status", "TMP");
 			
 			for (var i = 0; i < attatchFileArr.length; i++) {
 				formData.append('file', attatchFileArr[i])
@@ -248,7 +255,137 @@
 				formData.append('fileType', attatchFileTypeArr[i].fileType)			
 			}
 			
-			URL = "../report2/insertBusinessTripAjax";
+			var URL = "../report2/insertMarketResearchTmpAjax";
+			$.ajax({
+				type:"POST",
+				url:URL,
+				data: formData,
+				processData: false,
+		        contentType: false,
+		        cache: false,
+				dataType:"json",
+				success:function(result) {
+					console.log(result);
+				},
+				error:function(request, status, errorThrown){
+					alert("오류가 발생하였습니다.\n다시 시도하여 주세요.");
+				}			
+			});
+		}
+	}
+	//입력확인
+	function fn_insert(){
+		if( !chkNull($("#title").val()) ) {
+			alert("제목을 입력해 주세요.");
+			$("#title").focus();
+			return;
+		} else if( !chkNull($("#researchDate").val()) ) {
+			alert("시장조사일시를 입력해 주세요.");
+			$("#researchDate").focus();
+			return;
+		} else if( !chkNull($("#cost").val()) ) {
+			alert("비용을 입력해 주세요.");
+			$("#cost").focus();
+			return;
+		} else {
+			var formData = new FormData();
+			formData.append("planIdx",$("#planIdx").val());
+			formData.append("title",$("#title").val());
+			formData.append("tripType",$("#tripType").selectedValues()[0]);
+			
+			var marketNameArr = new Array();
+			$('tr[id^=market_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemMarketName = $('#'+ rowId + ' input[name=marketName]').val();
+				if( itemMarketName != '' ) {
+					marketNameArr.push(itemMarketName);	
+				}
+			});
+			
+			if( marketNameArr.length == 0 ) {
+				alert("대상업소를 입력해주세요.");
+				return;
+			}
+			
+			formData.append("marketNameArr",JSON.stringify(marketNameArr));
+			
+			var purposeArr = new Array();
+			$('tr[id^=purpose_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemPurpose = $('#'+ rowId + ' input[name=purpose]').val();
+				if( itemPurpose != '' ) {
+					purposeArr.push(itemPurpose);
+				}
+			});
+			
+			if( purposeArr.length == 0 ) {
+				alert("시장조사 목적을 입력해주세요.");
+				return;
+			}
+			
+			formData.append("purposeArr",JSON.stringify(purposeArr));
+			
+			formData.append("researchDate",$("#researchDate").val());
+			
+			var marketAddressArr = new Array();
+			$('tr[id^=address_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemMarketAddress = $('#'+ rowId + ' input[name=marketAddress]').val();
+				if( itemMarketAddress != '' ) {
+					marketAddressArr.push(itemMarketAddress);	
+				}
+			});
+			
+			if( marketAddressArr.length == 0 ) {
+				alert("시장조사 장소의 주소를 입력해주세요.");
+				return;
+			}
+			
+			formData.append("marketAddressArr",JSON.stringify(marketAddressArr));
+			
+			formData.append("cost",$("#cost").val());
+			
+			var deptArr = new Array();
+			var positionArr = new Array();
+			var nameArr = new Array();
+			var validUser = true;
+			$('tr[id^=user_tr]').toArray().forEach(function(contRow){
+				var rowId = $(contRow).attr('id');
+				var itemDept = $('#'+ rowId + ' input[name=dept]').val();
+				var itemPosition = $('#'+ rowId + ' input[name=position]').val();
+				var itemNmae = $('#'+ rowId + ' input[name=name]').val();
+				if( itemDept == '' && itemPosition == '' && itemNmae == '' ) {
+					validUser = false;
+				}
+				deptArr.push(itemDept);
+				positionArr.push(itemPosition);
+				nameArr.push(itemNmae);
+			});
+			
+			if( !validUser ) {
+				alert("조사자를 입력해주세요.");
+				return;
+			}
+			
+			formData.append("deptArr",JSON.stringify(deptArr));
+			formData.append("positionArr",JSON.stringify(positionArr));
+			formData.append("nameArr",JSON.stringify(nameArr));
+			formData.append("docType", $("#docType").val());
+			formData.append("status", "REG");
+			
+			for (var i = 0; i < attatchFileArr.length; i++) {
+				formData.append('file', attatchFileArr[i])
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileTypeText', attatchFileTypeArr[i].fileTypeText)			
+			}
+			
+			for (var i = 0; i < attatchFileTypeArr.length; i++) {
+				formData.append('fileType', attatchFileTypeArr[i].fileType)			
+			}
+			
+			URL = "../report2/insertMarketResearchAjax";
 			$.ajax({
 				type:"POST",
 				url:URL,
@@ -315,7 +452,7 @@
 	}
 
 	function fn_goList() {
-		location.href = '/report2/businessTripList';
+		location.href = '/report2/marketResearchList';
 	}
 	
 	function fn_apprSubmit(){
@@ -345,18 +482,15 @@
 	}
 	
 	function fn_copySearch() {
+		$("#searchValue").val("");
+		$("#searchLayerBody").html("<tr><td colspan=\"5\">검색해주세요</td></tr>");
 		openDialog('dialog_search');
 	}
 	
 	function fn_closeSearch() {
 		closeDialog('dialog_search');
 		$("#searchValue").val("");
-		$("#searchCategory1").removeOption(/./);
-		$("#searchCategory2").removeOption(/./);
-		$("#searchCategory2_div").hide();
-		$("#searchCategory3").removeOption(/./);
-		$("#searchCategory3_div").hide();
-		$("#productLayerBody").html("<tr><td colspan=\"4\">검색해주세요</td></tr>");
+		$("#searchLayerBody").html("<tr><td colspan=\"5\">검색해주세요</td></tr>");
 	}
 	
 	function fn_search() {
@@ -366,25 +500,24 @@
 			url:URL,
 			data:{
 				searchValue : $("#searchValue").val()
+				, tripDiv : "T"
 			},
 			dataType:"json",
 			success:function(result) {
-				console.log(result);
-				//productLayerBody
 				var jsonData = {};
 				jsonData = result;
-				$('#productLayerBody').empty();
+				$('#searchLayerBody').empty();
 				if( jsonData.length == 0 ) {
 					var html = "";
-					$("#productLayerBody").html(html);
+					$("#searchLayerBody").html(html);
 					html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
-					$("#productLayerBody").html(html);
+					$("#searchLayerBody").html(html);
 				} else {
 					jsonData.forEach(function(item){
 						var row = '<tr onClick="fn_copy(\''+item.PLAN_IDX+'\')">';
 						row += '<td></td>';
-						row += '<td class="tgnl">'+item.TITLE+'</td>';
-						row += '<td>'+item.TRIP_DESTINATION+'</td>';
+						row += '<td>'+item.TRIP_TYPE_TXT+'</td>';
+						row += '<td class="tgnl">'+item.TITLE+'</td>';						
 						row += '<td>';
 						row += ''+item.TRIP_START_DATE;
 						if( item.TRIP_END_DATE != '' ) {
@@ -392,15 +525,15 @@
 						}
 						row += '</td>';
 						row += '</tr>';
-						$('#productLayerBody').append(row);
+						$('#searchLayerBody').append(row);
 					})
 				}
 			},
 			error:function(request, status, errorThrown){
 				var html = "";
-				$("#productLayerBody").html(html);
+				$("#searchLayerBody").html(html);
 				html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
-				$("#productLayerBody").html(html);
+				$("#searchLayerBody").html(html);
 			}			
 		});
 	}
@@ -416,19 +549,38 @@
 			dataType:"json",
 			success:function(result) {
 				console.log(result);
-				$("#tripType").selectOptions(result.TRIP_TYPE);
+				$("#planIdx").val(result.planData.data.PLAN_IDX);
+				$("#tripType").selectOptions(result.planData.data.TRIP_TYPE);
 				$("#tripType_label").html($("#tripType").selectedTexts());
-				$("#tripStartDate").val(result.TRIP_START_DATE);
-				$("#tripEndDate").val(result.TRIP_END_DATE);
-				$("#title").val(result.TITLE);
-				$("#dept").val(result.DEPT);
-				$("#position").val(result.POSITION);
-				$("#name").val(result.NAME);
+				$("#title").val(result.planData.data.TITLE);
+				$("#cost").val(result.planData.data.TRIP_COST);
+				
+				var count = 0;
+				result.infoList.forEach(function(item,index){
+					if( item.INFO_TYPE == 'PUR' ) {
+						if( count > 0 ) {
+							$("#span_purpose").trigger("click");	
+						}
+						var trObj = $("#purpose_tbody tr:last");
+						trObj.find("input[name='purpose']").val(item.INFO_TEXT);
+						count++;
+					}
+				});
+
+				result.userList.forEach(function(item,index){
+					if( index > 0 ) {
+						$("#span_user").trigger("click");	
+					}					
+					var trObj = $("#user_tbody tr:last");
+					trObj.find("input[name='dept']").val(item.DEPT);
+					trObj.find("input[name='position']").val(item.POSITION);
+					trObj.find("input[name='name']").val(item.NAME);
+				});
+				
+				
 				$("#tripPurpose").val(result.TRIP_PURPOSE);
 				$("#tripDestination").val(result.TRIP_DESTINATION);
 				$("#tripTransit").val(result.TRIP_TRANSIT);
-				editor1.setData(result.CONTENTS);
-				editor2.setData(result.TRIP_COST);
 				$("#tripEffect").val(result.TRIP_EFFECT);
 				fn_closeSearch();
 			},
@@ -503,7 +655,23 @@
 					<tbody>
 						<tr>
 							<th style="border-left: none;">제목</th>
-							<td colspan="3"><input type="text" name="title" id="title" style="width: 90%;" class="req" /></td>
+							<td colspan="3">
+								<input type="hidden" name="planIdx" id="planIdx"/>
+								<input type="text" name="title" id="title" style="width: 90%;" class="req" />
+							</td>
+						</tr>
+						<tr>
+							<th style="border-left: none;">출장구분</th>
+							<td colspan="3">
+								<div class="selectbox" style="width:100px;">  
+									<label for="tripType" id="tripType_label">선택</label> 
+									<select name="tripType" id="tripType">
+										<option value="">선택</option>
+										<option value="I">국내</option>
+										<option value="O">해외</option>
+									</select>
+								</div>
+							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">대상업소<span onClick="fn_addCol('market')" id="span_market">(+)</span></th>
@@ -530,7 +698,7 @@
 							<th style="border-left: none;">목적<span onClick="fn_addCol('purpose')" id="span_purpose">(+)</span></th>
 							<td colspan="3">								
 								<table width="100%" border="0">
-									<tbody id="purpose_tbody" name="market_tbody">
+									<tbody id="purpose_tbody" name="purpose_tbody">
 										<tr id="purpose_tr_1">
 											<td>
 												<input type="text" name="purpose" id="purpose" style="width: 90%;" class="req" />
@@ -552,8 +720,25 @@
 							<td colspan="3"><input type="text" name="researchDate" id="researchDate" style="width: 150px;" class="req" /></td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">주소</th>
-							<td colspan="3"><input type="text" name="marketAddress" id="marketAddress" style="width: 90%;" class="req" /></td>
+							<th style="border-left: none;">주소<span onClick="fn_addCol('address')" id="span_address">(+)</span></th>
+							<td colspan="3">
+								<table width="100%" border="0">
+									<tbody id="address_tbody" name="address_tbody">
+										<tr id="address_tr_1">
+											<td>
+												<input type="text" name="marketAddress" id="marketAddress" style="width: 90%;" class="req" />
+											</td>
+										</tr>
+									</tbody>
+									<tbody id="address_tbody_temp" name="address_tbody_temp" style="display:none">
+										<tr id="address_tmp_tr_1" style="display:none">
+											<td>
+												<input type="text" name="marketAddress" id="marketAddress" style="width: 90%;" class="req" />
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
 						</tr>
 						<tr>
 							<th style="border-left: none;">비용</th>
@@ -562,8 +747,42 @@
 							</td>
 						</tr>
 						<tr>
-							<th style="border-left: none;">조사자</th>
-							<td colspan="3"><input type="text" name="cost" id="cost" style="width: 90%;" class="req" /></td>
+							<th style="border-left: none;">조사자<span onClick="fn_addCol('user')" id="span_user">(+)</span></th>
+							<td colspan="3">
+								<table width="100%">
+									<tr>
+										<td>소속</td>
+										<td>직위(직급)</td>
+										<td>성명</td>
+									</tr>
+									<tbody id="user_tbody" name="user_tbody">
+										<tr id="user_tr_1">
+											<td>
+												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
+											</td>
+											<td>
+												<input type="text" name="position" id="position" style="width: 100%;" class="req" />
+											</td>
+											<td>
+												<input type="text" name="name" id="name" style="width: 100%;" class="req" />
+											</td>
+										</tr>
+									</tbody>
+									<tbody id="user_tbody_temp" name="user_tbody_temp" style="display:none">
+										<tr id="user_tmp_tr_1" style="display:none">
+											<td>
+												<input type="text" name="dept" id="dept" style="width: 100%;" class="req" />
+											</td>
+											<td>
+												<input type="text" name="position" id="position" style="width: 100%;" class="req" />
+											</td>
+											<td>
+												<input type="text" name="name" id="name" style="width: 100%;" class="req" />
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
 						</tr>												
 						<tr>
 							<th style="border-left: none;">결재라인</th>
@@ -765,7 +984,7 @@
 				<li>
 					<dt>보고서검색</dt>
 					<dd>
-						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 업무내용 등을 입력하세요."/>
+						<input type="text" value="" class="req" style="width:302px; float: left" name="searchValue" id="searchValue" placeholder="제목, 목적, 출장지, 출장효과 등을 입력하세요."/>
 						<button class="btn_small_search ml5" onclick="fn_search()" style="float: left">조회</button>
 					</dd>
 				</li>
@@ -775,21 +994,21 @@
 			<table class="tbl07">
 				<colgroup>
 					<col width="40px">
-					<col/>
-					<col width="23%">
+					<col width="15%">
+					<col/>					
 					<col width="30%">
 				</colgroup>
 				<thead>
 					<tr>
 						<th></th>
-						<th>제목</th>
-						<th>출장지</th>
+						<th>출장구분</th>
+						<th>제목</th>						
 						<th>출장일</th>
 					<tr>
 				</thead>
-				<tbody id="productLayerBody">
+				<tbody id="searchLayerBody">
 					<tr>
-						<td colspan="4">검색해주세요</td>
+						<td colspan="5">검색해주세요</td>
 					</tr>
 				</tbody>
 			</table>

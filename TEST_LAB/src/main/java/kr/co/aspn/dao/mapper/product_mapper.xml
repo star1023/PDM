@@ -411,7 +411,7 @@
 			WHEN lh.HISTORY_TYPE  = 'V' then '개정'
 			WHEN lh.HISTORY_TYPE  = 'D' then '삭제'
 			WHEN lh.HISTORY_TYPE  = 'U' then '수정'
-			WHEN lh.HISTORY_TYPE  = 'U' then '임시저장'
+			WHEN lh.HISTORY_TYPE  = 'T' then '임시저장'
 			END HISTORY_TYPE_TXT 
 		, lp.VERSION_NO
 		, lp.NAME 

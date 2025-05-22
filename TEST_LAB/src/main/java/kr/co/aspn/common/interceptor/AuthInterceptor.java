@@ -39,11 +39,13 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		String sRequestUri = request.getRequestURI();
 		logger.debug("사용자 접속 Uri. : "+sRequestUri);
+		System.err.println("사용자 접속 Uri. : "+sRequestUri);
 		
 		boolean isExcept = false;
 		boolean hasAuth = AuthUtil.hasAuth(request);
 		logger.debug("hasAuth : "+hasAuth);
-		
+		System.err.println("hasAuth : "+hasAuth);
+		System.err.println("user id : "+AuthUtil.getAuth(request).getUserId());
 		
 		List<String> exceptUriList = new ArrayList<String>();
 		exceptUriList.add("/common");

@@ -391,4 +391,76 @@ public class Report2DaoImpl implements Report2Dao {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectList("report2.selectChemicalTestList", param);
 	}
+
+	@Override
+	public int selectMarketResearchSeq() {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectMarketResearchSeq");
+	}
+
+	@Override
+	public void insertMarketResearch(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertMarketResearch", param);
+	}
+
+	@Override
+	public void insertMarketResearchAddInfo(ArrayList<HashMap<String, Object>> addInfoList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertMarketResearchAddInfo", addInfoList);
+	}
+
+	@Override
+	public void insertMarketResearchUser(ArrayList<HashMap<String, Object>> userList) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.insert("report2.insertMarketResearchUser", userList);
+	}
+
+	@Override
+	public int selectMarketResearchCount(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectMarketResearchCount", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectMarketResearchList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectMarketResearchList", param);
+	}
+
+	@Override
+	public Map<String, String> selectMarketResearchData(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectOne("report2.selectMarketResearchData",param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectMarketResearchUserList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectMarketResearchUserList",param);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectMarketResearchAddInfoList(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("report2.selectMarketResearchAddInfoList",param);
+	}
+
+	@Override
+	public void updateMarketResearch(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("report2.updateMarketResearch", param);
+	}
+
+	@Override
+	public void deleteMarketResearchAddInfo(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteMarketResearchAddInfo",param);
+	}
+
+	@Override
+	public void deleteMarketResearchUser(Map<String, Object> param) throws Exception {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.delete("report2.deleteMarketResearchUser",param);
+	}
 }

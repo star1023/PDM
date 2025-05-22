@@ -84,8 +84,24 @@ public interface Report2Service {
 	List<Map<String, Object>> selectBusinessTripContentsList(Map<String, Object> param);
 
 	void updateBusinessTripTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
-
 	
+	int insertMarketResearchTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;
+	
+	int insertMarketResearch(Map<String, Object> param, MultipartFile[] file) throws Exception;	
+	
+	Map<String, Object> selectMarketResearchList(Map<String, Object> param) throws Exception;
+	
+	Map<String, Object> selectMarketResearchData(Map<String, Object> param);
+
+	List<Map<String, Object>> selectMarketResearchUserList(Map<String, Object> param);
+
+	List<Map<String, Object>> selectMarketResearchAddInfoList(Map<String, Object> param);
+	
+	void updateMarketResearchTmp(Map<String, Object> param, MultipartFile[] file) throws Exception;	
+	
+	void updateMarketResearch(Map<String, Object> param, MultipartFile[] file) throws Exception;
+
+	//추가완료 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
 	Map<String, Object> selectNewProductResultList(Map<String, Object> param) throws Exception;
 	

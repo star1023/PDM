@@ -15,7 +15,7 @@
 </style>
 
 <link href="../resources/css/mfg.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="/resources/js/appr/apprClass.js?v=<%= System.currentTimeMillis()%>"></script>
+<script type="text/javascript" src="../resources/js/appr/apprClass.js?v=<%= System.currentTimeMillis()%>"></script>
 <script type="text/javascript">
 	$(document).ready(function(){
 		//history.replaceState({}, null, location.pathname);

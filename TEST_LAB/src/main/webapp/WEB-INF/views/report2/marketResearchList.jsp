@@ -6,7 +6,7 @@
 <title>시장조사결과보고서</title>
 <script type="text/javascript">
 $(document).ready(function(){
-	//fn_loadList(1);
+	fn_loadList(1);
 });
 
 function fn_loadList(pageNo) {
@@ -15,7 +15,7 @@ function fn_loadList(pageNo) {
 	if( viewCount == '' ) {
 		viewCount = "10";
 	}
-	$("#list").html("<tr><td align='center' colspan='6'>조회중입니다.</td></tr>");
+	$("#list").html("<tr><td align='center' colspan='5'>조회중입니다.</td></tr>");
 	$('.page_navi').html("");
 	
 	$.ajax({
@@ -34,11 +34,26 @@ function fn_loadList(pageNo) {
 			if( data.totalCount > 0 ) {
 				$("#list").html(html);
 				data.list.forEach(function (item) {
-
+					html += "<tr>";
+					html += "	<td><div class=\"ellipsis_txt tgnl\">&nbsp;&nbsp;<a href=\"#\" onClick=\"fn_view('"+item.RESEARCH_IDX+"')\">"+nvl(item.TITLE,'&nbsp;')+"</a></div></td>";					
+					html += "	<td>"+nvl(item.RESEARCH_DATE,'&nbsp;')+"</td>";
+					html += "	<td>"+nvl(item.STATUS_TXT,'&nbsp;')+"</td>";
+					html += "	<td>"+nvl(item.DOC_OWNER_NAME,'&nbsp;')+"</td>";
+					html += "	<td>";
+					if( item.IS_LAST == 'Y' ) {
+						html += "		<li style=\"float:none; display:inline\">";
+						html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_viewHistory('"+item.RESEARCH_IDX+"')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
+						if( item.STATUS == 'COND_APPR' || item.STATUS == 'TMP' ) {
+							html += "			<button class=\"btn_doc\" onclick=\"javascript:fn_update('"+item.RESEARCH_IDX+"')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
+						}
+						html += "		</li>";
+					}
+					html += "	</td>";
+					html += "</tr>"	
 				});				
 			} else {
 				$("#list").html(html);
-				html += "<tr><td align='center' colspan='6'>데이터가 없습니다.</td></tr>";
+				html += "<tr><td align='center' colspan='5'>데이터가 없습니다.</td></tr>";
 			}			
 			$("#list").html(html);
 			$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
@@ -47,7 +62,7 @@ function fn_loadList(pageNo) {
 		error:function(request, status, errorThrown){
 			var html = "";
 			$("#list").html(html);
-			html += "<tr><td align='center' colspan='6'>오류가 발생하였습니다.</td></tr>";
+			html += "<tr><td align='center' colspan='5'>오류가 발생하였습니다.</td></tr>";
 			$("#list").html(html);
 			$('.page_navi').html(data.navi.prevBlock+data.navi.pageList+data.navi.nextBlock);
 			$('#pageNo').val(data.navi.pageNo);
@@ -184,18 +199,16 @@ function fn_viewHistory(idx) {
 			<div class="main_tbl">
 				<table class="tbl01">
 					<colgroup id="list_colgroup">						
-						<col width="8%">
 						<col />						
-						<col width="25%">
+						<col width="10%">
 						<col width="10%">
 						<col width="10%">						
 						<col width="15%">						
 					</colgroup>
 					<thead id="list_header">
 						<tr>
-							<th>출장구분</th>
 							<th>제목</th>							
-							<th>출장지</th>
+							<th>시행일시</th>
 							<th>문서상태</th>
 							<th>작성자</th>
 							<th></th>

@@ -330,6 +330,32 @@ public class Approval2Controller {
 		return "/approval2/businessTripPopup";
 	}
 	
+	@RequestMapping("/marketResearchPopup")
+	public String marketResearchPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		//1.lab_market_research 조회
+		Map<String, Object> researchData = reportService.selectMarketResearchData(param);
+		//2.lab_market_research_user 조회
+		List<Map<String, Object>> userList = reportService.selectMarketResearchUserList(param);
+		//3.lab_market_research_add_info 조회
+		List<Map<String, Object>> infoList = reportService.selectMarketResearchAddInfoList(param);
+		
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("researchData", researchData);
+		model.addAttribute("userList", userList);
+		model.addAttribute("infoList", infoList);
+		model.addAttribute("paramVO", param);
+
+		return "/approval2/marketResearchPopup";
+	}
+	
 	@RequestMapping("/senseQualityReportPopup")
 	public String senseQualityReportPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
 		System.err.println(param);
