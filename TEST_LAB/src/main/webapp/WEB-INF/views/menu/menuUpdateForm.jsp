@@ -1501,7 +1501,7 @@ var selectedArr = new Array();
 	        tokenBox.appendChild(token);
 	    });
 
-	    hiddenInput.value = selectedCodes.join(',');
+	    hiddenInput.value = selectedCodes.filter(Boolean).join(',');
 	    closeDialog('dialog_brand');
 	}
 	
@@ -1525,23 +1525,24 @@ var selectedArr = new Array();
 	function updateHiddenBrandCodes(idx) {
 	    const tokens = document.querySelectorAll("#brandTokenBox_" + idx + " .brand-token");
 	    const codes = [...tokens].map(t => t.getAttribute("data-code"));
-	    document.getElementById("brandCodeValues_" + idx).value = codes.join(',');
+	    document.getElementById("brandCodeValues_" + idx).value = codes.filter(Boolean).join(',');
 	}
-
+/*
+	function updateHiddenBrandCodes(idx) {
+	    const tokenBox = document.getElementById('brandTokenBox_' + idx);
+	    const hiddenInput = document.getElementById('brandCodeValues_' + idx);
+	
+	    const codes = [];
+	    tokenBox.querySelectorAll('.brand-token').forEach(token => {
+	        const code = token.dataset.code;
+	        if (code) codes.push(code);
+	    });
+	
+	    hiddenInput.value = codes.join(',');
+	}
+*/
 // ---------------------------------------------- BRAND POPUP -------------------------------------------
 
-function updateHiddenBrandCodes(idx) {
-    const tokenBox = document.getElementById('brandTokenBox_' + idx);
-    const hiddenInput = document.getElementById('brandCodeValues_' + idx);
-
-    const codes = [];
-    tokenBox.querySelectorAll('.brand-token').forEach(token => {
-        const code = token.dataset.code;
-        if (code) codes.push(code);
-    });
-
-    hiddenInput.value = codes.join(',');
-}
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -1919,8 +1920,20 @@ function updateHiddenBrandCodes(idx) {
 							  </c:if>
 							</div>
 				            <!-- ✅ 코드 hidden input -->
-				            <input type="hidden" id="brandCodeValues_1" name="brandCodeValues_1"
-				              value="<c:forEach items='${addInfoList}' var='item'><c:if test='${item.INFO_TYPE == "USB"}'>${item.INFO_TEXT},</c:if></c:forEach>">
+							<c:set var="usbCodes" value="" />
+							<c:forEach items="${addInfoList}" var="item" varStatus="status">
+							  <c:if test="${item.INFO_TYPE == 'USB'}">
+							    <c:choose>
+							      <c:when test="${empty usbCodes}">
+							        <c:set var="usbCodes" value="${item.INFO_TEXT}" />
+							      </c:when>
+							      <c:otherwise>
+							        <c:set var="usbCodes" value="${usbCodes},${item.INFO_TEXT}" />
+							      </c:otherwise>
+							    </c:choose>
+							  </c:if>
+							</c:forEach>
+							<input type="hidden" id="brandCodeValues_1" name="brandCodeValues_1" value="${usbCodes}" />
 				          </div>
 				        </td>
 				      </tr>

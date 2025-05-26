@@ -2155,8 +2155,19 @@ var selectedArr = new Array();
 							  </c:if>
 							</div>
 				            <!-- ✅ 코드 hidden input -->
-				            <input type="hidden" id="brandCodeValues_1" name="brandCodeValues_1"
-				              value="<c:forEach items='${addInfoList}' var='item'><c:if test='${item.INFO_TYPE == "USB"}'>${item.INFO_TEXT},</c:if></c:forEach>">
+							<c:forEach items="${addInfoList}" var="item" varStatus="status">
+							  <c:if test="${item.INFO_TYPE == 'USB'}">
+							    <c:choose>
+							      <c:when test="${empty usbCodeList}">
+							        <c:set var="usbCodeList" value="${item.INFO_TEXT}" />
+							      </c:when>
+							      <c:otherwise>
+							        <c:set var="usbCodeList" value="${usbCodeList},${item.INFO_TEXT}" />
+							      </c:otherwise>
+							    </c:choose>
+							  </c:if>
+							</c:forEach>
+							<input type="hidden" id="brandCodeValues_1" name="brandCodeValues_1" value="${usbCodeList}" />
 				          </div>
 				        </td>
 				      </tr>

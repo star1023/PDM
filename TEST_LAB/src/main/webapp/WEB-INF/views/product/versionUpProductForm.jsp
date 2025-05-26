@@ -48,6 +48,8 @@ var selectedArr = new Array();
 		fn.autoComplete($("#keyword"));
 	});
 	
+	let _brandFullList = []; // 전체 브랜드 저장용 전역변수
+	
 	function fn_closeErpMatRayer(){
 		$('#searchErpMatValue').val('')
 		$('#erpMatLayerBody').empty();
@@ -739,6 +741,22 @@ var selectedArr = new Array();
 			});		
 			formData.append("improveArr", improveArr);		
 			
+			// 용도
+			const usageType = $('select[name=usageSelect]').val();
+
+			if (usageType === 'BRAND') {
+			    const brandCodes = $('#brandCodeValues_1').val();
+			    if (brandCodes) {
+			        formData.append("usageArr", brandCodes);
+			    }
+			} else if (usageType === 'CUSTOM') {
+			    const customText = $('#customUsage_1').val();
+			    if (customText) {
+			        formData.append("usageArr", customText.trim());
+			    }
+			}
+			formData.append("usageType", usageType);
+			
 			var newItemNameArr = new Array();
 			var newItemStandardArr = new Array();
 			var newItemSupplierArr = new Array();
@@ -982,6 +1000,22 @@ var selectedArr = new Array();
 				improveArr.push($('#'+ rowId + ' input[name=improve]').val());
 			});		
 			formData.append("improveArr", improveArr);		
+			
+			// 용도
+			const usageType = $('select[name=usageSelect]').val();
+
+			if (usageType === 'BRAND') {
+			    const brandCodes = $('#brandCodeValues_1').val();
+			    if (brandCodes) {
+			        formData.append("usageArr", brandCodes);
+			    }
+			} else if (usageType === 'CUSTOM') {
+			    const customText = $('#customUsage_1').val();
+			    if (customText) {
+			        formData.append("usageArr", customText.trim());
+			    }
+			}
+			formData.append("usageType", usageType);
 			
 			var newItemNameArr = new Array();
 			var newItemStandardArr = new Array();
@@ -1583,6 +1617,224 @@ var selectedArr = new Array();
 			if($('#'+checkBoxId).is(':checked')) $(v).remove();
 		})
 	}
+	
+// ---------------------------------------------- BRAND POPUP -------------------------------------------
+	function onUsageChange(select, idx) {
+	    // label 업데이트
+	    const label = select.parentNode.parentNode.querySelector('label');
+	    if (label) {
+  	      label.textContent = select.options[select.selectedIndex].text;
+	    }
+	    // 3단계 위로 올라가서 td 찾기
+	    var td = select.parentNode.parentNode.parentNode;
+	    var contentTd = td.nextElementSibling; // 옆에 있는 내용 td
+
+	    contentTd.innerHTML = ''; // 내용 초기화
+
+	    if (select.value === 'BRAND') {
+	        const wrapper = document.createElement('div');
+	        wrapper.style = 'width: 100%;';
+
+	        // ✅ 전체를 감쌀 컨테이너 (토큰 + 버튼)
+	        const flexContainer = document.createElement('div');
+	        flexContainer.style = 'display: flex; margin-left: 10px; justify-content: space-between; align-items: center; gap: 10px;';
+
+	        // ✅ 토큰이 보여질 영역 (왼쪽)
+	        const tokenDiv = document.createElement('div');
+	        tokenDiv.id = 'brandTokenBox_' + idx;
+	        tokenDiv.className = 'token-box';
+	        tokenDiv.style = 'display: flex; flex-wrap: wrap; gap: 5px; flex: 1;';
+
+	        // ✅ 버튼 그룹 (오른쪽)
+	        const buttonGroup = document.createElement('div');
+	        buttonGroup.style = 'display: flex; gap: 5px;';
+
+	        const btnSearch = document.createElement('button');
+	        btnSearch.className = 'btn_small_search ml5';
+	        btnSearch.textContent = '조회';
+	        btnSearch.onclick = function () {
+	            openBrandDialog(idx);
+	        };
+
+	        const btnReset = document.createElement('button');
+	        btnReset.className = 'btn_small_search ml5';
+	        btnReset.textContent = '초기화';
+	        btnReset.onclick = function () {
+	            tokenDiv.innerHTML = '';
+	            hiddenInput.value = '';
+	        };
+
+	        buttonGroup.appendChild(btnSearch);
+	        buttonGroup.appendChild(btnReset);
+
+	        // ✅ 숨겨진 input (브랜드 코드 값들)
+	        const hiddenInput = document.createElement('input');
+	        hiddenInput.type = 'hidden';
+	        hiddenInput.id = 'brandCodeValues_' + idx;
+	        hiddenInput.name = 'brandCodeValues_' + idx;
+
+	        // ✅ 조합
+	        flexContainer.appendChild(tokenDiv);
+	        flexContainer.appendChild(buttonGroup);
+	        wrapper.appendChild(flexContainer);
+	        wrapper.appendChild(hiddenInput);
+	        contentTd.appendChild(wrapper);
+	    } else if (select.value === 'CUSTOM') {
+	        const input = document.createElement('input');
+	        input.type = 'text';
+	        input.id = 'customUsage_' + idx;
+	        input.placeholder = '용도를 입력하세요';
+	        input.className = 'req';
+	        input.style = 'width:99%;';
+	        contentTd.appendChild(input);
+	    }
+	}
+
+	function openBrandDialog(idx) {
+	    window._brandIdx = idx;
+	    document.getElementById("dialog_brand").style.display = "block";
+
+	    if (_brandFullList.length > 0) {
+	        // 이미 로드된 경우 필터 없이 전체 출력
+	        renderBrandTable(_brandFullList);
+	        return;
+	    }
+
+	    $.ajax({
+	        type: "POST",
+	        url: "../common/codeListAjax",
+	        data: { groupCode: "BRAND" },
+	        dataType: "json",
+	        success: function (data) {
+	            _brandFullList = data.RESULT; // ✅ 전역 변수에 저장
+	            renderBrandTable(_brandFullList); // 전체 출력
+	        },
+	        error: function () {
+	            alert("브랜드 정보를 불러오는데 실패했습니다.");
+	        }
+	    });
+	}
+	
+	function renderBrandTable(brandList) {
+	    const idx = window._brandIdx;
+	    const selectedCodesStr = document.getElementById("brandCodeValues_" + idx)?.value || "";
+	    const selectedCodes = selectedCodesStr.split(',').map(code => code.trim());
+
+	    const tbody = document.getElementById("brandLayerBody");
+	    tbody.innerHTML = "";
+
+	    const countElement = document.getElementById("brandCount") || document.getElementById("matCount");
+
+	    if (!brandList || brandList.length === 0) {
+	        tbody.innerHTML = "<tr><td colspan='3'>검색 결과가 없습니다.</td></tr>";
+	        if (countElement) countElement.textContent = "0";
+	        return;
+	    }
+
+	    brandList.forEach(function (brand) {
+	        const isChecked = selectedCodes.includes(brand.itemCode);
+
+	        const row = document.createElement("tr");
+	        row.innerHTML =
+	            "<td><input type='checkbox' style='width:20px; height:20px;' name='brandChk' value='" +
+	            brand.itemCode +
+	            "' data-name='" +
+	            brand.itemName +
+	            "'" + (isChecked ? " checked" : "") + "></td>" +
+	            "<td>" + brand.itemCode + "</td>" +
+	            "<td>" + brand.itemName + "</td>";
+	        tbody.appendChild(row);
+	    });
+
+	    if (countElement) countElement.textContent = brandList.length;
+	}
+
+	
+	function chooseBrandMulti() {
+	    const idx = window._brandIdx;
+	    const checked = document.querySelectorAll("input[name='brandChk']:checked");
+
+	    const tokenBox = document.getElementById("brandTokenBox_" + idx);
+	    const hiddenInput = document.getElementById("brandCodeValues_" + idx);
+
+	    tokenBox.innerHTML = ''; // 기존 토큰 초기화
+	    let selectedCodes = [];
+
+	    checked.forEach(item => {
+	        const code = item.value;
+	        const name = item.getAttribute("data-name");
+	        selectedCodes.push(code);
+
+	        const token = document.createElement("span");
+	        token.className = "brand-token";
+	        token.setAttribute("data-code", code);
+	        token.style = `
+	            display: flex;
+	            align-items: center;
+	            background: #e0e0e0;
+	            border-radius: 12px;
+	            padding: 4px 8px;
+	            margin-right: 5px;
+	            font-size: 13px;
+	        `;
+
+	        // ❌ 삭제 버튼
+	        const removeBtn = document.createElement("span");
+	        removeBtn.textContent = "✕";
+	        removeBtn.style = `
+	            font-weight: bold;
+	            margin-right: 6px;
+	            cursor: pointer;
+	            color: #666;
+	        `;
+	        removeBtn.onclick = function () {
+	            token.remove();
+	            updateHiddenBrandCodes(idx);
+	        };
+
+	        token.appendChild(removeBtn);
+	        token.append(name); // 브랜드명만 보여줌
+	        tokenBox.appendChild(token);
+	    });
+
+	    hiddenInput.value = selectedCodes.join(',');
+	    closeDialog('dialog_brand');
+	}
+	
+	function searchBrand() {
+	    const keyword = document.getElementById("searchBandValue").value.trim().toLowerCase();
+
+	    const filtered = _brandFullList.filter(function (brand) {
+	        return brand.itemCode.toLowerCase().includes(keyword) || brand.itemName.toLowerCase().includes(keyword);
+	    });
+
+	    renderBrandTable(filtered);
+	}
+
+	// 엔터키 검색용
+	function bindBrandDialogEnter(e) {
+	    if (e.key === 'Enter') {
+	        searchBrand();
+	    }
+	}
+	
+	function updateHiddenBrandCodes(idx) {
+	    const tokens = document.querySelectorAll("#brandTokenBox_" + idx + " .brand-token");
+	    const codes = [...tokens].map(t => t.getAttribute("data-code"));
+	    document.getElementById("brandCodeValues_" + idx).value = codes.join(',');
+	}
+
+// ---------------------------------------------- BRAND POPUP -------------------------------------------
+
+	function checkAll(e){
+		var tbody = $(e.target).parent().parent().parent().next();
+		tbody.children('tr').children('td').children('input[type=checkbox]').toArray().forEach(function(checkbox){
+			if(e.target.checked)
+				checkbox.checked = true;
+			else 
+				checkbox.checked = false;
+		})
+	}	
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
@@ -1780,8 +2032,90 @@ var selectedArr = new Array();
 					</table>
 				</div>
 				
-				<div class="title2"  style="width: 80%;"><span class="txt">용도</span></div>
-				<div class="title2" style="width: 20%; display: inline-block;">
+				<div id="">
+				  <div class="title2" style="width: 80%;"><span class="txt">용도</span></div>
+				  <table id="usage_Table" class="tbl05">
+				    <colgroup>
+				      <col width="100">
+				      <col width="600">
+				      <col />
+				    </colgroup>
+				    <thead>
+				      <tr>
+				        <th>용도선택</th>
+				        <th>내용</th>
+				      </tr>
+				    </thead>
+				    <tbody>
+				      <tr>
+				        <td>
+				          <div class="search_box" style="width:100%;">
+				            <div class="selectbox" style="width:100%; text-align:center;">
+								<c:set var="hasUSC" value="false" />
+								<c:forEach items="${addInfoList}" var="item">
+								  <c:if test="${item.INFO_TYPE == 'USC'}">
+								    <c:set var="hasUSC" value="true" />
+								  </c:if>
+								</c:forEach>
+								
+								<label><c:if test="${!hasUSC}">브랜드선택</c:if><c:if test="${hasUSC}">제품 용도 기입</c:if></label>
+								<select name="usageSelect" onchange="onUsageChange(this, 1)">
+								  <option value="">-- 선택 --</option>
+								  <option value="BRAND" <c:if test="${!hasUSC}">selected</c:if>>브랜드선택</option>
+								  <option value="CUSTOM" <c:if test="${hasUSC}">selected</c:if>>제품 용도 기입</option>
+								</select>
+				            </div>
+				          </div>
+				        </td>
+				        <td id="usageContentArea_1">
+				          <div style="width: 100%;">
+				            <div style="display: flex; margin-left: 10px; justify-content: space-between; align-items: center; gap: 10px;">
+							  <!-- ✅ 토큰 or input 박스 -->
+							  <div id="brandTokenBox_1" class="token-box" style="display: flex; flex-wrap: wrap; gap: 5px; flex: 1;">
+							    <c:forEach items="${addInfoList}" var="item">
+							      <c:if test="${item.INFO_TYPE == 'USB'}">
+							        <c:forEach var="i" begin="0" end="${fn:length(fn:split(item.INFO_TEXT, ',')) - 1}">
+							          <c:set var="code" value="${fn:split(item.INFO_TEXT, ',')[i]}" />
+							          <c:set var="name" value="${fn:split(item.INFO_TEXT_NAME, ',')[i]}" />
+							          <span class="brand-token" data-code="${code}">
+							            <span style="font-weight: bold; margin-right: 6px; cursor: pointer; color: rgb(102, 102, 102);">✕</span>
+							            ${name}
+							          </span>
+							        </c:forEach>
+							      </c:if>
+							      <c:if test="${item.INFO_TYPE == 'USC'}">
+							        <input type="text" id="customUsage_1" name="req" value="${item.INFO_TEXT}" style="width:99%;" />
+							      </c:if>
+							    </c:forEach>
+							  </div>
+							
+							  <!-- ✅ 버튼은 USB일 때만 노출 -->
+							  <c:if test="${!hasUSC}">
+							    <div style="display: flex; gap: 5px;">
+							      <button class="btn_small_search ml5" onclick="openBrandDialog(1)">조회</button>
+							      <button class="btn_small_search ml5" onclick="document.getElementById('brandTokenBox_1').innerHTML='';">초기화</button>
+							    </div>
+							  </c:if>
+							</div>
+    				        <!-- ✅ 코드 hidden input -->
+							<c:forEach items="${addInfoList}" var="item" varStatus="status">
+							  <c:if test="${item.INFO_TYPE == 'USB'}">
+							    <c:choose>
+							      <c:when test="${empty usbCodeList}">
+							        <c:set var="usbCodeList" value="${item.INFO_TEXT}" />
+							      </c:when>
+							      <c:otherwise>
+							        <c:set var="usbCodeList" value="${usbCodeList},${item.INFO_TEXT}" />
+							      </c:otherwise>
+							    </c:choose>
+							  </c:if>
+							</c:forEach>
+							<input type="hidden" id="brandCodeValues_1" name="brandCodeValues_1" value="${usbCodeList}" />
+				          </div>
+				        </td>
+				      </tr>
+				    </tbody>
+				  </table>
 				</div>
 				
 				<div id="">

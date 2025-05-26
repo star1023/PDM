@@ -755,7 +755,12 @@
 			INFO_IDX
 			, PRODUCT_IDX
 			, INFO_TYPE
-			, INFO_TEXT
+			, INFO_TEXT,
+			<!-- ✅ USA일 때만 함수로 치환, 아니면 원래 값 -->
+			CASE 
+				WHEN INFO_TYPE = 'USB' THEN FN_GET_CODE_NAME('BRAND', INFO_TEXT)
+				ELSE ''
+			END AS INFO_TEXT_NAME
 		FROM 
 			lab_product_add_info
 		WHERE 1 = 1
@@ -828,7 +833,9 @@
 		SELECT
 			SUM(CASE WHEN tmp.INFO_TYPE = 'PUR' THEN tmp.cnt ELSE 0 END) AS PUR_CNT
 			, SUM(CASE WHEN tmp.INFO_TYPE = 'FEA' THEN tmp.cnt ELSE 0 END) AS FEA_CNT 
-			, SUM(CASE WHEN tmp.INFO_TYPE = 'IMP' THEN tmp.cnt ELSE 0 END) AS IMP_CNT 
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'IMP' THEN tmp.cnt ELSE 0 END) AS IMP_CNT
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'USB' THEN tmp.cnt ELSE 0 END) AS USB_CNT 
+			, SUM(CASE WHEN tmp.INFO_TYPE = 'USC' THEN tmp.cnt ELSE 0 END) AS USC_CNT  
 		FROM (
 			SELECT INFO_TYPE, COUNT(INFO_TYPE) AS cnt FROM lab_product_add_info lpai 
 			WHERE 1 = 1
