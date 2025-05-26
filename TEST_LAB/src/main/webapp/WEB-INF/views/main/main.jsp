@@ -1113,6 +1113,7 @@ function fileDownload(fmNo){
 			<!-- 사이공백 -->
 			<div class="main_top_box_blank"></div>
 			<!-- 품목제조공정서 검색 start -->
+			<!-- 
 			<div class="main_jejo">
 			<div class="title2"><span class="txt">품목제조보고서 검색</span></div>
 			<div class="main_jejo_box" >
@@ -1144,11 +1145,12 @@ function fileDownload(fmNo){
 							<input type="hidden" name="searchListType" id="searchListType" value="ALL">
 						</div>
 					</div>
-					<div class="jejo_btn_box" style="padding:20px 5px 20px 20px;"><!--button class="btn_jejo" style="width:100%;">최근일주일 리스트보기</button--></div>
+					<div class="jejo_btn_box" style="padding:20px 5px 20px 20px;"></div>
 					<div class="jejo_btn_box" style="padding:20px 20px 20px 5px;"><button type="button" class="btn_jejo" style="width:100%;" onClick="javascript:searchManufacturingNo('ALL','1')">전체 리스트 보기 </button></div>
 				</div>
 			</div>
 			</div>
+			 -->
 			<!-- 품목제조공정서 검색 close -->
 
 	<div class="title2 mt30"><span class="txt">내문서 현황</span></div>

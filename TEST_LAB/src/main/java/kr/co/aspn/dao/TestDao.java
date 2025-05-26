@@ -112,4 +112,6 @@ public interface TestDao {
 	void updateMyCategoryOrder(Map<String, Object> param) throws Exception;
 
 	Map<String, Object> selectErpMaterialData(Map<String, Object> param);
+	
+	void deleteFileData(String fileIdx);
 }

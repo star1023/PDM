@@ -340,5 +340,10 @@ public class TestDaoImpl implements TestDao {
 	public Map<String, Object> selectErpMaterialData(Map<String, Object> param) {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.selectOne("test.selectErpMaterialData", param);
-	}	
+	}
+	
+	@Override
+	public void deleteFileData(String fileIdx) {
+	    sqlSessionTemplate.delete("test.deleteFileData", fileIdx);
+	}
 }

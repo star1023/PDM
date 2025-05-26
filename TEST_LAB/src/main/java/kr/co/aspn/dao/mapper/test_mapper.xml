@@ -1454,5 +1454,9 @@
 		AND lh.DOC_IDX = lm.MATERIAL_IDX 
 	ORDER BY lh.REG_DATE ASC
 	</select>
-	
+		
+	<delete id="deleteFileData" parameterType="int">
+	    DELETE FROM lab_file
+	    WHERE FILE_IDX = #{fileIdx}
+	</delete>
 </mapper>
