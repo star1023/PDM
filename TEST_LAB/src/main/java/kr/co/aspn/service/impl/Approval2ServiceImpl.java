@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.aspn.dao.Approval2Dao;
+import kr.co.aspn.dao.ManualDao;
 import kr.co.aspn.dao.ProductDao;
 import kr.co.aspn.dao.Report2Dao;
 import kr.co.aspn.service.Approval2Service;
@@ -24,6 +25,9 @@ public class Approval2ServiceImpl implements Approval2Service {
 	
 	@Autowired
 	Approval2Dao approvalDao;
+	
+	@Autowired
+	ManualDao manualDao;
 	
 	@Autowired
 	ProductDao productDao;
@@ -332,6 +336,9 @@ public class Approval2ServiceImpl implements Approval2Service {
 					map.put("docType", (String)param.get("docType"));	//문서 유형
 					map.put("docStatus", "COMP");						//완료
 					approvalDao.updateDocStatus(map);
+					if( (String)param.get("docType") != null && "MENU".equals((String)param.get("docType")) ) {
+						manualDao.insertManual(param);
+					}
 					//완료 메일/알림을 상신자에게 보낸다.
 					//참조자들에게 메일/알림을 보낸다.
 				}

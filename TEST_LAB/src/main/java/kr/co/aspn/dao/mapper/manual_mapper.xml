@@ -95,4 +95,15 @@
 			AND DOC_IDX = #{idx}
 			AND DOC_TYPE = #{docType}		
 	</select>
+	
+	<insert id="insertManual" parameterType="map">
+		INSRET
+		INTO lab_cook_manual(MANUAL_IDX, MENU_IDX, REG_YN, REG_DATE)
+		VALUES(
+			FN_NEXTVAL('lab_manual_seq')
+			, #{docIdx}
+			, 'N'
+			, sysdate()
+		)	
+	</insert>
 </mapper>
