@@ -296,6 +296,17 @@ input:disabled {
 		return true;
 	}
 	
+	function isStandardFilled(standardName) {
+	    let hasValue = false;
+	    $('input[name="' + standardName + '"]').each(function() {
+	        if ($(this).val().trim() !== "") {
+	            hasValue = true;
+	            return false; // break loop
+	        }
+	    });
+	    return hasValue;
+	}
+	
 	//입력확인
 	function fn_insert(){
 		//var standardContent = editor1.getData();
@@ -327,10 +338,14 @@ input:disabled {
 			return;
 		} else if( !fn_validateTestRange() ) {
 			return;
-		} else if( !chkNull(standardContents) ) {
-			alert("검사 진행 기준을 작성해 주세요.");
-			$("#standardContents").focus();
-			return;
+		} else if (!isStandardFilled("standard1")) {
+		    alert("검사 요청 방법을 작성해 주세요.");
+		    $('input[name="standard1"]').first().focus();
+		    return;
+		} else if (!isStandardFilled("standard2")) {
+		    alert("검사 진행 일정을 작성해 주세요.");
+		    $('input[name="standard2"]').first().focus();
+		    return;
 		} else if( attatchFileArr.length == 0 && $("#tempFileList option").length == 0 ) {
 			alert("첨부파일을 등록해주세요.");		
 			return;		

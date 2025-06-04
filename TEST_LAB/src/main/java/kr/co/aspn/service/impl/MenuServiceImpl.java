@@ -633,9 +633,11 @@ public class MenuServiceImpl implements MenuService {
 		int viewCount = 10;
 		int pageNo = 1;
 		try {
+			viewCount = Integer.parseInt((String)param.get("viewCount"));
 			pageNo = Integer.parseInt((String)param.get("pageNo"));
 		} catch( Exception e ) {
 			System.err.println(e.getMessage());
+			viewCount = 10;
 			pageNo = 1;
 		}
 		
@@ -790,7 +792,7 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
-			if( usageArr.size() > 0 ) {
+			if( usageArr != null && usageArr.size() > 0 ) {
 				for( int i = 0 ; i < usageArr.size() ; i++ ) {
 					HashMap<String,Object> usageData = new HashMap<String,Object>();
 					usageData.put("idx", menuIdx);
@@ -1064,7 +1066,7 @@ public class MenuServiceImpl implements MenuService {
 				}				
 			}
 			
-			if( usageArr.size() > 0 ) {
+			if( usageArr != null && usageArr.size() > 0 ) {
 				for( int i = 0 ; i < usageArr.size() ; i++ ) {
 					HashMap<String,Object> usageData = new HashMap<String,Object>();
 					usageData.put("idx", menuIdx);

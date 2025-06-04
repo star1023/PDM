@@ -177,7 +177,7 @@ public class ChemicalTestServiceImpl implements ChemicalTestService {
 			
 			//파일 DB 저장
 			if( file != null && file.length > 0 ) {
-				path = config.getProperty("upload.file.path.chemical");
+				path = config.getProperty("upload.file.path.chemicalTest");
 				path += "/"+toDay; 
 				for( MultipartFile multipartFile : file ) {
 					System.err.println("=================================");
@@ -417,7 +417,7 @@ public class ChemicalTestServiceImpl implements ChemicalTestService {
 			
 			//파일 DB 저장
 			if( file != null && file.length > 0 ) {
-				path = config.getProperty("upload.file.path.chemical");
+				path = config.getProperty("upload.file.path.chemicalTest");
 				path += "/"+toDay; 
 				for( MultipartFile multipartFile : file ) {
 					System.err.println("=================================");

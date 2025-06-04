@@ -182,6 +182,9 @@ function fn_list() {
 function fn_update(idx) {
 	location.href = '/report2/newProductResultUpdate?idx='+idx;
 }
+function downloadFile(idx){
+	location.href = '/test/fileDownload?idx='+idx;
+}
 </script>
 <div class="wrap_in" id="fixNextTag">
 	<span class="path">
