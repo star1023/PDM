@@ -31,23 +31,23 @@
 }
 
 .faq-category-token {
-    display: inline-flex; /* ✅ flex로 텍스트 정렬 */
-    justify-content: center; /* ✅ 가로 가운데 정렬 */
-    align-items: center;     /* ✅ 세로 가운데 정렬 */
-    width: 80px;            /* ✅ 고정 너비 */
-    height: 24px;            /* ✅ 고정 높이 */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 80px;
+    height: 24px;
+    padding: 0 12px;
     border-radius: 12px;
     font-size: 12px;
-    padding: 0 10px;         /* ✅ 수평 padding 조정 */
     white-space: nowrap;
     flex-shrink: 0;
-    align-self: flex-start;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis; /* ✅ 너무 긴 경우 생략 처리 */
+    font-weight: 500;
+    border: 1px solid;
 }
+
 .faq-q-title {
     flex: 1;
+    font-size: 15px;
     font-weight: bold;
     word-break: break-word;
     white-space: normal;
@@ -85,6 +85,11 @@
     background: #f9f9f9;
     border-top: 1px solid #eee;
     overflow: hidden;
+}
+
+pre {
+	font-size: 14px;
+	font-family: '맑은고딕', Malgun Gothic;
 }
 </style>
 <script type="text/javascript">
@@ -147,20 +152,6 @@ function fn_loadList(pageNo = 1) {
 			$('#pageNo').val(data.navi.pageNo);
 		}
 	});
-}
-
-function fn_renderList(list) {
-    const $tbody = $("#list");
-    $tbody.empty();
-
-    if (!list || list.length === 0) {
-        $tbody.append("<tr><td colspan='' style='text-align:center;'>데이터가 없습니다.</td></tr>");
-        return;
-    }
-
-    list.forEach(function (item, index) {
-        
-    });
 }
 
 function fn_searchClear() {
@@ -253,13 +244,15 @@ function fn_renderList(list) {
         var html = "";
         html += "<div class='faq-item'>";
         const categoryName = item.CATEGORY_NAME || "-";
-        const bgColor = stringToColor(categoryName);
+        const color = stringToColor(categoryName);
 
         html += "  <div class='faq-question' onclick='toggleAnswer(" + index + ")'>";
         html += "    <div class='faq-left'>";
         html += "      <div class='faq-title-wrapper'>";
-        html += "        <span class='faq-category-token' style=\"background:" + bgColor + "; color:#333; border:1px solid #ccc;\">" +
-                      categoryName + "</span>";
+        html += '<span class="faq-category-token" style="color:' + color.border +
+		        '; border-color:' + color.border +
+		        '; background-color:' + color.background + ';">' +
+		        categoryName + '</span>';
         html += "        <span class='faq-q-title'>" + item.QUESTION + "</span>";
         html += "      </div>";
         html += "    </div>";
@@ -294,12 +287,15 @@ function toggleAnswer(index) {
 }
 
 function stringToColor(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const hue = Math.abs(hash % 360);
-    return 'hsl('+ hue +', 90%, 96%)'; // 부드러운 파스텔 계열
+    var hue = Math.abs(hash % 360);
+    return {
+        border: 'hsl(' + hue + ', 60%, 70%)',
+        background: 'hsla(' + hue + ', 40%, 75%, 0.1)'
+    };
 }
 
 function fn_delete(idx) {

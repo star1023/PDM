@@ -58,7 +58,7 @@
 			if( docType == 'PROD' ) {
 				url = "/approval2/productPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();
 			} else if( docType == 'MENU' ) {
-				url = "";
+				url = "/approval2/menuPopup?apprIdx="+apprIdx+"&idx="+docIdx;
 			} else if( docType == 'DESIGN' ) {
 				url = "/approval2/designPopup?apprIdx="+apprIdx+"&idx="+docIdx+"&viewType="+$("#listType").val();	
 			} else if( docType == 'PLAN' ) {

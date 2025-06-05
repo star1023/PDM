@@ -23,4 +23,6 @@ public interface BoardNoticeService {
     void updateNotice(Map<String, Object> param, MultipartFile[] files, String[] deletedFileList) throws Exception;
     
     int updateHits(Map<String, Object> param) throws Exception;
+    
+    void deleteNotice(Map<String, Object> param) throws Exception;
 }

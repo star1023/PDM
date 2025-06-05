@@ -11,10 +11,10 @@
     <appender name="FILE_SQL"
         class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- <file>C:/develop/sllab_log/sllab_jdbc.log</file> -->
-        <file>C:/develop/sllab_log/system.log</file>
+        <file>/aspn/pdm/logs/system.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>C:/develop/sllab_log/sllab_jdbc.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/aspn/pdm/logs/lab_jdbc.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 10 days' worth of history -->
             <maxHistory>10</maxHistory>
@@ -28,11 +28,11 @@
     <appender name="FILE_EXCEPTION"
         class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- <file>C:/develop/sllab_log/sllab_exception.log</file> -->
-        <file>C:/develop/sllab_log/system_exception.log</file>
+        <file>/aspn/pdm/logs/system_exception.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
             <!-- <fileNamePattern>C:/develop/sllab_log/sllab_exception.%d{yyyy-MM-dd}.log</fileNamePattern> -->
-            <fileNamePattern>C:/develop/sllab_log/system.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/aspn/pdm/logs/system.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 10 days' worth of history -->
             <maxHistory>10</maxHistory>

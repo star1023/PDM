@@ -61,15 +61,16 @@
 	</select>
 	
 	<select id="selectBoardNoticeList" parameterType="map" resultType="map">
-		/* boardNotice.selectBoardNoticeList */
+	/* boardNotice.selectBoardNoticeList */
 		SELECT * FROM (
 			SELECT ROW_NUMBER() OVER (
 				ORDER BY 
 				    CASE 
 				        WHEN TYPE = 'I'
-				         AND (CURRENT_DATE BETWEEN STR_TO_DATE(POST_START_DATE, '%Y-%m-%d') AND STR_TO_DATE(POST_END_DATE, '%Y-%m-%d'))
+				         AND CURRENT_DATE BETWEEN STR_TO_DATE(POST_START_DATE, '%Y-%m-%d') AND STR_TO_DATE(POST_END_DATE, '%Y-%m-%d')
 				        THEN 0
-				        ELSE 1
+				        WHEN TYPE = 'I' THEN 1
+				        ELSE 2
 				    END,
 				    BNOTICE_IDX DESC
 			) AS rn,
@@ -197,6 +198,15 @@
 		/* boardNotice.updateHits */
 	    UPDATE lab_board_notice
 	    SET HITS = IFNULL(HITS, 0) + 1
+	    WHERE BNOTICE_IDX = #{idx}
+	</update>
+	
+	<update id="updateIsDeleteY" parameterType="map">
+	/* boardNotice.updateIsDeleteY */
+	    UPDATE lab_board_notice
+	    SET IS_DELETE = 'Y',
+	        REG_USER = #{userId},
+	        REG_DATE = NOW()
 	    WHERE BNOTICE_IDX = #{idx}
 	</update>
 </mapper>

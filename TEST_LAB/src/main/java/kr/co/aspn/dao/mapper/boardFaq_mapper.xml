@@ -7,32 +7,47 @@
 	</sql>
 	
 	<sql id="whereBoardFaqList">
-		<if test="searchType != null and searchType != '' ">
+	
+		<!-- 전체 또는 searchType이 비어있는 경우: 제목, 답변, 작성자 모두 검색 -->
+		<if test="(searchType == null or searchType == '') and searchValue != null and searchValue != ''">
+			AND (
+				QUESTION LIKE CONCAT('%', #{searchValue}, '%')
+				OR ANSWER LIKE CONCAT('%', #{searchValue}, '%')
+				OR REG_USER LIKE CONCAT('%', #{searchValue}, '%')
+			)
+		</if>
+	
+		<!-- 특정 조건 검색 -->
+		<if test="searchType != null and searchType != '' and searchValue != null and searchValue != ''">
 			<choose>
 				<when test="searchType == 'searchQuestion'">
-					AND QUESTION LIKE CONCAT('%',#{searchValue},'%')
+					AND QUESTION LIKE CONCAT('%', #{searchValue}, '%')
 				</when>
 				<when test="searchType == 'searchAnswer'">
-					AND ANSWER LIKE CONCAT('%',#{searchValue},'%')
+					AND ANSWER LIKE CONCAT('%', #{searchValue}, '%')
 				</when>
 				<otherwise>
 					AND (
-						QUESTION LIKE CONCAT('%',#{searchValue},'%')
-						OR ANSWER LIKE CONCAT('%',#{searchValue},'%')
-						OR REG_USER LIKE CONCAT('%',#{searchValue},'%')
+						QUESTION LIKE CONCAT('%', #{searchValue}, '%')
+						OR ANSWER LIKE CONCAT('%', #{searchValue}, '%')
+						OR REG_USER LIKE CONCAT('%', #{searchValue}, '%')
 					)
 				</otherwise>
 			</choose>
 		</if>
 	
+		<!-- 카테고리 필터 -->
 		<if test="searchFaqType != null and searchFaqType != '' ">
 			AND CATEGORY = #{searchFaqType}
 		</if>
 	
+		<!-- 날짜 필터 -->
 		<if test="searchStartDate != null and searchStartDate != '' and searchEndDate != null and searchEndDate != ''">
 			AND DATE(REG_DATE) BETWEEN #{searchStartDate} AND #{searchEndDate}
 		</if>
+	
 	</sql>
+
 
 	
 	<select id="selectHistory" parameterType="map" resultType="hashmap">

@@ -107,9 +107,10 @@ function fn_renderList(list) {
             const textColor = isValidPeriod ? "#d15b47" : "#000";
 
             row += "<td style='white-space: nowrap; color: " + textColor + "'>" +
-                "<span style='font-weight: bold; display: inline-flex; align-items: center;'>" +
-                "<img src='/resources/images/icon_megaphone.png' style='width: 20px; height: 20px; " + iconStyle + "' />" +
-                "&nbsp;[공지]</span></td>";
+            "<span style='margin-left : 20px; display: inline-flex; align-items: center; gap: 4px;'>" +
+            "<img src='/resources/images/icon_megaphone.png' style='width: 18px; height: 18px; " + iconStyle + "' />" +
+            "&nbsp;<img src='/resources/images/lab_notice_handwriting.png' style='height: 32px; width: 70px; "+ iconStyle +"' alt='공지'/>" +
+            "</span></td>";
         } else {
             row += "<td></td>";
         }
@@ -137,6 +138,7 @@ function fn_renderList(list) {
         row += "<td>";
         row += "  <button class=\"btn_doc\" onclick=\"fn_viewHistory('" + item.BNOTICE_IDX + "', '" + item.BNOTICE_IDX + "')\"><img src=\"/resources/images/icon_doc05.png\">이력</button>";
         row += "  <button class=\"btn_doc\" onclick=\"fn_updatForm('" + item.BNOTICE_IDX + "')\"><img src=\"/resources/images/icon_doc03.png\">수정</button>";
+        row += "  <button class=\"btn_doc\" onclick=\"fn_delete('" + item.BNOTICE_IDX + "')\"><img src=\"/resources/images/icon_doc04.png\">삭제</button>";
         row += "</td>";
 
         row += "</tr>";
@@ -169,6 +171,32 @@ function fn_viewDetail(idx) {
 
 function paging( pageNo ) {
 	fn_loadList(pageNo);
+}
+
+
+function fn_delete(idx) {
+    if (!confirm("정말 삭제하시겠습니까?")) {
+        return; // 취소 시 아무 작업도 하지 않음
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/boardNotice/deleteNoticeAjax",
+        data: { idx: idx },
+        dataType: "json",
+        success: function(res) {
+            if (res.success) {
+                alert("삭제되었습니다.");
+                fn_loadList(); // 목록 재조회
+            } else {
+                alert("삭제 실패: " + (res.message || "알 수 없는 오류"));
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("삭제 중 오류:", error);
+            alert("서버 오류가 발생했습니다.");
+        }
+    });
 }
 
 function fn_viewHistory(idx, docNo) {
@@ -320,8 +348,8 @@ function isNoticePeriodValid(startDateStr, endDateStr) {
 			<div class="main_tbl">
 				<table class="tbl01">
 					<colgroup id="list_colgroup">
-						<col width="10%">
-						<col width="30%">
+						<col width="14%">
+						<col width="28%">
 						<col width="14%">			
 						<col width="7%">			
 						<col width="8%">			

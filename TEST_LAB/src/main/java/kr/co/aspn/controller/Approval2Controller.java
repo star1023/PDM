@@ -41,6 +41,9 @@ public class Approval2Controller {
 	ProductService productService;
 	
 	@Autowired
+	MenuService menuService;
+	
+	@Autowired
 	Report2Service reportService;
 	
 	@RequestMapping("/searchUserAjax")
@@ -434,5 +437,28 @@ public class Approval2Controller {
 	@ResponseBody
 	public Map<String, String> selectApprItemAjax(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
 		return approvalService.selectApprItem(param);
+	}
+	
+	@RequestMapping("/menuPopup")
+	public String menuPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> menuData = menuService.selectMenuData(param);
+		List<Map<String, String>> addInfoList = menuService.selectAddInfo(param);		
+		List<Map<String, String>> newDataList = menuService.selectNewDataList(param);
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("menuData", menuData);
+		model.addAttribute("addInfoList", addInfoList);
+		model.addAttribute("newDataList", newDataList);
+		model.addAttribute("paramVO", param);
+		//lab_product_materisl 테이블 조회
+		model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
+		return "/approval2/menuPopup";
 	}
 }

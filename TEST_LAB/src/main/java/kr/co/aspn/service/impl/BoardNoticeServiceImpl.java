@@ -258,4 +258,38 @@ public class BoardNoticeServiceImpl implements BoardNoticeService {
 	public int updateHits(Map<String, Object> param) throws Exception {
 	    return boardNoticeDao.updateHits(param);
 	}
+	
+	@Override
+	public void deleteNotice(Map<String, Object> param) throws Exception {
+		
+	    // 1. 첨부파일 조회
+	    param.put("docType", "NOTICE");
+	    List<Map<String, String>> fileList = testDao.selectFileList(param);
+
+	    // 2. 파일 삭제
+	    for (Map<String, String> fileData : fileList) {
+	        String filePath = fileData.get("FILE_PATH");
+	        String fileName = fileData.get("FILE_NAME"); // DB 컬럼 확인 후 FILE_NAME이 맞는지 확인
+
+	        if (filePath != null && fileName != null) {
+	            File fileToDelete = new File(filePath + File.separator + fileName);
+
+	            if (fileToDelete.exists()) {
+	                boolean deleted = fileToDelete.delete();
+	                if (deleted) {
+	                    System.out.println("✅ 파일 삭제 성공: " + fileToDelete.getAbsolutePath());
+	                } else {
+	                    System.err.println("❌ 파일 삭제 실패: " + fileToDelete.getAbsolutePath());
+	                }
+	            } else {
+	                System.err.println("❌ 파일 없음: " + fileToDelete.getAbsolutePath());
+	            }
+	        }
+
+	        // 3. DB 파일 정보 삭제
+	        testDao.deleteFileData(fileData.get("FILE_IDX"));
+	    }
+
+		boardNoticeDao.updateIsDeleteY(param); // is_delete = 'Y'로 업데이트
+	}
 }

@@ -1,7 +1,7 @@
 eclipse.preferences.version=1
-encoding//src/main/java=EUC_KR
-encoding//src/main/resources=EUC_KR
+encoding//src/main/java=UTF-8
+encoding//src/main/resources=UTF-8
 encoding//src/main/resources-local=EUC_KR
-encoding//src/test/java=EUC_KR
-encoding//src/test/resources=EUC_KR
-encoding/<project>=EUC_KR
+encoding//src/test/java=UTF-8
+encoding//src/test/resources=UTF-8
+encoding/<project>=UTF-8

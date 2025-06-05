@@ -161,4 +161,28 @@ public class BoardNoticeController {
 	    }
 	    return result;
 	}
+	
+	@RequestMapping("/deleteNoticeAjax")
+	@ResponseBody
+	public Map<String, Object> deleteNoticeAjax(HttpServletRequest request, HttpServletResponse response,
+	                                         @RequestParam Map<String, Object> param) throws Exception {
+	    Map<String, Object> result = new HashMap<>();
+
+	    try {
+	        Auth auth = AuthUtil.getAuth(request);
+	        param.put("userId", auth.getUserId());
+
+	        // 삭제 처리 (IS_DELETE = 'Y')
+	        boardNoticeService.deleteNotice(param);
+
+	        result.put("success", true);
+	        result.put("message", "공지사항이 삭제되었습니다.");
+	    } catch (Exception e) {
+	        logger.error("[deleteFaqAjax] 삭제 중 오류 발생", e);
+	        result.put("success", false);
+	        result.put("message", "삭제 실패: " + e.getMessage());
+	    }
+
+	    return result;
+	}
 }

@@ -36,7 +36,7 @@ function loginProc(){
 			async:false,
 			success:function(data) {
 				if(data.status == 'success'){
-					location.href = '../main/main';			
+					location.href = '../main/main2';			
 		        } else if( data.status == 'fail' ){
 					alert(data.msg);
 		        } else if( data.status == 'lock' ) {

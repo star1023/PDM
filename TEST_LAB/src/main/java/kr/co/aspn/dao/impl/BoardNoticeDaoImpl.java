@@ -64,4 +64,10 @@ public class BoardNoticeDaoImpl implements BoardNoticeDao {
 		// TODO Auto-generated method stub
 		return sqlSessionTemplate.update("boardNotice.updateHits", param);
 	};
+	
+	@Override
+	public void updateIsDeleteY(Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		sqlSessionTemplate.update("boardNotice.updateIsDeleteY", param);
+	}
 }

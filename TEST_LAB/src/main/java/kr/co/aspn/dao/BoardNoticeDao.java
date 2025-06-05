@@ -23,4 +23,6 @@ public interface BoardNoticeDao {
     
     int updateHits(Map<String, Object> param);
     
+    void updateIsDeleteY(Map<String, Object> param);
+    
 }

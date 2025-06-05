@@ -48,6 +48,10 @@
 	        }
 	    });
 	}
+	
+	function fn_list(){
+		location.href = '/boardNotice/list';
+	}
 </script>
 <div class="wrap_in" id="fixNextTag">
     <span class="path">공지사항 &nbsp;&nbsp;
