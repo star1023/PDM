@@ -197,6 +197,8 @@
 					   WHEN DOC_TYPE = 'RESEARCH' THEN '시장조사결과보고서'
 					   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 					   WHEN DOC_TYPE = 'PACKAGE' THEN '표시사항 기재양식'
+					   WHEN DOC_TYPE = 'RESULT' THEN '신제품 품질 결과보고서'
+					   WHEN DOC_TYPE = 'CHEMICAL' THEN '이화학 검사 의뢰서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -266,6 +268,8 @@
 				   WHEN DOC_TYPE = 'RESEARCH' THEN '시장조사결과보고서'
 				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				   WHEN DOC_TYPE = 'PACKAGE' THEN '표시사항 기재양식'
+				   WHEN DOC_TYPE = 'RESULT' THEN '신제품 품질 결과보고서'
+				   WHEN DOC_TYPE = 'CHEMICAL' THEN '이화학 검사 의뢰서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -340,6 +344,8 @@
 				   WHEN DOC_TYPE = 'RESEARCH' THEN '시장조사결과보고서'
 				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				   WHEN DOC_TYPE = 'PACKAGE' THEN '표시사항 기재양식'
+				   WHEN DOC_TYPE = 'RESULT' THEN '신제품 품질 결과보고서'
+				   WHEN DOC_TYPE = 'CHEMICAL' THEN '이화학 검사 의뢰서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(TARGET_USER_ID) as TARGET_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -401,6 +407,8 @@
 				   WHEN DOC_TYPE = 'RESEARCH' THEN '시장조사결과보고서'
 				   WHEN DOC_TYPE = 'SENSE_QUALITY' THEN '관능&amp;품질평가 테스트 결과보고서'
 				   WHEN DOC_TYPE = 'PACKAGE' THEN '표시사항 기재양식'
+				   WHEN DOC_TYPE = 'RESULT' THEN '신제품 품질 결과보고서'
+				   WHEN DOC_TYPE = 'CHEMICAL' THEN '이화학 검사 의뢰서'
 				  END DOC_TYPE_NAME
 			, FN_GET_USER_NAME(CURRENT_USER_ID) as CURRENT_USER_NAME
 			, FN_GET_USER_NAME(REG_USER) as REG_USER_NAME
@@ -505,6 +513,12 @@
       		<when test="docType.equals('PACKAGE')">
       		lab_package_info
       		</when>
+      		<when test="docType.equals('RESULT')">
+      		lab_new_product_result
+      		</when>
+      		<when test="docType.equals('PACKAGE')">
+      		lab_chemical_test
+      		</when>
       	</choose>
 		WHERE 1 = 1
 			AND IS_DELETE = 'N'
@@ -532,6 +546,12 @@
 	      		</when>
 	      		<when test="docType.equals('PACKAGE')">
 	      		AND PACKAGE_IDX = #{docIdx}
+	      		</when>
+	      		<when test="docType.equals('RESULT')">
+	      		AND RESULT_IDX = #{docIdx}
+	      		</when>
+	      		<when test="docType.equals('CHEMICAL')">
+	      		AND CHEMICAL_IDX = #{docIdx}
 	      		</when>
 	      	</choose>
 	</select>
@@ -575,6 +595,18 @@
       		<when test="docType.equals('PACKAGE')">
       		lab_package_info
       		</when>
+      		<when test="docType.equals('RESULT')">
+      		lab_new_product_result
+      		</when>
+      		<when test="docType.equals('PACKAGE')">
+      		lab_chemical_test
+      		</when>
+     		<when test="docType.equals('RESULT')">
+      		lab_new_product_result
+      		</when>
+      		<when test="docType.equals('CHEMICAL')">
+      		lab_chemical_test
+      		</when>
       	</choose>
 		SET
 			STATUS = #{docStatus}
@@ -604,6 +636,12 @@
       		<when test="docType.equals('PACKAGE')">
       		AND PACKAGE_IDX = #{docIdx}
       		</when>
+			<when test="docType.equals('RESULT')">
+    		AND RESULT_IDX = #{docIdx}
+    		</when>
+    		<when test="docType.equals('CHEMICAL')">
+    		AND CHEMICAL_IDX = #{docIdx}
+    		</when>
       	</choose>
 	</update>
 	

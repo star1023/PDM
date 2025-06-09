@@ -44,6 +44,12 @@ public class Approval2Controller {
 	MenuService menuService;
 	
 	@Autowired
+	ChemicalTestService chemicalTestService;
+	
+	@Autowired
+	NewProductReportService newProductResultService;
+	
+	@Autowired
 	Report2Service reportService;
 	
 	@RequestMapping("/searchUserAjax")
@@ -460,5 +466,51 @@ public class Approval2Controller {
 		//lab_product_materisl 테이블 조회
 		model.addAttribute("menuMaterialData", menuService.selectMenuMaterial(param));
 		return "/approval2/menuPopup";
+	}
+	
+	@RequestMapping("/chemicalTestPopup")
+	public String chemicalTestPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> chemicalTestData = chemicalTestService.selectChemicalTestData(param);
+		List<Map<String, Object>> chemicalTestItemList = chemicalTestService.selectChemicalTestItemList(param);
+		List<Map<String, Object>> chemicalTestStandardList = chemicalTestService.selectChemicalTestStandardList(param);
+
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("chemicalTestData", chemicalTestData);
+		model.addAttribute("chemicalTestItemList", chemicalTestItemList);
+		model.addAttribute("chemicalTestStandardList", chemicalTestStandardList);
+		model.addAttribute("paramVO", param);
+		
+		return "/approval2/chemicalTestPopup";
+	}
+	
+	@RequestMapping("/newProductResultPopup")
+	public String newProductResultPopup(@RequestParam Map<String, Object> param ,HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
+		System.err.println(param);
+		//결재 정보 조회
+		param.put("userId", AuthUtil.getAuth(request).getUserId());
+		Map<String, String> apprHeader = approvalService.selectApprHeaderData(param);
+		List<Map<String, String>> apprItem = approvalService.selectApprItemList(param);
+		List<Map<String, String>> refList = approvalService.selectReferenceList(param);
+		Map<String, Object> newProductResultData = newProductResultService.selectNewProductResultData(param);
+		List<Map<String, Object>> newProductResultItemList = newProductResultService.selectNewProductResultItemList(param);
+		List<Map<String, Object>> newProductResultImageList = newProductResultService.selectNewProductResultItemList(param);
+
+		model.addAttribute("apprHeader", apprHeader);
+		model.addAttribute("apprItem", apprItem);
+		model.addAttribute("refList", refList);
+		model.addAttribute("newProductResultData", newProductResultData);
+		model.addAttribute("newProductResultItemList", newProductResultItemList);
+		model.addAttribute("newProductResultImageList", newProductResultImageList);
+		model.addAttribute("paramVO", param);
+		
+		return "/approval2/newProductResultPopup";
 	}
 }

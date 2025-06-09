@@ -240,7 +240,7 @@ function downloadFile(idx){
 	location.href = '/test/fileDownload?idx='+idx;
 }
 </script>
-<h2 style=" position:fixed;" class="print_hidden">
+<h2 style=" position:fixed; background-color: #38b6e6 !important;" class="print_hidden">
 	<span class="title"><img src="/resources/images/bg_bs_box_fast02.png">결재</span>
 </h2>
 <div  class="top_btn_box" style=" position:fixed;">

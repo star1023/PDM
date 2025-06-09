@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.aspn.dao.Approval2Dao;
+import kr.co.aspn.dao.ChemicalTestDao;
 import kr.co.aspn.dao.ManualDao;
+import kr.co.aspn.dao.MenuDao;
+import kr.co.aspn.dao.NewProductResultDao;
 import kr.co.aspn.dao.ProductDao;
 import kr.co.aspn.dao.Report2Dao;
 import kr.co.aspn.service.Approval2Service;
@@ -31,6 +34,15 @@ public class Approval2ServiceImpl implements Approval2Service {
 	
 	@Autowired
 	ProductDao productDao;
+	
+	@Autowired
+	MenuDao menuDao;
+	
+	@Autowired
+	ChemicalTestDao chemicalTestDao;
+	
+	@Autowired
+	NewProductResultDao newProductResultDao;
 	
 	@Autowired
 	Report2Dao reportDao;
@@ -299,12 +311,17 @@ public class Approval2ServiceImpl implements Approval2Service {
 		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
-			
+			docData = menuDao.selectMenuData(param);
 		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
 			docData = reportDao.selectDesignData(param);
 		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
 			docData = reportDao.selectBusinessTripData(param);
+		} else if(  param.get("docType") != null && "CHEMICAL".equals(param.get("docType"))) {
+			docData = chemicalTestDao.selectChemicalTestData(param);
+		} else if(  param.get("docType") != null && "RESULT".equals(param.get("docType"))) {
+			docData = newProductResultDao.selectNewProductResultData(param);
 		}
+		
 		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
 		System.err.println("docData : "+docData);
 		if( docData.get("STATUS") != null && ("APPR".equals(docData.get("STATUS")) || "COND_APPR".equals(docData.get("STATUS")) )  ) {
@@ -365,12 +382,17 @@ public class Approval2ServiceImpl implements Approval2Service {
 		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
-			
+			docData = menuDao.selectMenuData(param);
 		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
 			docData = reportDao.selectDesignData(param);
 		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
 			docData = reportDao.selectBusinessTripData(param);
+		} else if(  param.get("docType") != null && "CHEMICAL".equals(param.get("docType"))) {
+			docData = chemicalTestDao.selectChemicalTestData(param);
+		} else if(  param.get("docType") != null && "RESULT".equals(param.get("docType"))) {
+			docData = newProductResultDao.selectNewProductResultData(param);
 		}
+		
 		//문서 상태가 승인중, 부분승인인 경우에만 결재가 가능하다.
 		System.err.println("docData : "+docData);
 		if( docData.get("STATUS") != null && ("APPR".equals(docData.get("STATUS")) || "COND_APPR".equals(docData.get("STATUS")) )  ) {
@@ -433,11 +455,15 @@ public class Approval2ServiceImpl implements Approval2Service {
 		if(  param.get("docType") != null && "PROD".equals(param.get("docType"))) {
 			docData = productDao.selectProductData(param);
 		} else if(  param.get("docType") != null && "MENU".equals(param.get("docType"))) {
-			
+			docData = menuDao.selectMenuData(param);
 		} else if(  param.get("docType") != null && "DESIGN".equals(param.get("docType"))) {
 			docData = reportDao.selectDesignData(param);
 		} else if(  param.get("docType") != null && "TRIP".equals(param.get("docType"))) {
 			docData = reportDao.selectBusinessTripData(param);
+		} else if(  param.get("docType") != null && "CHEMICAL".equals(param.get("docType"))) {
+			docData = chemicalTestDao.selectChemicalTestData(param);
+		} else if(  param.get("docType") != null && "RESULT".equals(param.get("docType"))) {
+			docData = newProductResultDao.selectNewProductResultData(param);
 		}
 		
 		//문서 상태가 승인중, 부분승인인 경우에만 반려가 가능하다.

@@ -13,6 +13,157 @@
 <title>연구개발시스템</title>
 <link href="../resources/css/main.css" rel="stylesheet" type="text/css" />
 <style>
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto; /* ✅ 만약 팝업 전체가 넘칠 경우 대비 */
+}
+
+.popup-header img {
+    height: 40px;
+    margin: 5px 0 5px 0;
+}
+   
+.popup-wrapper {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 700px;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.popup-header {
+    background-color: #b32025;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.popup-container {
+    background: #fff;
+    overflow-y: auto;
+    padding: 30px 40px;
+    flex: 1; /* 본문이 남는 공간 차지 */
+}
+
+.popup-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #222;
+    border-bottom: 2px solid #b92c35;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.notice-title {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.notice-title:hover {
+    color: #b92c35;
+}
+
+.more-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+}
+.more-icon img {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 2px;
+}
+.more-icon:hover {
+    color: #b92c35;
+}
+
+   .popup-title .more-btn {
+       cursor: pointer;
+       display: flex;
+       align-items: center;
+       gap: 4px;
+   }
+
+   .popup-meta {
+       font-size: 14px;
+       color: #666;
+       margin-bottom: 20px;
+   	text-align: right;
+   }
+
+   .popup-content {
+       font-size: 16px;
+       line-height: 1.8;
+       white-space: pre-wrap;
+   }
+
+   .popup-footer {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       margin-top: 30px;
+   }
+
+   .popup-footer label {
+       font-size: 14px;
+       color: #555;
+   }
+
+   .btn-close {
+       background: #3c8dbc;
+       color: white;
+       border: none;
+       padding: 8px 16px;
+       font-size: 14px;
+       border-radius: 4px;
+       cursor: pointer;
+   }
+
+   .btn-close:hover {
+       background: #337ab7;
+   }
+   
+   .popup-footer-fixed {
+    background: #fff;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    height: 60px;
+    box-sizing: border-box;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
 .positionCenter{
 	position: absolute;
 	transform: translate(-50%, -45%);
@@ -1147,9 +1298,9 @@ function fn_renderDashboardList(list) {
                 ? "filter: brightness(0) saturate(100%) invert(19%) sepia(94%) saturate(7468%) hue-rotate(353deg) brightness(89%) contrast(102%);"
                 : "";
 
-            iconHtml = "<span style='margin-left: 12px; display: inline-flex; align-items: center; gap: 4px;'>" +
+            iconHtml = "<span style='margin-left: 12px; display: inline-flex; align-items: center; gap: 15px;'>" +
                         "<img src='/resources/images/icon_megaphone.png' style='width: 14px; height: 14px; " + iconStyle + "' />" +
-                        "<img src='/resources/images/lab_notice_handwriting.png' style='height: 28px; width: 60px; " + iconStyle + "' alt='Notice!'/>" +
+                        "<img src='/resources/images/lab_notice_handwriting.png' style='height: 14px; width: 60px; " + iconStyle + "' alt='Notice!'/>" +
                         "</span>";
         }
 
@@ -1192,13 +1343,16 @@ function getCookie(name) {
     const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
     return match ? match[2] : null;
 }
+
+let popupNoticeQueue = [];
+
 function fn_noticePopupFromList(list) {
     if (!list || list.length === 0) return;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // 오늘 기준
+    today.setHours(0, 0, 0, 0);
 
-    const popupNotices = list.filter(function(item) {
+    popupNoticeQueue = list.filter(function(item) {
         if (item.IS_POPUP !== 'Y') return false;
 
         const skip = getCookie("notice_skip_" + item.BNOTICE_IDX);
@@ -1212,33 +1366,54 @@ function fn_noticePopupFromList(list) {
         return start <= today && today <= end;
     });
 
-    if (popupNotices.length > 0) {
-        const width = 800;
-        const height = 500;
-        const offsetStep = 40;
-
-        // 📍 기준점: 화면 중앙에서 약간 왼쪽 위로
-        const baseLeft = window.screenX + (window.outerWidth - width) / 2 - 400;
-        const baseTop = window.screenY + (window.outerHeight - height) / 2 - 200;
-
-        popupNotices.forEach(function(notice, index) {
-            const left = baseLeft + (index * offsetStep);
-            const top = baseTop + (index * offsetStep);
-
-            const popupUrl = "/main/noticePopup?idx=" + notice.BNOTICE_IDX;
-            const windowName = "NoticePopup_" + notice.BNOTICE_IDX + "_" + new Date().getTime();
-            const features =
-                "width=" + width +
-                ",height=" + height +
-                ",left=" + left +
-                ",top=" + top +
-                ",scrollbars=yes,resizable=yes";
-
-            window.open(popupUrl, windowName, features);
-        });
+    if (popupNoticeQueue.length > 0) {
+        showNextNoticePopup();
     }
 }
 
+function showNextNoticePopup() {
+    if (popupNoticeQueue.length === 0) {
+        $("#noticeLayerPopup").hide();
+        return;
+    }
+
+    const notice = popupNoticeQueue.shift();
+
+    $("#popupNoticeTitle").text(notice.TITLE);
+    $("#popupNoticeMeta").text("작성자: " + notice.REG_USER + " | 등록일: " + notice.REG_DATE);
+    $("#popupNoticeContent").empty().html(notice.CONTENT);
+
+    $("#popupNoticeTitle, .more-icon").data("noticeId", notice.BNOTICE_IDX);
+    $("#popupTodaySkip").prop("checked", false);
+
+    // 팝업 열기 + fadeIn 후 바로 스크롤 0
+    $("#noticeLayerPopup").fadeIn(function () {
+        $(".popup-container").scrollTop(0); // ✅ 정확한 스크롤 타겟
+    });
+}
+
+
+function closeNoticeLayerPopup() {
+    const currentId = $("#popupNoticeTitle").data("noticeId");
+    const skip = $("#popupTodaySkip").is(":checked");
+
+    if (skip && currentId) {
+        const expires = new Date();
+        expires.setHours(23, 59, 59, 999);
+        document.cookie = "notice_skip_" + currentId + "=Y; expires=" + expires.toUTCString() + "; path=/";
+    }
+
+    $("#noticeLayerPopup").fadeOut(() => {
+        showNextNoticePopup(); // 다음 팝업 표시
+    });
+}
+
+function goToDetail() {
+    const id = $("#popupNoticeTitle").data("noticeId");
+    if (id) {
+        location.href = "/boardNotice/view?idx=" + id;
+    }
+}
 // popup //
 </script>
 <div class="wrap_in" id="fixNextTag">
@@ -1293,7 +1468,7 @@ function fn_noticePopupFromList(list) {
 			<!-- 품목제조공정서 검색 start -->
 			
 			<div class="main_jejo">
-			<div class="title2"><span class="txt">품목제조보고서 검색</span></div>
+			<div class="title2"><span class="txt">원료 검색</span></div>
 			<div class="main_jejo_box" >
 					<div class="tab05">
 						<ul id="main_company_ul">
@@ -1351,3 +1526,32 @@ function fn_noticePopupFromList(list) {
 		<!-- 컨텐츠 close-->	
 	</section>
 </div>	
+
+<!-- 🔔 공지사항 팝업 레이어 -->
+<div id="noticeLayerPopup" class="popup-overlay" style="display:none;">
+  <div class="popup-wrapper">
+    <!-- 헤더 -->
+    <div class="popup-header">
+        <img src="/resources/images/bbq_logo.png" alt="BBQ Logo">
+    </div>
+
+    <!-- 팝업 본체 -->
+    <div class="popup-container">
+      <div class="popup-title">
+          <span class="notice-title" id="popupNoticeTitle" onclick="goToDetail()"></span>
+          <div class="more-icon" onclick="goToDetail()">
+              <img src="/resources/images/icon_more.png" alt="돋보기" />
+              <div>More</div>
+          </div>
+      </div>
+      <div class="popup-meta" id="popupNoticeMeta"></div>
+      <div class="popup-content" id="popupNoticeContent"></div>
+    </div>
+
+    <!-- 푸터 고정 -->
+    <div class="popup-footer-fixed">
+        <label><input type="checkbox" id="popupTodaySkip"> 오늘 하루 보지 않기</label>
+        <button class="btn-close" onclick="closeNoticeLayerPopup()">닫기</button>
+    </div>
+  </div>
+</div>

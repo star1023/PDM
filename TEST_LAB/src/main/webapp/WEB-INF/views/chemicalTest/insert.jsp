@@ -450,7 +450,7 @@ input:disabled {
 								apprFormData.append("apprComment", $("#apprComment").val());
 								apprFormData.append("apprLine", $("#apprLine").selectedValues());
 								apprFormData.append("refLine", $("#refLine").selectedValues());
-								apprFormData.append("title", $("#title").val());
+								apprFormData.append("title", $("#productName").val() + ' 이화학검사의뢰서');
 								apprFormData.append("docType", $("#docType").val());
 								apprFormData.append("status", "N");
 								var URL = "../approval2/insertApprAjax";

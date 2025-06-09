@@ -177,10 +177,10 @@ function fn_apprSubmit(){
 	}
 }
 function fn_list() {
-	location.href = '/report2/newProductResultList';
+	location.href = '/newProductResult/list';
 }
 function fn_update(idx) {
-	location.href = '/report2/newProductResultUpdate?idx='+idx;
+	location.href = '/newProductResult/update?idx='+idx;
 }
 function downloadFile(idx){
 	location.href = '/test/fileDownload?idx='+idx;

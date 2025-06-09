@@ -107,9 +107,9 @@ function fn_renderList(list) {
             const textColor = isValidPeriod ? "#d15b47" : "#000";
 
             row += "<td style='white-space: nowrap; color: " + textColor + "'>" +
-            "<span style='margin-left : 20px; display: inline-flex; align-items: center; gap: 4px;'>" +
+            "<span style='margin-left : 20px; display: inline-flex; align-items: center; gap: 8px;'>" +
             "<img src='/resources/images/icon_megaphone.png' style='width: 18px; height: 18px; " + iconStyle + "' />" +
-            "&nbsp;<img src='/resources/images/lab_notice_handwriting.png' style='height: 32px; width: 70px; "+ iconStyle +"' alt='공지'/>" +
+            "&nbsp;<img src='/resources/images/lab_notice_handwriting.png' style='height: 13px; width: 60px; "+ iconStyle +"' alt='공지'/>" +
             "</span></td>";
         } else {
             row += "<td></td>";

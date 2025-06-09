@@ -10,6 +10,10 @@
 <title>결재함</title>
 <style>
 /*추가*/
+table.insert_proc01 {
+  table-layout: fixed;
+  width: 100%;
+}
 .outside{ border:0; font-family:'맑은고딕',Malgun Gothic; font-size:12px;}
 .outside td{border:2px solid #666;}
 .intable_title{ border:0;}
@@ -57,6 +61,52 @@ $(document).ready(function() {
 		   return false;
 	 }
 });
+
+//전체 COLUMN 메타 정보 불러오기 → 이후 헤더와 바디 동적 렌더링
+$.ajax({
+    type: "POST",
+    url: "../common/codeListAjax",
+    data: { groupCode: "COLUMN" },
+    dataType: "json",
+    success: function (data) {
+        _columnFullList = data.RESULT;
+        renderDynamicHeader();
+        renderDynamicBody();
+    },
+    error: function () {
+        alert("컬럼 정보를 불러오는데 실패했습니다.");
+    }
+});
+
+var _columnStateCodes = "${newProductResultData.data.COLUMN_STATE}".split(',');
+var _columnFullList = []; // 전체 COLUMN 메타 목록
+var resultItemList = [];
+var itemImageList = [];
+
+<c:if test="${not empty newProductResultItemList}">
+resultItemList = [
+<c:forEach var="item" items="${newProductResultItemList}" varStatus="status">
+    {
+        ROW_NO: ${item.ROW_NO},
+        COLUMN_CODE: "${item.COLUMN_CODE}",
+        COLUMN_VALUE: "${item.COLUMN_VALUE}"
+    }<c:if test="${!status.last}">,</c:if>
+</c:forEach>
+];
+</c:if>
+
+<c:if test="${not empty newProductResultImageList}">
+itemImageList = [
+<c:forEach var="img" items="${newProductResultImageList}" varStatus="status"> <!-- ✅ 이게 맞음 -->
+    {
+        ROW_NO: ${img.ROW_NO},
+        COLUMN_CODE: "${img.COLUMN_CODE}",
+        FILE_PATH: "${img.FILE_PATH}",
+        FILE_NAME: "${img.FILE_NAME}"
+    }<c:if test="${!status.last}">,</c:if>
+</c:forEach>
+];
+</c:if>
 
 function fn_approvalSubmit() {
 	console.log($("#apprIdx").val());
@@ -239,6 +289,119 @@ function getTextareaHTML(note) {
 function downloadFile(idx){
 	location.href = '/test/fileDownload?idx='+idx;
 }
+
+/* 동적 테이블 */
+function renderDynamicHeader() {
+    var headerRow = document.getElementById("dynamicHeaderRow");
+    headerRow.innerHTML = "";
+
+    _columnStateCodes.forEach(function(code) {
+        var meta = _columnFullList.find(function(c) {
+            return c.itemCode === code;
+        });
+        var th = document.createElement("th");
+        th.textContent = meta ? meta.itemName : code;
+        headerRow.appendChild(th);
+    });
+
+    renderDynamicColGroup(); // ✅ colgroup + colspan 동기화
+}
+
+function renderDynamicBody() {
+    var tbody = document.getElementById("dynamicBody");
+    tbody.innerHTML = "";
+
+    var rowMap = {};
+
+    // ROW_NO 별로 값 매핑
+    resultItemList.forEach(function(item) {
+        if (!rowMap[item.ROW_NO]) {
+            rowMap[item.ROW_NO] = {};
+        }
+        rowMap[item.ROW_NO][item.COLUMN_CODE] = item.COLUMN_VALUE;
+    });
+
+    // ROW_NO 순으로 정렬해서 렌더링
+    Object.keys(rowMap).sort(function(a, b) {
+        return parseInt(a, 10) - parseInt(b, 10);
+    }).forEach(function(rowNo) {
+        var tr = document.createElement("tr");
+
+        _columnStateCodes.forEach(function(code) {
+            var td = document.createElement("td");
+            var meta = _columnFullList.find(function(c) {
+                return c.itemCode === code;
+            });
+
+            var isImage = meta && meta.itemName.indexOf("이미지") !== -1;
+
+            if (isImage) {
+                var matchedImages = itemImageList.filter(function(img) {
+                    return img.ROW_NO == rowNo && img.COLUMN_CODE == code;
+                });
+
+                if (matchedImages.length > 0) {
+                    matchedImages.forEach(function(img) {
+                        var image = document.createElement("img");
+
+                        // ✅ 경로가 유효한 경우에만 실제 이미지 표시
+                        if (img.FILE_PATH && img.FILE_NAME) {
+                            image.src = "/images" + img.FILE_PATH + "/" + img.FILE_NAME;
+                        } else {
+                            // ❌ 경로가 없으면 기본 이미지로 처리
+                            image.src = "/resources/images/img_noimg3.png";
+                        }
+
+                        image.style.maxWidth = "240px";
+                        image.style.objectFit = "contain";
+                        image.style.border = "1px solid #ccc";
+                        image.style.marginRight = "8px";
+                        image.style.height = "auto";
+                        image.style.verticalAlign = "middle";
+
+                        td.appendChild(image);
+                    });
+                } else {
+                    // ✅ matchedImages 자체가 없는 경우도 기본 이미지 표시
+                    var noImg = document.createElement("img");
+                    noImg.src = "/resources/images/img_noimg3.png";
+                    noImg.style.width = "80px";
+                    noImg.style.height = "80px";
+                    noImg.style.objectFit = "contain";
+                    noImg.style.border = "1px solid #ccc";
+                    td.appendChild(noImg);
+                }
+            } else {
+                var value = rowMap[rowNo][code] || "";
+                td.textContent = value;
+            }
+
+            tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+function renderDynamicColGroup() {
+    var colGroup = document.getElementById("dynamicColGroup");
+    colGroup.innerHTML = "";
+
+    _columnStateCodes.forEach(function() {
+        var col = document.createElement("col");
+        colGroup.appendChild(col);
+    });
+
+    // ✅ 공통 colspan 처리 대상 ID 배열
+    var colspanTargets = ["inspectionTd", "titleTd", "monthTd", "fileTd"];
+
+    colspanTargets.forEach(function(id) {
+        var td = document.getElementById(id);
+        if (td) {
+            td.setAttribute("colspan", _columnStateCodes.length);
+        }
+    });
+}
 </script>
 <h2 style=" position:fixed; background-color: #38b6e6 !important;" class="print_hidden">
 	<span class="title"><img src="/resources/images/bg_bs_box_fast02.png">결재</span>
@@ -323,17 +486,17 @@ function downloadFile(idx){
 							</table>
 						</div>
 						<div class="fr pt20 pb10" style="margin-bottom:10px;"  id="buttonArea2">
-						<c:if test="${paramVO.viewType eq 'myApprList' }">
-						<c:if test="${apprHeader.LAST_STATUS eq 'N' || apprHeader.LAST_STATUS eq 'A' }">
-							<c:if test = "${apprHeader.CURRENT_USER_ID eq paramVO.userId}">
-								<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 승인</button>
-								<c:if test="${apprHeader.CURRENT_STEP < apprHeader.TOTAL_STEP}">
-								<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalCondSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 부분승인</button>
+							<c:if test="${paramVO.viewType eq 'myApprList' }">
+								<c:if test="${apprHeader.LAST_STATUS eq 'N' || apprHeader.LAST_STATUS eq 'A' }">
+									<c:if test = "${apprHeader.CURRENT_USER_ID eq paramVO.userId}">
+										<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 승인</button>
+										<c:if test="${apprHeader.CURRENT_STEP < apprHeader.TOTAL_STEP}">
+											<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalCondSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 부분승인</button>
+										</c:if>
+										<button class="btn_con_search" onclick="fn_approvalReject(); return false;" id="btn_reject"><img src="/resources/images/icon_doc06.png"> 반려</button>					
+									</c:if>	
 								</c:if>
-								<button class="btn_con_search" onclick="fn_approvalReject(); return false;" id="btn_reject"><img src="/resources/images/icon_doc06.png"> 반려</button>					
-							</c:if>	
-						</c:if>
-						</c:if>
+							</c:if>
 						</div>
 					</td>
 				</tr>
@@ -345,287 +508,46 @@ function downloadFile(idx){
 		<div class="main_tbl">
 			<table class="insert_proc01">
 				<colgroup>
-					<col width="15%" />
-					<col width="35%" />
-					<col width="15%" />
-					<col width="35%" />
+					
 				</colgroup>
 				<tbody>
 					<tr>
 						<th style="border-left: none;">제목</th>
-						<td colspan="3">${menuData.data.TITLE}</td>
+						<td id="titleTd">${newProductResultData.data.TITLE}</td> <!-- ✅ id 추가 -->
 					</tr>
 					<tr>
-						<th style="border-left: none;">제품명</th>
-						<td colspan="3">
-							${menuData.data.NAME}
-						</td>
+						<th style="border-left: none;">시행월</th>
+						<td id="monthTd">${newProductResultData.data.EXCUTE_DATE}</td> <!-- ✅ id 추가 -->
 					</tr>
 					<tr>
-						<th style="border-left: none;">개발 목적</th>
-						<td colspan="3">
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'PUR' }">
-									${addInfoList.INFO_TEXT} <br>
-								</c:if>
-							</c:forEach>
-						</td>
+					    <th style="border-left: none;">검사 요청 항목</th>
+					    <td id="inspectionTd"> <!-- ✅ JS에서 colspan 설정할 곳 -->
+					        <table class="tbl01" style="border-bottom: 2px solid #4b5165;">
+					            <colgroup id="dynamicColGroup"></colgroup> <!-- ✅ 동적 <colgroup> 생성 -->
+					            <thead>
+					                <tr id="dynamicHeaderRow"></tr>
+					            </thead>
+					            <tbody id="dynamicBody"></tbody>
+					        </table>	
+					    </td>
 					</tr>
-					<tr>
-						<th style="border-left: none;">메뉴 특징</th>
-						<td colspan="3">
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'FEA' }">
-									${addInfoList.INFO_TEXT} <br>
-								</c:if>
-							</c:forEach>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">용도</th>
-						<td colspan="3">
 
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">신규도입품/제품규격</th>
-						<td colspan="3">
-							<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
-								<colgroup>
-									<col width="140">
-									<col width="140">
-									<col width="250">
-									<col width="150">
-									<col />
-								</colgroup>
-								<thead>
-									<tr>
-										<th>제품명</th>
-										<th>포장규격</th>
-										<th>공급처 및 담당자</th>
-										<th>보관조건 및 소비기한</th>
-										<th>비고</th>
-									</tr>
-								</thead>
-								<tbody>
-									<c:forEach items="${newDataList}" var="newDataList" varStatus="status">
-										<tr id="new_tr_${status.count}" class="temp_color">
-											<td>
-												${newDataList.PRODUCT_NAME}
-											</td>
-											<td>
-												${newDataList.PACKAGE_STANDARD}
-											</td>
-											<td>
-												${newDataList.SUPPLIER}
-											</td>
-											<td>${newDataList.KEEP_EXP}</td>
-											<td>${newDataList.NOTE}</td>
-										</tr>
-									</c:forEach>
-								</tbody>
-							</table>	
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">도입 예정일</th>
-						<td colspan="3">
-							${menuData.data.SCHEDULE_DATE}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">제품코드</th>
-						<td>
-							${menuData.data.PRODUCT_CODE}
-						</td>
-						<th style="border-left: none;">상품코드</th>
-						<td>
-							${menuData.data.SAP_CODE}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">버젼 No.</th>
-						<td colspan="3">
-							${menuData.data.VERSION_NO}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">제품유형</th>
-						<td colspan="5">
-							<c:if test="${menuData.data.MENU_TYPE1 != null }">
-							${menuData.data.MENU_TYPE_NAME1}
-							</c:if>
-							<c:if test="${menuData.data.MENU_TYPE2 != null }">
-							&gt; ${menuData.data.MENU_TYPE_NAME2}
-							</c:if>
-							<c:if test="${menuData.data.MENU_TYPE3 != null }">
-							&gt; ${menuData.data.MENU_TYPE_NAME3}
-							</c:if>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">첨부파일 유형</th>
-						<td colspan="3">
-							<c:forEach items="${menuData.fileType}" var="fileType" varStatus="status">
-								<c:if test="${status.index != 0 }">
-								,
-								</c:if>
-								${fileType.FILE_TEXT}
-							</c:forEach>
-						</td>
-					</tr>
 					<tr>
 						<th style="border-left: none;">첨부파일</th>
-						<td colspan="3" class="con_file">
-							<ul>
-								<li class="point_img">
-									<dd>
-										<ul>
-											<c:forEach items="${menuData.fileList}" var="fileList" varStatus="status">
-												<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-											</c:forEach>
-										</ul>
-									</dd>
-								</li>
-							</ul>	
+						<td id="fileTd" style="text-align: left; vertical-align: top;">
+							<ul style="margin: 0; padding-left: 20px; list-style-type: none;">
+								<c:forEach items="${newProductResultData.fileList}" var="fileList">
+									<li style="margin-bottom: 4px;">
+										<img src="/resources/images/icon_file01.png" style="vertical-align: middle; margin-right: 5px;">
+										<a href="javascript:downloadFile('${fileList.FILE_IDX}')" style="text-decoration: none; color: #007acc;">
+											${fileList.ORG_FILE_NAME}
+										</a>
+									</li>
+								</c:forEach>
+							</ul>
 						</td>
 					</tr>
 				</tbody>
-			</table>
-		</div>
-		<c:if test="${menuData.data.IS_NEW_MATERIAL == 'Y' }">
-		<div class="main_tbl">				
-			<table class="tbl01">
-				<colgroup>
-					<col width="140">
-					<col width="140">
-					<col width="250">
-					<col width="150">
-					<col width="200">
-					<col width="8%">
-					<col />
-				</colgroup>
-				<thead>
-					<tr>
-						<th>원료코드</th>
-						<th>ERP코드</th>
-						<th>원료명</th>
-						<th>규격</th>
-						<th>보관방법 및 유통기한</th>
-						<th>공급가</th>
-						<th>비고</th>
-					</tr>
-				</thead>
-				<tbody>
-				<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
-				<c:if test="${menuMaterialData.MATERIAL_TYPE == 'Y' }">
-					<tr>
-						<td>
-							<div class=""><a href="#" onClick="fn_view('${menuMaterialData.MATERIAL_IDX}')">${menuMaterialData.MATERIAL_CODE}</a></div>
-						</td>
-						<td>
-							${menuMaterialData.SAP_CODE}
-						</td>
-						<td>
-							${menuMaterialData.NAME}
-						</td>
-						<td>
-							${menuMaterialData.STANDARD}
-						</td>
-						<td>
-							${menuMaterialData.KEEP_EXP}
-						</td>
-						<td>
-							${menuMaterialData.UNIT_PRICE}
-						</td>
-						<td>
-							${menuMaterialData.DESCRIPTION}
-						</td>
-					</tr>
-				</c:if>	
-				</c:forEach>	
-				</tbody>
-				<tfoot>
-				</tfoot>
-			</table>
-		</div>
-		</c:if>
-		
-		<div class="main_tbl">				
-			<table class="tbl01 ">
-				<colgroup>
-					<col width="140">					
-					<col width="140">
-					<col width="250">
-					<col width="150">
-					<col width="200">
-					<col width="8%">
-					<col />
-				</colgroup>
-				<thead>
-					<tr>
-						<th>원료코드</th>
-						<th>ERP코드</th>
-						<th>원료명</th>
-						<th>규격</th>
-						<th>보관방법 및 유통기한</th>
-						<th>공급가</th>
-						<th>비고</th>
-					</tr>
-				</thead>
-				<tbody>
-				<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
-				<c:if test="${menuMaterialData.MATERIAL_TYPE == 'N' }">
-					<tr>
-						<td>
-							<div class=""><a href="#" onClick="fn_erpview('${menuMaterialData.SAP_CODE}')">${menuMaterialData.MATERIAL_CODE}</a></div>
-						</td>
-						<td>
-							${menuMaterialData.SAP_CODE}
-						</td>
-						<td>
-							${menuMaterialData.NAME}
-						</td>
-						<td>
-							${menuMaterialData.STANDARD}
-						</td>
-						<td>
-							${menuMaterialData.KEEP_EXP}
-						</td>
-						<td>
-							${menuMaterialData.UNIT_PRICE}
-						</td>
-						<td>
-							${menuMaterialData.DESCRIPTION}
-						</td>
-					</tr>
-				</c:if>	
-				</c:forEach>	
-				</tbody>
-				<tfoot>
-				</tfoot>
-			</table>
-		</div>
-		<!-- 
-		<div class="con_file" style="">
-			<ul>
-				<li class="point_img">
-					<dt>첨부파일</dt><dd>
-						<ul>
-							<c:forEach items="${menuData.fileList}" var="fileList" varStatus="status">
-								<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-							</c:forEach>
-						</ul>
-					</dd>
-				</li>
-			</ul>
-		</div>
-		 -->
-		<div>
-			<table class="insert_proc01">
-				<tr>
-					<td><pre>${menuData.data.CONTENTS}</pre></td>
-				</tr>
 			</table>
 		</div>
 	</div>

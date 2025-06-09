@@ -1118,7 +1118,7 @@ public class MenuServiceImpl implements MenuService {
 				}
 				
 				try{
-					newMap.put("typCode", newItemTypeCodeArr.get(i));
+					newMap.put("typeCode", newItemTypeCodeArr.get(i));
 				} catch(Exception e) {
 					newMap.put("typeCode", "");
 				}

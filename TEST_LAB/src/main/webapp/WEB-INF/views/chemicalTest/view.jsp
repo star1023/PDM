@@ -350,10 +350,19 @@ th.contentBlock {
 							</td>
 							<!-- 오른쪽: 이미지 영역 -->
 							<td style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-								<p>
-									<img id="preview" src="/images${chemicalTestData.data.FILE_PATH}/${chemicalTestData.data.FILE_NAME}"
-										style="border:1px solid #e1e1e1; border-radius:5px; min-height:300px; max-height:300px; object-fit: contain; min-width:440px; max-width: 440px;">
-								</p>
+								<c:choose>
+									<c:when test="${not empty chemicalTestData.data.FILE_NAME}">
+										<img id="preview"
+											src="/images${chemicalTestData.data.FILE_PATH}/${chemicalTestData.data.FILE_NAME}"
+											style="border:1px solid #e1e1e1; border-radius:5px; min-height:300px; max-height:300px; object-fit: contain; min-width:440px; max-width: 440px;">
+									</c:when>
+									<c:otherwise>
+										<img id="preview"
+											src="/resources/images/img_noimg3.png"
+											alt="이미지 없음"
+											style="border:1px solid #e1e1e1; border-radius:5px; min-height:300px; max-height:300px; object-fit: contain; min-width:440px; max-width: 440px;">
+									</c:otherwise>
+								</c:choose>
 							</td>
 						</tr>
 					</tbody>

@@ -10,6 +10,10 @@
 <title>결재함</title>
 <style>
 /*추가*/
+table.insert_proc01 {
+  table-layout: fixed;
+  width: 100%;
+}
 .outside{ border:0; font-family:'맑은고딕',Malgun Gothic; font-size:12px;}
 .outside td{border:2px solid #666;}
 .intable_title{ border:0;}
@@ -323,17 +327,17 @@ function downloadFile(idx){
 							</table>
 						</div>
 						<div class="fr pt20 pb10" style="margin-bottom:10px;"  id="buttonArea2">
-						<c:if test="${paramVO.viewType eq 'myApprList' }">
-						<c:if test="${apprHeader.LAST_STATUS eq 'N' || apprHeader.LAST_STATUS eq 'A' }">
-							<c:if test = "${apprHeader.CURRENT_USER_ID eq paramVO.userId}">
-								<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 승인</button>
-								<c:if test="${apprHeader.CURRENT_STEP < apprHeader.TOTAL_STEP}">
-								<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalCondSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 부분승인</button>
+							<c:if test="${paramVO.viewType eq 'myApprList' }">
+								<c:if test="${apprHeader.LAST_STATUS eq 'N' || apprHeader.LAST_STATUS eq 'A' }">
+									<c:if test = "${apprHeader.CURRENT_USER_ID eq paramVO.userId}">
+										<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 승인</button>
+										<c:if test="${apprHeader.CURRENT_STEP < apprHeader.TOTAL_STEP}">
+											<button class="btn_con_search" style="border-color:#09F; color:#09F"  onclick="fn_approvalCondSubmit(); return false;" id="btn_submit"><img src="/resources/images/icon_s_approval.png"> 부분승인</button>
+										</c:if>
+										<button class="btn_con_search" onclick="fn_approvalReject(); return false;" id="btn_reject"><img src="/resources/images/icon_doc06.png"> 반려</button>					
+									</c:if>	
 								</c:if>
-								<button class="btn_con_search" onclick="fn_approvalReject(); return false;" id="btn_reject"><img src="/resources/images/icon_doc06.png"> 반려</button>					
-							</c:if>	
-						</c:if>
-						</c:if>
+							</c:if>
 						</div>
 					</td>
 				</tr>
@@ -345,287 +349,135 @@ function downloadFile(idx){
 		<div class="main_tbl">
 			<table class="insert_proc01">
 				<colgroup>
-					<col width="15%" />
-					<col width="35%" />
-					<col width="15%" />
-					<col width="35%" />
+					<col width="16.66%">
+					<col width="16.66%">
+					<col width="16.66%">
+					<col width="16.66%">
+					<col width="16.66%">
+					<col width="16.66%">
 				</colgroup>
 				<tbody>
 					<tr>
-						<th style="border-left: none;">제목</th>
-						<td colspan="3">${menuData.data.TITLE}</td>
+						<th style="border-left: none;">의뢰일</th>
+						<td >${chemicalTestData.data.REQUEST_DATE}</td>
+						<th style="border-left: none;">희망 완료일</th>
+						<td >${chemicalTestData.data.COMPLETION_DATE}</td>
+						<th style="border-left: none;">의뢰자</th>
+						<td >${chemicalTestData.data.REQUEST_USER}</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">제품명</th>
-						<td colspan="3">
-							${menuData.data.NAME}
+						<th style="border-left: none;">시료명</th>
+						<td colspan="5">
+							${chemicalTestData.data.PRODUCT_NAME}
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">개발 목적</th>
-						<td colspan="3">
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'PUR' }">
-									${addInfoList.INFO_TEXT} <br>
-								</c:if>
-							</c:forEach>
+						<th style="border-left: none;">시료 수량</th>
+						<td colspan="5">
+							${chemicalTestData.data.PRODUCT_COUNT}
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">메뉴 특징</th>
-						<td colspan="3">
-							<c:forEach items="${addInfoList}" var="addInfoList" varStatus="status">
-								<c:if test="${addInfoList.INFO_TYPE == 'FEA' }">
-									${addInfoList.INFO_TEXT} <br>
-								</c:if>
-							</c:forEach>
+						<th style="border-left: none;">보관방법</th>
+						<td colspan="5">
+							${chemicalTestData.data.PRESERVATION}
 						</td>
-					</tr>
 					<tr>
-						<th style="border-left: none;">용도</th>
-						<td colspan="3">
-
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">신규도입품/제품규격</th>
-						<td colspan="3">
+						<th style="border-left: none;">검사 요청 항목</th>
+						<td colspan="5">
 							<table class="tbl01 " style="border-bottom: 2px solid #4b5165;">
 								<colgroup>
-									<col width="140">
-									<col width="140">
-									<col width="250">
-									<col width="150">
-									<col />
+									<col width="25%">
+									<col width="25%">
+									<col width="25%">
+									<col width="25%">
 								</colgroup>
 								<thead>
 									<tr>
-										<th>제품명</th>
-										<th>포장규격</th>
-										<th>공급처 및 담당자</th>
-										<th>보관조건 및 소비기한</th>
-										<th>비고</th>
+										<th style="text-align:center;">pH</th>
+										<th style="text-align:center;">Brix</th>
+										<th style="text-align:center;">염도</th>
+										<th style="text-align:center;">점도</th>
 									</tr>
 								</thead>
 								<tbody>
-									<c:forEach items="${newDataList}" var="newDataList" varStatus="status">
-										<tr id="new_tr_${status.count}" class="temp_color">
-											<td>
-												${newDataList.PRODUCT_NAME}
-											</td>
-											<td>
-												${newDataList.PACKAGE_STANDARD}
-											</td>
-											<td>
-												${newDataList.SUPPLIER}
-											</td>
-											<td>${newDataList.KEEP_EXP}</td>
-											<td>${newDataList.NOTE}</td>
-										</tr>
-									</c:forEach>
+									<tr>
+									    <c:forEach var="type" items="${fn:split('PH,BRI,SAL,VIS', ',')}">
+										     <c:set var="matchedContent" value="" />
+										     <c:set var="found" value="false" />
+										     <c:forEach var="item" items="${chemicalTestItemList}">
+										         <c:if test="${not found and item.TYPE_CODE eq type}">
+										             <c:set var="matchedContent" value="${item.ITEM_CONTENT}" />
+										             <c:set var="found" value="true" />
+										         </c:if>
+										     </c:forEach>
+										     <td style="text-align:center;">${matchedContent}</td>
+										 </c:forEach>
+									</tr>
 								</tbody>
 							</table>	
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">도입 예정일</th>
-						<td colspan="3">
-							${menuData.data.SCHEDULE_DATE}
-						</td>
+					    <th style="border-left: none;">검사 요청 방법</th>
+					    <td colspan="5">
+					        <c:forEach var="item" items="${chemicalTestStandardList}">
+					            <c:if test="${item.TYPE_CODE eq 'MET'}">
+					                ${item.STANDARD_CONTENT}<br/>
+					            </c:if>
+					        </c:forEach>
+					    </td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">제품코드</th>
+					    <th style="border-left: none;">검사 진행 일정</th>
+					    <td colspan="5">
+					        <c:forEach var="item" items="${chemicalTestStandardList}">
+					            <c:if test="${item.TYPE_CODE eq 'SCH'}">
+					                ${item.STANDARD_CONTENT}<br/>
+					            </c:if>
+					        </c:forEach>
+					    </td>
+					</tr>
+					<tr>
+						<th style="border-left: none;">요청사항</th>
 						<td>
-							${menuData.data.PRODUCT_CODE}
-						</td>
-						<th style="border-left: none;">상품코드</th>
-						<td>
-							${menuData.data.SAP_CODE}
+							${chemicalTestData.data.REQUEST_CONTENT}
 						</td>
 					</tr>
 					<tr>
-						<th style="border-left: none;">버젼 No.</th>
-						<td colspan="3">
-							${menuData.data.VERSION_NO}
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">제품유형</th>
-						<td colspan="5">
-							<c:if test="${menuData.data.MENU_TYPE1 != null }">
-							${menuData.data.MENU_TYPE_NAME1}
-							</c:if>
-							<c:if test="${menuData.data.MENU_TYPE2 != null }">
-							&gt; ${menuData.data.MENU_TYPE_NAME2}
-							</c:if>
-							<c:if test="${menuData.data.MENU_TYPE3 != null }">
-							&gt; ${menuData.data.MENU_TYPE_NAME3}
-							</c:if>
-						</td>
-					</tr>
-					<tr>
-						<th style="border-left: none;">첨부파일 유형</th>
-						<td colspan="3">
-							<c:forEach items="${menuData.fileType}" var="fileType" varStatus="status">
-								<c:if test="${status.index != 0 }">
-								,
-								</c:if>
-								${fileType.FILE_TEXT}
-							</c:forEach>
+						<th style="border-left: none;">시료 사진</th>
+						<td colspan="5" style="max-width: 440px; text-align: center;">
+							<c:choose>
+								<c:when test="${not empty chemicalTestData.data.FILE_NAME}">
+									<img id="preview"
+										src="/images${chemicalTestData.data.FILE_PATH}/${chemicalTestData.data.FILE_NAME}"
+										style="width: 100%; max-width: 440px; height: auto; border:1px solid #e1e1e1; border-radius:5px; object-fit: contain;">
+								</c:when>
+								<c:otherwise>
+									<img id="preview"
+										src="/resources/images/img_noimg3.png"
+										alt="이미지 없음"
+										style="width: 100%; max-width: 440px; height: auto; border:1px solid #e1e1e1; border-radius:5px; object-fit: contain;">
+								</c:otherwise>
+							</c:choose>
 						</td>
 					</tr>
 					<tr>
 						<th style="border-left: none;">첨부파일</th>
-						<td colspan="3" class="con_file">
-							<ul>
-								<li class="point_img">
-									<dd>
-										<ul>
-											<c:forEach items="${menuData.fileList}" var="fileList" varStatus="status">
-												<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-											</c:forEach>
-										</ul>
-									</dd>
-								</li>
-							</ul>	
+						<td colspan="5" style="text-align: left; vertical-align: top;">
+							<ul style="margin: 0; padding-left: 20px; list-style-type: none;">
+								<c:forEach items="${chemicalTestData.fileList}" var="fileList">
+									<li style="margin-bottom: 4px;">
+										<img src="/resources/images/icon_file01.png" style="vertical-align: middle; margin-right: 5px;">
+										<a href="javascript:downloadFile('${fileList.FILE_IDX}')" style="text-decoration: none; color: #007acc;">
+											${fileList.ORG_FILE_NAME}
+										</a>
+									</li>
+								</c:forEach>
+							</ul>
 						</td>
 					</tr>
 				</tbody>
-			</table>
-		</div>
-		<c:if test="${menuData.data.IS_NEW_MATERIAL == 'Y' }">
-		<div class="main_tbl">				
-			<table class="tbl01">
-				<colgroup>
-					<col width="140">
-					<col width="140">
-					<col width="250">
-					<col width="150">
-					<col width="200">
-					<col width="8%">
-					<col />
-				</colgroup>
-				<thead>
-					<tr>
-						<th>원료코드</th>
-						<th>ERP코드</th>
-						<th>원료명</th>
-						<th>규격</th>
-						<th>보관방법 및 유통기한</th>
-						<th>공급가</th>
-						<th>비고</th>
-					</tr>
-				</thead>
-				<tbody>
-				<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
-				<c:if test="${menuMaterialData.MATERIAL_TYPE == 'Y' }">
-					<tr>
-						<td>
-							<div class=""><a href="#" onClick="fn_view('${menuMaterialData.MATERIAL_IDX}')">${menuMaterialData.MATERIAL_CODE}</a></div>
-						</td>
-						<td>
-							${menuMaterialData.SAP_CODE}
-						</td>
-						<td>
-							${menuMaterialData.NAME}
-						</td>
-						<td>
-							${menuMaterialData.STANDARD}
-						</td>
-						<td>
-							${menuMaterialData.KEEP_EXP}
-						</td>
-						<td>
-							${menuMaterialData.UNIT_PRICE}
-						</td>
-						<td>
-							${menuMaterialData.DESCRIPTION}
-						</td>
-					</tr>
-				</c:if>	
-				</c:forEach>	
-				</tbody>
-				<tfoot>
-				</tfoot>
-			</table>
-		</div>
-		</c:if>
-		
-		<div class="main_tbl">				
-			<table class="tbl01 ">
-				<colgroup>
-					<col width="140">					
-					<col width="140">
-					<col width="250">
-					<col width="150">
-					<col width="200">
-					<col width="8%">
-					<col />
-				</colgroup>
-				<thead>
-					<tr>
-						<th>원료코드</th>
-						<th>ERP코드</th>
-						<th>원료명</th>
-						<th>규격</th>
-						<th>보관방법 및 유통기한</th>
-						<th>공급가</th>
-						<th>비고</th>
-					</tr>
-				</thead>
-				<tbody>
-				<c:forEach items="${menuMaterialData}" var="menuMaterialData" varStatus="status">
-				<c:if test="${menuMaterialData.MATERIAL_TYPE == 'N' }">
-					<tr>
-						<td>
-							<div class=""><a href="#" onClick="fn_erpview('${menuMaterialData.SAP_CODE}')">${menuMaterialData.MATERIAL_CODE}</a></div>
-						</td>
-						<td>
-							${menuMaterialData.SAP_CODE}
-						</td>
-						<td>
-							${menuMaterialData.NAME}
-						</td>
-						<td>
-							${menuMaterialData.STANDARD}
-						</td>
-						<td>
-							${menuMaterialData.KEEP_EXP}
-						</td>
-						<td>
-							${menuMaterialData.UNIT_PRICE}
-						</td>
-						<td>
-							${menuMaterialData.DESCRIPTION}
-						</td>
-					</tr>
-				</c:if>	
-				</c:forEach>	
-				</tbody>
-				<tfoot>
-				</tfoot>
-			</table>
-		</div>
-		<!-- 
-		<div class="con_file" style="">
-			<ul>
-				<li class="point_img">
-					<dt>첨부파일</dt><dd>
-						<ul>
-							<c:forEach items="${menuData.fileList}" var="fileList" varStatus="status">
-								<li>&nbsp;<a href="javascript:downloadFile('${fileList.FILE_IDX}')">${fileList.ORG_FILE_NAME}</a></li>
-							</c:forEach>
-						</ul>
-					</dd>
-				</li>
-			</ul>
-		</div>
-		 -->
-		<div>
-			<table class="insert_proc01">
-				<tr>
-					<td><pre>${menuData.data.CONTENTS}</pre></td>
-				</tr>
 			</table>
 		</div>
 	</div>
